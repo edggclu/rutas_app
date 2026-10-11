@@ -16,6 +16,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
+      fontFamily: 'Inter',
       scaffoldBackgroundColor: AppColors.gris50,
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(

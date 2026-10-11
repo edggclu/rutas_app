@@ -26,3 +26,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/mock/
+
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets\fonts\Inter-VariableFont_opsz,wght.ttf

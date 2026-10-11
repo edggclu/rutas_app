@@ -1,0 +1,4 @@
+{
+  "token": "mock-token-tono",
+  "user": { "id": 2, "name": "Toño", "phone": "3220000002", "role": "technician", "permissions": ["engineer", "dispatch"] }
+}

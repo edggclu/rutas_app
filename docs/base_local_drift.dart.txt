@@ -1,0 +1,89 @@
+// Esquema propuesto de la base local (Drift / SQLite) para el paso 2.
+// Está como .txt a propósito: Drift necesita `build_runner` y no se agrega
+// al proyecto hasta el paso 2. Para usarlo:
+//   flutter pub add drift sqlite3_flutter_libs path_provider path
+//   flutter pub add --dev drift_dev build_runner
+//   (mover a lib/data/local/app_database.dart y correr)
+//   dart run build_runner build --delete-conflicting-outputs
+//
+// Idea: lo que baja de /api/my-day se guarda tal cual en tablas de solo lectura
+// y todo lo que hace el técnico entra a la COLA (outbox) antes de enviarse.
+
+import 'package:drift/drift.dart';
+
+part 'app_database.g.dart';
+
+/// Parámetros descargados de /api/settings (clave, valor).
+class SettingsKv extends Table {
+  TextColumn get key => text()();
+  TextColumn get value => text()();
+  @override
+  Set<Column> get primaryKey => {key};
+}
+
+/// Una fila por visita descargada. El detalle (cliente, lugar, trabajo, plan,
+/// checklist) se guarda como JSON para no duplicar el modelo del servidor.
+class CachedVisits extends Table {
+  IntColumn get id => integer()();
+  TextColumn get date => text()(); // YYYY-MM-DD
+  IntColumn get orderInRoute => integer()();
+  TextColumn get status => text()(); // pending | en_route | on_site | done
+  TextColumn get result => text().nullable()();
+  TextColumn get json => text()(); // visita completa tal como llegó
+  DateTimeColumn get arrivedAtUtc => dateTime().nullable()();
+  RealColumn get arrivalLat => real().nullable()();
+  RealColumn get arrivalLng => real().nullable()();
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// COLA de acciones (outbox). Cada acción se guarda con un uuid generado en el
+/// teléfono y la hora en que pasó; se envía en orden cuando hay señal.
+///
+/// Estados:
+///   grace   -> dentro de los 10 s para deshacer; NO enviable todavía
+///              (deshacer = borrar la fila)
+///   pending -> lista para enviarse
+///   sending -> en vuelo
+///   failed  -> se reintenta (attempts + 1)
+/// Una acción enviada y aceptada se borra (o pasa a 'sent' si se quiere historial).
+class OutboxEvents extends Table {
+  TextColumn get uuid => text()();
+  IntColumn get seq => integer().autoIncrement()(); // orden de envío
+  TextColumn get type => text()();
+  IntColumn get visitId => integer().nullable()();
+  DateTimeColumn get occurredAtUtc => dateTime()(); // hora del teléfono, cuando pasó
+  TextColumn get tz => text().withDefault(const Constant('America/Mexico_City'))();
+  TextColumn get payloadJson => text().withDefault(const Constant('{}'))();
+  TextColumn get state => text().withDefault(const Constant('pending'))();
+  DateTimeColumn get graceUntilUtc => dateTime().nullable()();
+  IntColumn get attempts => integer().withDefault(const Constant(0))();
+  TextColumn get lastError => text().nullable()();
+}
+
+/// Fotos y videos pendientes de subir (los videos esperan Wi-Fi si así se pidió).
+class MediaQueue extends Table {
+  TextColumn get uuid => text()();
+  IntColumn get visitId => integer()();
+  TextColumn get kind => text()(); // progress | warranty | damage | closing | cabling_video
+  TextColumn get localPath => text()();
+  BoolColumn get wifiOnly => boolean().withDefault(const Constant(false))();
+  TextColumn get state => text().withDefault(const Constant('pending'))();
+  DateTimeColumn get createdAtUtc => dateTime()();
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
+@DriftDatabase(tables: [SettingsKv, CachedVisits, OutboxEvents, MediaQueue])
+class AppDatabase extends _$AppDatabase {
+  AppDatabase(super.e);
+  @override
+  int get schemaVersion => 1;
+}
+
+// Reglas de implementación (paso 2):
+//  - "No me abren": guardar la hora de llegada y calcular
+//    llegada + wait_base_min + wait_per_km_min * km_from_previous.
+//    Nunca usar un temporizador en memoria (se pierde al bloquear el teléfono).
+//  - Sin señal, la autorización por saldo vencido pasa directo a "solicitud
+//    para después" (regla propuesta, por confirmar).

@@ -1,0 +1,71 @@
+{
+  "date": "2026-10-06",
+  "generated_at": "2026-10-06T13:02:11Z",
+  "technician": { "id": 7, "name": "Pedro" },
+  "visits": [
+    {
+      "id": 101, "order": 1, "status": "en_route", "result": null,
+      "scheduled_at": "2026-10-06T14:00:00Z", "day_number": 1, "responsible": true,
+      "companions": [{ "id": 3, "name": "Toño" }],
+      "arrived_at": null, "left_at": null, "km_from_previous": 12.4,
+      "client": { "id": 1, "name": "Hotel Bahía", "overdue": true },
+      "place": {
+        "id": 3, "name": "Hotel Bahía — torre 2", "address": "Av. Costera 120, Nuevo Vallarta",
+        "lat": 20.7002, "lng": -105.2943, "estimated_km_from_office": 12.4,
+        "access_notes": "Entrar por la puerta de servicio, preguntar por mantenimiento.",
+        "contact": { "name": "Ing. Ramírez", "role": "Mantenimiento", "phone": "3221234567", "authorized": true }
+      },
+      "job": {
+        "id": 14, "folio": "TEL-2610-014", "type": "installation", "priority": "normal", "coverage": "paid",
+        "status": "in_progress",
+        "description": "Instalar 8 cámaras en el estacionamiento.",
+        "plan_summary": "Cable por el plafón del pasillo. 8 cámaras, 1 grabador y escalera de 6 m.",
+        "engineer": { "id": 2, "name": "Toño" }, "close_mode": "remote",
+        "warranty_guide": null, "block": null
+      }
+    },
+    {
+      "id": 102, "order": 2, "status": "pending", "result": null,
+      "scheduled_at": "2026-10-06T20:30:00Z", "day_number": null, "responsible": true,
+      "companions": [],
+      "arrived_at": null, "left_at": null, "km_from_previous": 5.0,
+      "client": { "id": 2, "name": "Restaurante Mar Azul", "overdue": false },
+      "place": {
+        "id": 8, "name": "Restaurante Mar Azul", "address": "Calle Hidalgo 45, Centro, Puerto Vallarta",
+        "lat": 20.6534, "lng": -105.2253, "estimated_km_from_office": 17.0,
+        "access_notes": "Calle angosta. Tocar el timbre de la cocina.",
+        "contact": { "name": "Sra. Lupita", "role": "Dueña", "phone": "3229876543", "authorized": true }
+      },
+      "job": {
+        "id": 21, "folio": "TEL-2610-021", "type": "corrective", "priority": "normal", "coverage": "warranty",
+        "status": "scheduled",
+        "description": "La cámara de la caja ya no se ve.",
+        "plan_summary": null,
+        "engineer": { "id": 2, "name": "Toño" }, "close_mode": "remote",
+        "warranty_guide": "Documenta la causa, toma foto de la falla y del número de serie. No le prometas al cliente que entra en garantía.",
+        "block": null
+      }
+    },
+    {
+      "id": 103, "order": 3, "status": "pending", "result": null,
+      "scheduled_at": null, "day_number": null, "responsible": true,
+      "companions": [],
+      "arrived_at": null, "left_at": null, "km_from_previous": 9.0,
+      "client": { "id": 4, "name": "Condominio Las Palmas", "overdue": false },
+      "place": {
+        "id": 12, "name": "Condominio Las Palmas", "address": "Blvd. Nayarit 880, Nuevo Vallarta",
+        "lat": 20.7101, "lng": -105.2889, "estimated_km_from_office": 14.0,
+        "access_notes": "Anunciarse con el guardia y pedir al administrador.",
+        "contact": { "name": "Lic. Ortega", "role": "Administrador", "phone": "3225551212", "authorized": true }
+      },
+      "job": {
+        "id": 9, "folio": "TEL-2610-009", "type": "preventive", "priority": "normal", "coverage": "policy",
+        "status": "scheduled",
+        "description": "Revisión trimestral: limpiar lentes por el salitre, revisar grabación, disco y no-break.",
+        "plan_summary": null,
+        "engineer": { "id": 2, "name": "Toño" }, "close_mode": "remote",
+        "warranty_guide": null, "block": null
+      }
+    }
+  ]
+}

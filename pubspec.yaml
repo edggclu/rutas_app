@@ -30,4 +30,5 @@ flutter:
   fonts:
     - family: Inter
       fonts:
-        - asset: assets\fonts\Inter-VariableFont_opsz,wght.ttf
+        # - asset: assets\fonts\Inter-VariableFont_opsz,wght.ttf
+        - asset: assets\fonts\InterVariable.ttf

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:telyser_app/domain/app_settings.dart';
 
 import '../../domain/models.dart';
 import '../repositories.dart';
@@ -37,4 +38,9 @@ class MockVisitRepository implements VisitRepository {
     await Future<void>.delayed(const Duration(milliseconds: 400));
     return DayRoute.fromJson(await _loadJson('assets/mock/my_day.json'));
   }
+}
+class MockSettingsRepository implements SettingsRepository {
+  @override
+  Future<AppSettings> fetch() async =>
+      AppSettings.fromMap(await _loadJson('assets/mock/settings.json'));
 }

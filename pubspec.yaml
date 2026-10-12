@@ -17,6 +17,7 @@ dependencies:
   sqlite3_flutter_libs: ^0.6.0+eol
   timezone: ">=0.9.4 <1.0.0"
   url_launcher: ^6.3.0
+  uuid: ^4.6.0
   # Paso 2 (base local y cola): se agregan con
   #   flutter pub add drift sqlite3_flutter_libs path_provider path
   #   flutter pub add --dev drift_dev build_runner

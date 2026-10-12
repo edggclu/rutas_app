@@ -33,7 +33,7 @@ class CachedVisits extends Table {
 /// COLA de acciones (outbox).
 /// Estados: grace (10 s para deshacer, no enviable) -> pending -> sending -> failed.
 class OutboxEvents extends Table {
-  TextColumn get uuid => text()();
+  TextColumn get uuid => text().unique()();
   IntColumn get seq => integer().autoIncrement()();
   TextColumn get type => text()();
   IntColumn get visitId => integer().nullable()();

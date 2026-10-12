@@ -16,7 +16,7 @@ Usuarios de prueba (cualquier contraseña):
 lib/
   core/        tema (colores de Figma), hora UTC -> México, widgets (deslizable, etiquetas…)
   domain/      modelos del contrato my-day, enums, estado del técnico (calculado)
-  data/        repositories.dart (interfaces) + mock/ (datos de prueba) + providers.dart
+    data/        repositories.dart (interfaces) + mock/ (datos de prueba) + local/ (base Drift y cola) + providers.dart
   features/    auth · shell (pestañas por permisos) · my_day (lista y tarjeta de visita)
 assets/mock/   JSON de ejemplo: my_day, sesión de técnico y de jefe, settings
 docs/          contrato_api.md y base_local_drift.dart.txt (para el paso 2)
@@ -84,6 +84,74 @@ erDiagram
 **Estados de `outbox_events.state`:** `grace` (10 s para deshacer, no enviable) → `pending` → `sending` → `failed` (se reintenta). Deshacer borra la fila.
 
 **Nota:** las relaciones por `visit_id` son lógicas. Drift no declara llaves foráneas reales en este esquema, así que la base no impide guardar un `visit_id` que no exista en `cached_visits`.
+
+
+
+
+## Cómo se mapea `GET /api/my-day`
+
+Contrato completo en `docs/contrato_api.md`. Ejemplo real en `assets/mock/my_day.json`.
+
+### Flujo
+
+```mermaid
+flowchart LR
+    A["Servidor Laravel<br/>GET /api/my-day"] -->|JSON| B["VisitRepository.myDay()"]
+    B -->|"fromJson (a mano)"| C["Modelos Dart<br/>DayRoute > Visit"]
+    C --> D["Pantallas<br/>(Riverpod)"]
+    B -.->|"bloque 4"| E[("cached_visits<br/>json + columnas")]
+    E -.->|"sin señal"| B
+    F[("outbox_events")] -.->|"bloque 4: estado = JSON + cola"| D
+```
+
+Las líneas punteadas están **pendientes** (bloque 4). Hoy el repositorio de prueba lee el JSON de `assets/mock/` y lo convierte directo en modelos.
+
+### Estructura del JSON y su modelo Dart
+
+```mermaid
+classDiagram
+    DayRoute "1" --> "*" Visit
+    Visit --> Client
+    Visit --> Place
+    Visit --> Job
+    Visit --> "*" Person : companions
+    Place --> Contact
+    Job --> Person : engineer
+
+    class DayRoute { date, visits }
+    class Visit { id, order, status, result, scheduledAt, dayNumber, responsible, arrivedAt, kmFromPrevious }
+    class Client { id, name, overdue }
+    class Place { id, name, address, lat, lng, estimatedKmFromOffice, accessNotes }
+    class Contact { name, role, phone, authorized }
+    class Job { id, folio, type, priority, coverage, description, planSummary, warrantyGuide }
+    class Person { id, name }
+```
+
+Todos los modelos están en `lib/domain/models.dart` y se parsean a mano con `fromJson`.
+
+### Campo por campo
+
+| JSON | Modelo Dart | Notas |
+|---|---|---|
+| `date` | `DayRoute.date` | |
+| `visits[]` | `DayRoute.visits` | Se ordena por `order` al parsear |
+| `visits[].status` | `Visit.status` (`VisitStatus`) | `pending`, `en_route`, `on_site`, `done`. Un valor desconocido cae en `pending` |
+| `visits[].result` | `Visit.result` (`VisitResult?`) | `finished`, `continue`, `blocked`, `no_answer`. Nulo si no está `done` |
+| `scheduled_at`, `arrived_at` | `scheduledAt`, `arrivedAt` | Se convierten a UTC. Se muestran en America/Mexico_City con `formatClock` |
+| `day_number` | `dayNumber` | "Día N" sin total |
+| `responsible` | `responsible` | `false` = acompañante |
+| `companions[]` | `List<Person>` | |
+| `km_from_previous` | `kmFromPrevious` | Alimenta la espera de "No me abren" |
+| `client` | `Client` | `overdue` es solo sí/no, nunca montos |
+| `place` | `Place` | `lat`, `lng` y `estimated_km_from_office` pueden ser nulos |
+| `place.contact` | `Contact?` | `authorized` = puede pedir extras |
+| `job.type` | `Job.type` (`JobType`) | `installation`, `corrective`, `preventive` |
+| `job.priority` | `Job.priority` (`Priority`) | `normal`, `urgent` |
+| `job.coverage` | `Job.coverage` (`Coverage`) | `paid`, `warranty`, `policy` |
+| `job.engineer` |
+
+
+
 
 ## Qué falta (siguientes pasos)
 2. Salida ("Llevo todo"), Llegué manual, cola local con Drift y 10 s para deshacer.

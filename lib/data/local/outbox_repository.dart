@@ -17,6 +17,7 @@ class OutboxRepository {
       final AppDatabase _db;
       final DateTime Function() _now; // se inyecta para poder probar el tiempo
       final Uuid _uuid;
+      
   /// Guarda una acción en estado `grace`. Los segundos de gracia vienen de
   /// los parámetros del servidor (`undo_seconds`), nunca fijos en el código.
   Future<String> enqueue ({

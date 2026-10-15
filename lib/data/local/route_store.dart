@@ -11,9 +11,9 @@ class RouteStore {
 
   /// Recibe el JSON crudo de GET /api/my-day. Solo se guarda el día vigente.
   Future<void> saveDay(Map<String, dynamic> raw) async {
-    final date = raw['Date'] as String;
+    final date = raw['date'] as String;
     final visits = ((raw['visits'] as List?) ?? const [])
-      .cast<Map<String, dynamic>>();
+        .cast<Map<String, dynamic>>();
 
     await _db.transaction(() async {
       await _db.delete(_db.cachedVisits).go();

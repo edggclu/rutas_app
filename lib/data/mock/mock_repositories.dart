@@ -34,9 +34,9 @@ class MockAuthRepository implements AuthRepository {
 
 class MockVisitRepository implements VisitRepository {
   @override
-  Future<DayRoute> myDay(DateTime date) async {
+  Future<Map<String, dynamic>> fetchMyDay(DateTime date) async {
     await Future<void>.delayed(const Duration(milliseconds: 400));
-    return DayRoute.fromJson(await _loadJson('assets/mock/my_day.json'));
+    return _loadJson('assets/mock/my_day.json');
   }
 }
 class MockSettingsRepository implements SettingsRepository {

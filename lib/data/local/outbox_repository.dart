@@ -17,7 +17,7 @@ class OutboxRepository {
       final AppDatabase _db;
       final DateTime Function() _now; // se inyecta para poder probar el tiempo
       final Uuid _uuid;
-      
+
   /// Guarda una acción en estado `grace`. Los segundos de gracia vienen de
   /// los parámetros del servidor (`undo_seconds`), nunca fijos en el código.
   Future<String> enqueue ({
@@ -80,4 +80,9 @@ class OutboxRepository {
     return batch;
   }
 
+  /// Todas las acciones en orden. Se vuelve a emitir cada vez que la cola
+  /// cambia (encolar, deshacer, liberar), y así la pantalla se actualiza sola.
+  Stream<List<OutboxEvent>> watchAll() => (_db.select(_db.outboxEvents)
+    ..orderBy([(e) => OrderingTerm.asc(e.seq)]))
+    .watch();
 }

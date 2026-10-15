@@ -182,6 +182,26 @@ class Visit {
         place: Place.fromJson(j['place'] as Map<String, dynamic>),
         job: Job.fromJson(j['job'] as Map<String, dynamic>),
       );
+
+      Visit copyWith ({
+        VisitStatus? status,
+        VisitResult? result,
+        DateTime? arrivedAt,
+      }) => 
+          Visit(
+            id: id, 
+            order: order, 
+            status: status ?? this.status, 
+            result: result ?? this.result,
+            scheduledAt: scheduledAt,
+            dayNumber: dayNumber,
+            responsible: responsible, 
+            companions: companions, 
+            arrivedAt: arrivedAt ?? this.arrivedAt,
+            kmFromPrevious: kmFromPrevious,
+            client: client, 
+            place: place, 
+            job: job);
 }
 
 class DayRoute {

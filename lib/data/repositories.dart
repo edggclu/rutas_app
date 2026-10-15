@@ -12,7 +12,8 @@ abstract class AuthRepository {
 }
 
 abstract class VisitRepository {
-  Future<DayRoute> myDay(DateTime date);
+  // Future<DayRoute> myDay(DateTime date);
+  Future<Map<String,dynamic>> fetchMyDay(DateTime date);
 }
 
 abstract class SettingsRepository {

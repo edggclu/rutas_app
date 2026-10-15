@@ -40,7 +40,7 @@ class MyDayScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
                   OutlinedButton(
                     style: OutlinedButton.styleFrom(minimumSize: const Size(160, 44)),
-                    onPressed: () => ref.invalidate(myDayProvider),
+                    onPressed: () => ref.invalidate(myDayBaseProvider),
                     child: const Text('Reintentar'),
                   ),
                 ],

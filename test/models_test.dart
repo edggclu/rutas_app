@@ -48,7 +48,7 @@ void main() {
     expect(c.source, ChecklistSource.plan);
     expect(c.materials.length, 3);
     expect(c.tools.single.text, 'Escalera de 6 m');
-    expect(c.materials[1].quantityLabel, '×120');
+    expect(c.materials[1].quantityLabel, 'x120');
     expect(route.visits[1].checklist.source, ChecklistSource.none);
   });
 }

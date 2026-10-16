@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/> <!-- permiso de ubicación precisa (GPS) -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/> <!-- permiso de ubicación aproximada (Android lo pide junto con la precisa) -->
     <application
         android:label="telyser_app"
         android:name="${applicationName}"

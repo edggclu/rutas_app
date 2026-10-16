@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
 /// Botón que se confirma deslizando (evita toques accidentales con el teléfono
-/// en la bolsa). El paso de "10 segundos para deshacer" se agrega en el paso 2,
-/// junto con la cola de acciones: aquí solo avisa con [onConfirmed].
+/// en la bolsa). El deshacer lo maneja quien recibe onConfirmed: showUndoBar y la cola
 class SlideToConfirm extends StatefulWidget {
   const SlideToConfirm({
     super.key,

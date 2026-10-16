@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:telyser_app/data/visit_actions.dart';
 
 import '../domain/app_settings.dart';
 import '../domain/models.dart';
@@ -102,3 +103,10 @@ final myDayProvider = Provider<AsyncValue<DayRoute>>((ref) {
   final events = ref.watch(visitEventsProvider).value ?? const <VisitEvent>[];
   return base.whenData((route) => applyEvents(route, events));
 });
+
+/// Acciones del técnico (encolan eventos). Lee `undo_seconds` de los
+/// parámetros descargados, nunca un número fijo.
+final visitActionsProvider = Provider<VisitActions>((ref) => VisitActions(
+      ref.watch(outboxRepositoryProvider),
+      () async => (await ref.read(settingsProvider.future)).undoSeconds,
+    ));

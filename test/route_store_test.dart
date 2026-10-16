@@ -31,7 +31,7 @@ void main() {
   test('las columnas consultables se llenan', () async {
     await store.saveDay(raw);
     final rows = await db.select(db.cachedVisits).get();
-    expect(rows.map((r) => r.status), ['en_route', 'pending', 'pending']);
+    expect(rows.map((r) => r.status), ['pending', 'pending', 'pending']);
     expect(rows.map((r) => r.orderInRoute), [1, 2, 3]);
   });
 

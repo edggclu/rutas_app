@@ -150,7 +150,58 @@ Todos los modelos están en `lib/domain/models.dart` y se parsean a mano con `fr
 | `job.coverage` | `Job.coverage` (`Coverage`) | `paid`, `warranty`, `policy` |
 | `job.engineer` |
 
+## Cómo funciona una acción del técnico (ejemplo: Salida)
 
+```mermaid
+sequenceDiagram
+    actor T as Técnico
+    participant UI as Pantalla (DepartureScreen)
+    participant A as VisitActions
+    participant O as outbox_events (cola)
+    participant S as myDayProvider (applyEvents)
+
+    T->>UI: desliza "Llevo todo"
+    UI->>A: confirmDeparture()
+    A->>O: enqueue(missing_items) y enqueue(departure_confirmed), estado grace
+    O-->>S: watchAll() emite la cola
+    S-->>UI: visita 1 = En camino
+    UI-->>T: barra "quedan 10 s · Deshacer"
+    alt toca Deshacer antes de 10 s
+        T->>A: undo()
+        A->>O: borra las filas
+        O-->>S: emite otra vez
+        S-->>UI: visita 1 vuelve a Por hacer
+    else pasan 10 s
+        Note over O: sigue en grace. El enviador (paso 8) llama releaseExpired(), las pasa a pending y las manda en orden
+    end
+```
+
+**Regla de oro:** las pantallas nunca cambian el estado de una visita directamente. Solo encolan eventos; el estado se **recalcula** como `ruta del servidor + eventos de la cola`. Por eso deshacer es borrar una fila y por eso el estado sobrevive a cerrar la app.
+
+### Mapa de archivos
+
+| Archivo | Qué hace |
+|---|---|
+| `data/local/app_database.dart` | Define las 4 tablas de SQLite y abre `telyser.sqlite` en el teléfono. |
+| `data/local/outbox_repository.dart` | La cola: `enqueue` (guarda en `grace`), `undo` (borra si sigue en gracia), `releaseExpired` (pasa a `pending`), `nextBatch` (lo enviable, en orden) y `watchAll` (avisa a la UI cuando cambia). |
+| `data/local/settings_store.dart` | Guarda y lee los parámetros (`undo_seconds`, 150 m, etc.) en `settings_kv`. |
+| `data/local/route_store.dart` | Guarda la ruta del día en `cached_visits` (JSON completo más columnas consultables) y la lee sin señal. |
+| `data/visit_actions.dart` | Decide qué eventos se encolan por cada acción del técnico y devuelve un comprobante para deshacer. |
+| `data/providers.dart` | Conecta todo con Riverpod. `myDayBaseProvider` baja y guarda la ruta, `visitEventsProvider` escucha la cola y `myDayProvider` los combina. |
+| `domain/app_settings.dart` | Modelo de los parámetros del servidor. |
+| `domain/event_types.dart` | Nombres de los tipos de evento (`arrived`, `finished`…). |
+| `domain/visit_state.dart` | `applyEvents`: función pura que calcula el estado real de la ruta. Se prueba sin pantallas. |
+| `core/widgets/undo_bar.dart` | Barra "Deshacer" con cuenta regresiva. |
+| `features/departure/departure_screen.dart` | Pantalla C2: lista de material, faltantes y deslizable de salida. |
+
+### Reglas de `applyEvents`
+
+| Evento | Efecto en la ruta |
+|---|---|
+| `departure_confirmed` | La visita pasa de Por hacer a En camino |
+| `arrived` | La visita pasa a En sitio y guarda la hora |
+| `finished`, `continue_tomorrow`, `blocked`, `no_answer_confirmed` | La visita queda Hecha con su resultado y la siguiente por hacer pasa a En camino (salvo que ya haya una En camino o En sitio) |
+| `missing_items`, `no_answer_reported` y demás | No cambian el estado; solo viajan al servidor |
 
 
 ## Qué falta (siguientes pasos)

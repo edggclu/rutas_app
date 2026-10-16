@@ -11,6 +11,7 @@ import '../../domain/models.dart';
 import '../../domain/technician_state.dart';
 import 'visit_card.dart';
 import 'visit_detail_screen.dart';
+import '../departure/departure_screen.dart';
 
 /// C1 · Mi día: la ruta del día en orden y el estado del técnico.
 class MyDayScreen extends ConsumerWidget {
@@ -71,7 +72,7 @@ class _Content extends StatelessWidget {
     ];
     final canPrepareDeparture = route.visits.isNotEmpty &&
         route.visits.every((v) =>
-            v.status == VisitStatus.pending || v.status == VisitStatus.enRoute);
+            v.status == VisitStatus.pending);
 
     return Column(
       children: [
@@ -136,10 +137,11 @@ class _Content extends StatelessWidget {
             color: Colors.white,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: FilledButton(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Salida llega con el paso 2.')),
-              ),
-              child: const Text('Preparar salida'),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => DepartureScreen(route: route),
+                )
+              ), child: null,
             ),
           ),
       ],

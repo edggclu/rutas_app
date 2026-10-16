@@ -30,9 +30,25 @@ void main() {
   });
 
   test('el estado del técnico se calcula de sus visitas', () {
-    final s = computeTechnicianState(route.visits);
+    // Antes de salir, todas Por hacer: Libre.
+    expect(computeTechnicianState(route.visits).kind, TechStateKind.free);
+
+    final enRoute = [
+      route.visits.first.copyWith(status: VisitStatus.enRoute),
+      ...route.visits.skip(1),
+    ];
+    final s = computeTechnicianState(enRoute);
     expect(s.kind, TechStateKind.enRoute);
     expect(s.label, 'En camino a Hotel Bahía');
     expect(computeTechnicianState(const []).kind, TechStateKind.free);
+  });
+
+  test('el checklist de la visita 101 viene del plan', () {
+    final c = route.visits.first.checklist;
+    expect(c.source, ChecklistSource.plan);
+    expect(c.materials.length, 3);
+    expect(c.tools.single.text, 'Escalera de 6 m');
+    expect(c.materials[1].quantityLabel, '×120');
+    expect(route.visits[1].checklist.source, ChecklistSource.none);
   });
 }

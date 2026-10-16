@@ -123,6 +123,65 @@ class Job {
       );
 }
 
+class ChecklistItem {
+
+  final int id;
+  final ChecklistKind kind;
+  final String text;
+  final num? quantity;
+
+  /// Producto del catálogo, si el renglón viene de uno (la herramienta no).
+  final int? productId;
+
+  const ChecklistItem({
+    required this.id,
+    required this.kind,
+    required this.text,
+    this.quantity,
+    this.productId
+  });
+  /// "×8", "×120" o "" si no hay cantidad. Los enteros se muestran sin ".0".
+  String get quantityLabel {
+    final q = quantity;
+    if (q== null) return '';
+    return 'x${q% 1 == 0 ? q.toInt() : q}';
+    // return (q==null) ? '' : 'x${q% 1 == 0 ? q.toInt() : q}';
+  }
+
+  factory ChecklistItem.fromJson(Map<String, dynamic> j) => ChecklistItem(
+    id: j['id'] as int, 
+    kind: ChecklistKind.parse(j['kind'] as String?),
+    text: j['text'] as String,
+    quantity: j['quantity'] as num?,
+    productId: j['product_id'] as int?
+  );
+}
+
+/// Lista de material y herramienta que el técnico revisa antes de salir.
+class Checklist {
+  final ChecklistSource source;
+  final List<ChecklistItem> items;
+  const Checklist({required this.source, required this.items});
+
+  /// Sin lista: el técnico lleva su material de siempre.
+  static const empty = Checklist(source: ChecklistSource.none, items: []);
+
+  // Listas de materiales y herramientas
+  List<ChecklistItem> get materials =>
+    items.where((item) => item.kind == ChecklistKind.material).toList();
+  List<ChecklistItem> get tools =>
+    items.where((item) => item.kind == ChecklistKind.tool).toList();
+
+  factory Checklist.fromJson(Map<String, dynamic> j) => Checklist(
+    source: ChecklistSource.parse(j['source'] as String?), 
+    items: ((j['items'] as List?) ?? const [])
+      .map((e) => ChecklistItem.fromJson(e as Map<String, dynamic>))
+      .toList()
+    );
+}
+
+
+
 class Visit {
   const Visit({
     required this.id,
@@ -138,6 +197,7 @@ class Visit {
     required this.client,
     required this.place,
     required this.job,
+    this.checklist = Checklist.empty
   });
 
   final int id;
@@ -161,6 +221,9 @@ class Visit {
   final Place place;
   final Job job;
 
+  // Lista de salida, vacia si el servidor no manda ninguna
+  final Checklist checklist;
+
   factory Visit.fromJson(Map<String, dynamic> j) => Visit(
         id: j['id'] as int,
         order: j['order'] as int,
@@ -181,6 +244,9 @@ class Visit {
         client: Client.fromJson(j['client'] as Map<String, dynamic>),
         place: Place.fromJson(j['place'] as Map<String, dynamic>),
         job: Job.fromJson(j['job'] as Map<String, dynamic>),
+        checklist: j['checklist'] == null 
+          ? Checklist.empty 
+          : Checklist.fromJson(j['checklist'] as Map<String, dynamic>)
       );
 
       Visit copyWith ({
@@ -201,7 +267,9 @@ class Visit {
             kmFromPrevious: kmFromPrevious,
             client: client, 
             place: place, 
-            job: job);
+            job: job,
+            checklist: checklist
+            );
 }
 
 class DayRoute {

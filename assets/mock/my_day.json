@@ -4,7 +4,7 @@
   "technician": { "id": 7, "name": "Pedro" },
   "visits": [
     {
-      "id": 101, "order": 1, "status": "en_route", "result": null,
+      "id": 101, "order": 1, "status": "pending", "result": null,
       "scheduled_at": "2026-10-06T14:00:00Z", "day_number": 1, "responsible": true,
       "companions": [{ "id": 3, "name": "Toño" }],
       "arrived_at": null, "left_at": null, "km_from_previous": 12.4,
@@ -14,6 +14,15 @@
         "lat": 20.7002, "lng": -105.2943, "estimated_km_from_office": 12.4,
         "access_notes": "Entrar por la puerta de servicio, preguntar por mantenimiento.",
         "contact": { "name": "Ing. Ramírez", "role": "Mantenimiento", "phone": "3221234567", "authorized": true }
+      },
+      "checklist" : {
+        "source": "plan",
+          "items": [
+            { "id": 1, "kind": "material", "text": "Cámaras IP", "quantity": 8, "product_id": 301 },
+            { "id": 2, "kind": "material", "text": "Cable UTP (m)", "quantity": 120, "product_id": 302 },
+            { "id": 3, "kind": "material", "text": "Grabador NVR", "quantity": 1, "product_id": 303 },
+            { "id": 4, "kind": "tool", "text": "Escalera de 6 m", "quantity": 1, "product_id": null }
+          ]
       },
       "job": {
         "id": 14, "folio": "TEL-2610-014", "type": "installation", "priority": "normal", "coverage": "paid",
@@ -36,6 +45,7 @@
         "access_notes": "Calle angosta. Tocar el timbre de la cocina.",
         "contact": { "name": "Sra. Lupita", "role": "Dueña", "phone": "3229876543", "authorized": true }
       },
+      "checklist": { "source": "none", "items": [] },
       "job": {
         "id": 21, "folio": "TEL-2610-021", "type": "corrective", "priority": "normal", "coverage": "warranty",
         "status": "scheduled",
@@ -58,6 +68,7 @@
         "access_notes": "Anunciarse con el guardia y pedir al administrador.",
         "contact": { "name": "Lic. Ortega", "role": "Administrador", "phone": "3225551212", "authorized": true }
       },
+      "checklist": { "source": "none", "items": [] },
       "job": {
         "id": 9, "folio": "TEL-2610-009", "type": "preventive", "priority": "normal", "coverage": "policy",
         "status": "scheduled",

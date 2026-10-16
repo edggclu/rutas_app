@@ -8,4 +8,5 @@ class EventTypes {
   static const finished = 'finished';
   static const continueTomorrow = 'continue_tomorrow';
   static const blocked = 'blocked';
+  static const missingItems = 'missing_items';
 }

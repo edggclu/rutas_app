@@ -85,3 +85,30 @@ enum Coverage {
     }
   }
 }
+
+/// De dónde sale la lista de salida de una visita (en este orden de prioridad:
+/// plan del ingeniero, cotización, nada).
+enum ChecklistSource {
+  plan,
+  quote,
+  none;
+
+  static ChecklistSource parse(String? s) {
+    switch (s) {
+      case 'plan':
+        return ChecklistSource.plan;
+      case 'quote':
+        return ChecklistSource.quote;
+      default:
+        return ChecklistSource.none;
+    }
+  }
+}
+/// Un renglón es material (se consume o se instala) o herramienta (se regresa).
+enum ChecklistKind {
+  material,
+  tool;
+
+  static ChecklistKind parse(String? s) => 
+    s == 'tool' ?  ChecklistKind.tool : ChecklistKind.material;
+}

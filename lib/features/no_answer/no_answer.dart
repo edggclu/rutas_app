@@ -27,7 +27,7 @@ class NoAnswerScreen extends ConsumerWidget {
   String _clock(Duration d) {
     final m = d.inMinutes.toString().padLeft(2, '0'); // minutos totales, con dos dígitos
     final s = (d.inSeconds % 60).toString().padLeft(2, '0'); // segundos
-    return '$m$s';
+    return '$m:$s';
   }
 
   /// Llamar o whatsapp registra intento si se abrio la app

@@ -11,6 +11,7 @@ import 'local/route_store.dart';
 import 'local/settings_store.dart';
 import 'mock/mock_repositories.dart';
 import 'repositories.dart';
+import 'location_service.dart'; // el servicio de ubicación
 
 // Para conectar la API real: cambiar estas tres líneas por las implementaciones HTTP.
 final authRepositoryProvider =
@@ -104,9 +105,24 @@ final myDayProvider = Provider<AsyncValue<DayRoute>>((ref) {
   return base.whenData((route) => applyEvents(route, events));
 });
 
-/// Acciones del técnico (encolan eventos). Lee `undo_seconds` de los
-/// parámetros descargados, nunca un número fijo.
-final visitActionsProvider = Provider<VisitActions>((ref) => VisitActions(
-      ref.watch(outboxRepositoryProvider),
-      () async => (await ref.read(settingsProvider.future)).undoSeconds,
-    ));
+/// El servicio de ubicacion real. En tests se sustituye por uno falso.
+final locationServiceProvider = Provider<LocationService>(
+  (ref) => DeviceLocationService()); // la versión que usa el GPS
+
+  /// Acciones del técnico (encolan eventos).
+  final visitActionsProvider = Provider<VisitActions> ((ref) => VisitActions(
+    ref.watch(outboxRepositoryProvider), // le da la cola 
+    () async => (await ref.read(settingsProvider.future)).undoSeconds, // le da cómo leer los segundos de deshacer
+     ref.watch(locationServiceProvider)
+  )
+);
+
+/// Una visita por su id, siempre con el estado actual (servidor + cola).
+final visitByIdProvider = Provider.family<Visit?, int> ((ref, id) { // family = uno por cada id
+  final route = ref.watch(myDayProvider).value;
+  if (route == null) return null; // todavía no carga: no hay visita
+  for (final v in route.visits) { // recorre las visitas de la ruta
+    if (v.id == id) return v; // la encontró: la devuelve
+  }
+  return null; // ninguna coincide con ese id
+}); 

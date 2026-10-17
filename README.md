@@ -203,6 +203,43 @@ sequenceDiagram
 | `finished`, `continue_tomorrow`, `blocked`, `no_answer_confirmed` | La visita queda Hecha con su resultado y la siguiente por hacer pasa a En camino (salvo que ya haya una En camino o En sitio) |
 | `missing_items`, `no_answer_reported` y demás | No cambian el estado; solo viajan al servidor |
 
+### Llegué manual y "¿Ya te abrieron?"
+
+```mermaid
+sequenceDiagram
+    actor T as Técnico
+    participant D as VisitDetailScreen
+    participant A as VisitActions.arrive()
+    participant L as LocationService (GPS)
+    participant O as outbox_events (cola)
+    participant S as myDayProvider (applyEvents)
+
+    T->>D: desliza "Llegué"
+    D->>A: arrive(visitId)
+    A->>L: currentPosition()
+    L-->>A: lat/lng (o null si no hay GPS o permiso)
+    A->>O: enqueue(arrived, {mode: manual, lat, lng}) en estado grace
+    O-->>S: watchAll() emite la cola
+    S-->>D: visita = En sitio, y aparece el panel "¿Ya te abrieron?"
+    alt toca Deshacer antes de 10 s
+        T->>A: undo()
+        A->>O: borra la fila
+        S-->>D: visita = En camino, vuelve el deslizable
+    else toca Empezar
+        D->>T: abre la pantalla En sitio
+    end
+```
+
+| Archivo | Qué hace |
+|---|---|
+| `data/location_service.dart` | `LocationService` (contrato) y `DeviceLocationService` (GPS real). Lee la ubicación una sola vez. Si falla, devuelve `null` y Llegué se marca igual. |
+| `data/visit_actions.dart` | `arrive()` encola `arrived` con `{mode, lat, lng}`. |
+| `data/providers.dart` | `visitByIdProvider`: una visita por id con su estado actual (servidor + cola). |
+| `features/my_day/visit_detail_loader.dart` | Lee la visita actual y se la pasa a la tarjeta para que se redibuje sola. |
+| `features/my_day/arrival_panel.dart` | Panel "¿Ya te abrieron?" con Empezar y No me abren. |
+| `features/site/site_screen.dart` | Pantalla En sitio (provisional hasta el paso 4). |
+
+
 
 ## Qué falta (siguientes pasos)
 2. Salida ("Llevo todo"), Llegué manual, cola local con Drift y 10 s para deshacer.

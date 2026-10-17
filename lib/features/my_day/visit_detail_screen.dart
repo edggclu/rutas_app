@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:telyser_app/core/widgets/undo_bar.dart';
+import 'package:telyser_app/data/providers.dart';
+import 'package:telyser_app/features/my_day/arrival_panel.dart';
+import 'package:telyser_app/features/site/site_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -9,10 +14,9 @@ import '../../domain/enums.dart';
 import '../../domain/models.dart';
 import 'visit_tags.dart';
 
-/// C3 · Tarjeta de visita (En camino): todo lo necesario para llegar y saber
-/// qué hacer. "Llegué" todavía no cambia el estado: eso entra en el paso 2,
-/// junto con la cola de acciones y los 10 segundos para deshacer.
-class VisitDetailScreen extends StatelessWidget {
+/// C3 · Tarjeta de visita: todo lo necesario para llegar y saber qué hacer.
+/// Abajo muestra el deslizable "Llegué" o, si ya llegó, el panel "¿Ya te abrieron?".
+class VisitDetailScreen extends ConsumerWidget {
   const VisitDetailScreen({super.key, required this.visit});
 
   final Visit visit;
@@ -52,12 +56,27 @@ class VisitDetailScreen extends StatelessWidget {
     );
     if (!ok && context.mounted) _toast(context, 'No se pudo abrir WhatsApp.');
   }
+  Future<void> _arrive(BuildContext content, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(content);
+    final actions = ref.read(visitActionsProvider); // las acciones del técnico
+    try {
+      final receipt = await actions.arrive(visitId: visit.id); // lee GPS y guarda "llegué" en la cola
+      showUndoBar(
+        messenger, 
+        message: "Marcaste Llegue", 
+        seconds: receipt.graceSeconds, 
+        onUndo: () => actions.undo(receipt)); // qué hacer si toca Deshacer: borrar de la cola
+    } catch (_) { // no se pudo guardar en la base local
+      messenger.showSnackBar(const SnackBar(
+        content: Text("No se pudo guardar tu llegada. Intenta de nuevo")));
+    }
+  }
 
   void _toast(BuildContext context, String msg) =>
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final job = visit.job;
     final place = visit.place;
     final contact = place.contact;
@@ -202,18 +221,31 @@ class VisitDetailScreen extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            color: Colors.white,
-            padding: EdgeInsets.fromLTRB(
-                16, 12, 16, 12 + MediaQuery.of(context).padding.bottom),
-            child: SlideToConfirm(
-              label: 'Desliza: Llegué',
-              onConfirmed: () => _toast(
+          if(visit.status == VisitStatus.onSite)
+            // si ya llego muestra: "Ya te abrieron?"
+            ArrivalPanel(
+              visit: visit, 
+              // al tocar "Empezar"
+              onStart: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => SiteScreen(visitId: visit.id),
+                )
+              ), 
+              // al tocar 'no me abren'
+              onNoAnswer: () => _toast(
                 context,
-                'Llegué se conecta en el paso 2 (cola de acciones).',
-              ),
-            ),
-          ),
+                'TODO: La cuenta regresiva '
+              )
+            )
+          // si no ha llegado y la visita no está terminada
+          else if (visit.status != VisitStatus.done)
+            Container (
+              color: Colors.white,
+              padding: EdgeInsets.fromLTRB(16, 12, 16,
+                        12 + MediaQuery.of(context).padding.bottom),
+              child: SlideToConfirm(
+                label: 'Desliza: LLegue', 
+                onConfirmed: () => _arrive(context,ref)),
+            )
         ],
       ),
     );

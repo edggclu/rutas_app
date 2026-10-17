@@ -10,8 +10,8 @@ import '../../domain/enums.dart';
 import '../../domain/models.dart';
 import '../../domain/technician_state.dart';
 import 'visit_card.dart';
-import 'visit_detail_screen.dart';
 import '../departure/departure_screen.dart';
+import 'visit_detail_loader.dart';
 
 /// C1 · Mi día: la ruta del día en orden y el estado del técnico.
 class MyDayScreen extends ConsumerWidget {
@@ -123,7 +123,7 @@ class _Content extends StatelessWidget {
                         visit: v,
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute<void>(
-                            builder: (_) => VisitDetailScreen(visit: v),
+                            builder: (_) => VisitDetailLoader(visitId: v.id),
                           ),
                         ),
                       ),

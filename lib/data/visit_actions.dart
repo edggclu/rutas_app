@@ -1,72 +1,88 @@
 import 'package:telyser_app/data/local/outbox_repository.dart';
+import 'package:telyser_app/data/location_service.dart';
 import 'package:telyser_app/domain/enums.dart';
 import 'package:telyser_app/domain/event_types.dart';
 import 'package:telyser_app/domain/models.dart';
 
-/// Comprobante de lo que se encoló: sirve para deshacerlo.
+/// Comprobante de lo que se encolo, sirve para deshacerlo
 class ActionReceipt {
 
-  /// Identificadores de las filas creadas en la cola.
+  /// Identificadores de las filas creadas en la cola
   final List<String> uuids;
 
-  // Segundos que dura el tiempo para deshacer (parametro 'undo_seconds')
+  /// Segundos que dura el tiempo para deshacer (parametro: 'undo_seconds')
   final int graceSeconds;
-
+  
   const ActionReceipt(this.uuids, this.graceSeconds);
 }
 
-/// Acciones del tecnico. Cada metodo guarda eventos en la cola (en estado
-/// 'grace') y devuelve un comprobante.
+/// Acciones del tecnico. Cada metodo guarda eventos en la cola (en estado 'grace') y devuelve un comprobante.
+/// Esta clase decide que eventos se encolan por cada accion
 class VisitActions {
+  final OutboxRepository _outbox; // la cola donde se guarda todo
+  final Future<int> Function() _graceSeconds; // función que lee `undo_seconds` de los parámetros
+  final LocationService _location; // quien sabe dar la ubicacion real o falsa en tests
 
-  final OutboxRepository _outbox;
+  VisitActions(this._outbox, this._graceSeconds, this._location);
 
-  /// Lee 'undo_seconds' de los parametros. Se inyecta para poder probar sin pantallas ni Riverpod.
-  final Future<int> Function() _graceSeconds;
-
-  VisitActions(this._outbox, this._graceSeconds);
-
-  /// "Llevo todo" / salir con faltantes
-  /// 
-  /// Encola, en este orden:
-  /// 1. un 'missing_items' por cada visita que tenga renglones faltantes
-  /// 2. un 'departure_confirmed' de la primera visita por hacer.
-  /// 
-  /// [missing] es id: de visita -> renglones que faltan.
-  Future<ActionReceipt> confirmDeparture({
+  // Levo todo o Salir con faltantes
+  Future<ActionReceipt> confirmDeparture({ // encola los eventos de la salida
     required List<Visit> visits,
-    required Map<int, List<ChecklistItem>> missing,
+    required Map<int, List<ChecklistItem>> missing, // id de visita : item que falta
   }) async {
-    final grace = await _graceSeconds();
-    final first = visits.firstWhere((v) => v.status == VisitStatus.pending);
+    final grace = await _graceSeconds(); // lee los segundos
+    final first = visits.firstWhere((v) => v.status == VisitStatus.pending); // primera visita por hacer
     final uuids = <String>[];
 
+    // recorre cada visita que tiene faltantes
     for (final entry in missing.entries) {
       uuids.add(await _outbox.enqueue(
-        type: EventTypes.missingItems, graceSeconds: grace,
-        visitId: entry.key,
+        type: EventTypes.missingItems, 
+        graceSeconds: grace,
+        visitId: entry.key, // de que visita es
         payload: {
           'items': [
-            for (final i in entry.value) {
-              'id': i.id, 'text': i.text, 'kind': i.kind.name
-            }
+            for (final i in entry.value) // cada item faltante
+            {'id': i.id, 'text': i.text, 'kind': i.kind.name},
           ]
         }
       ));
     }
-    uuids.add(await _outbox.enqueue(
-      type: EventTypes.departureConfirmed, 
-      graceSeconds: grace,
-      visitId: first.id));
 
-      return ActionReceipt(uuids, grace);
+    // Encola la salida, siempre va después de los faltantes
+    uuids.add(await _outbox.enqueue(
+      type: EventTypes.departureConfirmed, // salida confirmada
+      graceSeconds: grace,
+      visitId: first.id
+    ));
+
+    // devuelve el comprobante
+    return ActionReceipt(uuids, grace);
   }
 
-  /// Deshace todo lo que contiene el comprobante. Cada fila se borra solo si
-  /// sigue en gracia; pasado el tiempo ya no se puede.
-  Future<void> undo(ActionReceipt receipt) async {
-    for (final id in receipt.uuids) {
-      await _outbox.undo(id);
+    /// "Llegué" manual: guarda la llegada con la hora y la ubicación del momento.
+  Future<ActionReceipt> arrive({required int visitId}) async {
+    final grace = await _graceSeconds(); // lee los segundos para deshacer
+    final point = await _location.currentPosition(); // lee el GPS (puede ser null si no se pudo)
+    final uuid = await _outbox.enqueue( // guarda la acción en la cola
+      type: EventTypes.arrived,
+      graceSeconds: grace,
+      visitId: visitId,
+      payload: { // los datos que viajarán al servidor
+        'mode':'manual', // el tipo de arrive, si se desliza es manual, el automatico es auto
+        'lat': point?.lat, // ? por si regresa nulo
+        'lng':point?.lng
+      }
+    ); 
+    return ActionReceipt([uuid], grace); // comprobante con una sola fila
+  }
+
+  /// Deshace todo lo que contiene el comprobante.
+  Future<void> undo(ActionReceipt receipt) async { // recibe el comprobante de la acción
+    for (final id in receipt.uuids) { // recorre cada fila creada
+      await _outbox.undo(id); // la borra solo si sigue dentro de los segundos de gracia
     }
   }
+
 }
+

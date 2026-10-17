@@ -126,3 +126,13 @@ final visitByIdProvider = Provider.family<Visit?, int> ((ref, id) { // family = 
   }
   return null; // ninguna coincide con ese id
 }); 
+
+/// Reloj que avisa cada segundo. SOLO sirve para redibujar la cuenta regresiva
+/// el tiempo real siempre se calcula desde la hora de llegada guardada
+final tickProvider = StreamProvider.autoDispose<DateTime> (// autoDispose: se apaga al salir de la pantalla
+  (ref) => Stream.periodic( // Stream que emite cada 1 segundo
+    const Duration(seconds: 1),
+    (_) => DateTime.now().toUtc()
+  )
+
+);

@@ -77,6 +77,51 @@ class VisitActions {
     return ActionReceipt([uuid], grace); // comprobante con una sola fila
   }
 
+  /// Toque en "No me abren": avisa a la oficina. Solo se avisa una vez por visita.
+  Future<void> reportNoAnswer({required int visitId}) async {
+    final already = await _outbox.exists(type: EventTypes.noAnswerReported, visitId: visitId); // revisa que no exista un reporte
+    if (already) return;
+
+    // guarda el aviso en la cola
+    await _outbox.enqueue(
+      type: EventTypes.noAnswerReported, 
+      graceSeconds: 0,
+      visitId: visitId);
+  }
+  
+  /// Toque en llamar o whatsApp al cliente. [channel] es 'call' o 'whatsapp'.
+  Future<void> registerClientContact ({
+    required int visitId,
+    required String channel,
+  }) async {
+    // guarda el intento en la cola
+    await _outbox.enqueue(type: EventTypes.clientContacted, graceSeconds: 0,
+      visitId: visitId,
+      payload: {'channel':channel}
+    );
+  }
+
+  /// Toque en 'Llamar a la oficina'
+  Future<void> registerOfficeCall({required int visitId}) async {
+    // guarda el intento en la cola
+    await _outbox.enqueue( 
+      type: EventTypes.officeCalled, // tipo: "llamé a la oficina"
+      graceSeconds: 0,
+      visitId: visitId,
+    );
+  }
+
+  /// Deslizable "No me atendieron": cierra la visita con ese resultado.
+  Future<ActionReceipt> confirmNoAnswer({required int visitId}) async {
+    final grace = await _graceSeconds();
+    final uuid = await _outbox.enqueue(
+      type: EventTypes.noAnswerConfirmed, graceSeconds: grace,
+      visitId: visitId);
+    return ActionReceipt([uuid], grace); // comprobante para poder deshacer
+  }
+
+
+
   /// Deshace todo lo que contiene el comprobante.
   Future<void> undo(ActionReceipt receipt) async { // recibe el comprobante de la acción
     for (final id in receipt.uuids) { // recorre cada fila creada

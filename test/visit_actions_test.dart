@@ -1,19 +1,19 @@
-import 'dart:convert'; // jsonDecode para leer el payload guardado
-import 'dart:io'; // File para leer el JSON de prueba
+import 'dart:convert'; 
+import 'dart:io'; 
 
-import 'package:drift/native.dart'; // base de datos en memoria para tests
-import 'package:flutter_test/flutter_test.dart'; // herramientas de prueba
-import 'package:telyser_app/data/local/app_database.dart'; // la base local
-import 'package:telyser_app/data/local/outbox_repository.dart'; // la cola
-import 'package:telyser_app/data/location_service.dart'; // GeoPoint y LocationService
-import 'package:telyser_app/data/visit_actions.dart'; // las acciones que se prueban
-import 'package:telyser_app/domain/event_types.dart'; // nombres de eventos
-import 'package:telyser_app/domain/models.dart'; // DayRoute y Visit
+import 'package:drift/native.dart'; 
+import 'package:flutter_test/flutter_test.dart'; 
+import 'package:telyser_app/data/local/app_database.dart'; 
+import 'package:telyser_app/data/local/outbox_repository.dart'; 
+import 'package:telyser_app/data/location_service.dart'; 
+import 'package:telyser_app/data/visit_actions.dart'; 
+import 'package:telyser_app/domain/event_types.dart'; 
+import 'package:telyser_app/domain/models.dart'; 
 
 /// Ubicación falsa: devuelve siempre el punto que se le indique (o null).
-class _FakeLocation implements LocationService { // cumple el mismo contrato que la real
-  _FakeLocation(this.point); // recibe el punto a devolver
-  final GeoPoint? point; // el punto falso (null = "no hay ubicación")
+class _FakeLocation implements LocationService { 
+  _FakeLocation(this.point); 
+  final GeoPoint? point; 
   @override
   Future<GeoPoint?> currentPosition() async => point; // devuelve el punto sin tocar el GPS
 }
@@ -23,16 +23,16 @@ void main() {
   late OutboxRepository outbox; // la cola
   late List<Visit> visits; // las visitas del JSON de prueba
 
-  setUp(() { // se ejecuta antes de cada prueba
+  setUp(() { 
     db = AppDatabase.forTesting(NativeDatabase.memory()); // base nueva y vacía
     outbox = OutboxRepository(db, now: () => DateTime.utc(2026, 10, 6, 12)); // cola con reloj fijo
     final raw = File('assets/mock/my_day.json').readAsStringSync(); // lee el JSON de prueba
     visits = DayRoute.fromJson(json.decode(raw) as Map<String, dynamic>).visits; // lo convierte en visitas
   });
 
-  tearDown(() => db.close()); // cierra la base al terminar cada prueba
+  tearDown(() => db.close()); 
 
-  VisitActions build(GeoPoint? point) => // arma las acciones con la ubicación que se indique
+  VisitActions build(GeoPoint? point) => 
       VisitActions(outbox, () async => 10, _FakeLocation(point)); // 10 = segundos para deshacer
 
   test('salida sin faltantes: solo encola la salida, en gracia', () async {
@@ -96,4 +96,38 @@ void main() {
     await actions.undo(receipt); // la deshace dentro de los 10 s
     expect(await db.select(db.outboxEvents).get(), isEmpty); // la cola queda vacía
   });
+
+    test('No me abren avisa una sola vez por visita', () async { // no duplica el aviso
+    final actions = build(null); // las acciones
+    await actions.reportNoAnswer(visitId: 102); // primer toque
+    await actions.reportNoAnswer(visitId: 102); // segundo toque (el técnico volvió a entrar)
+    final rows = await db.select(db.outboxEvents).get(); // lee la cola
+    expect(rows.length, 1); // solo hay un aviso
+    expect(rows.single.type, EventTypes.noAnswerReported); // del tipo correcto
+  });
+
+  test('registrar contacto con el cliente guarda el canal', () async { // llamada o WhatsApp
+    await build(null).registerClientContact(visitId: 102, channel: 'whatsapp'); // toca WhatsApp
+    final row = (await db.select(db.outboxEvents).get()).single; // la única fila
+    expect(row.type, EventTypes.clientContacted); // tipo correcto
+    expect(jsonDecode(row.payloadJson)['channel'], 'whatsapp'); // guardó el canal
+  });
+
+  test('registrar llamada a la oficina guarda el evento', () async { // llamada a la oficina
+    await build(null).registerOfficeCall(visitId: 102); // toca llamar a la oficina
+    final row = (await db.select(db.outboxEvents).get()).single; // la única fila
+    expect(row.type, EventTypes.officeCalled); // tipo correcto
+    expect(row.visitId, 102); // de la visita correcta
+  });
+
+  test('No me atendieron queda en gracia y se puede deshacer', () async { // el cierre es deslizable
+    final actions = build(null); // las acciones
+    final receipt = await actions.confirmNoAnswer(visitId: 102); // desliza
+    final row = (await db.select(db.outboxEvents).get()).single; // la única fila
+    expect(row.type, EventTypes.noAnswerConfirmed); // tipo correcto
+    expect(row.state, 'grace'); // en tiempo de gracia
+    await actions.undo(receipt); // deshace
+    expect(await db.select(db.outboxEvents).get(), isEmpty); // la cola queda vacía
+  });
+
 }

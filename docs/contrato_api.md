@@ -27,13 +27,15 @@ descarga al iniciar el día y **nunca** los escribe fijos en el código.
   "wait_base_min": 10, "wait_per_km_min": 1,
   "min_client_contacts": 1, "min_office_calls": 1,
   "undo_seconds": 10, "credit_authorization_wait_min": 5,
-  "photo_target_kb": 300, "video_max_s": 60
+  "photo_target_kb": 300, "video_max_s": 60,
+  "office_phone": "3220000000"
 }
 ```
 - `credit_authorization_wait_min`: el documento de requisitos dice 15 min en la
   sección 10.2 y 5 min en la 19. Hay que confirmar cuál es.
 - Las familias de material que absorbe Telyser **no** se mandan a la app: el
   servidor marca el material absorbido y el técnico no ve ninguna etiqueta.
+- `office_phone`: teléfono de la oficina. La app lo usa para el botón "Llamar a la oficina".
 
 ## GET /api/my-day?date=YYYY-MM-DD
 Ruta del día del usuario, con todo lo necesario para trabajar sin señal.

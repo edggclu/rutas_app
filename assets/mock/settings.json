@@ -1,12 +1,13 @@
 {
   "arrival_radius_m": 150,
   "arrival_dwell_s": 60,
-  "wait_base_min": 10,
-  "wait_per_km_min": 1,
+  "wait_base_min": 1,
+  "wait_per_km_min": 0,
   "min_client_contacts": 1,
   "min_office_calls": 1,
   "undo_seconds": 10,
   "credit_authorization_wait_min": 5,
   "photo_target_kb": 300,
-  "video_max_s": 60
+  "video_max_s": 60,
+  "office_phone": "3220000000"
 }

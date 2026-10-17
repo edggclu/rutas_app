@@ -239,16 +239,36 @@ sequenceDiagram
 | `features/my_day/arrival_panel.dart` | Panel "¿Ya te abrieron?" con Empezar y No me abren. |
 | `features/site/site_screen.dart` | Pantalla En sitio (provisional hasta el paso 4). |
 
+### "No me abren"
 
+```mermaid
+flowchart TD
+    A["Técnico en el panel ¿Ya te abrieron?"] -->|"toca No me abren"| B["reportNoAnswer()<br/>encola no_answer_reported (una vez)"]
+    B --> C["Pantalla C4: cuenta regresiva"]
+    C -->|"Llamar o WhatsApp al cliente"| D["encola client_contacted"]
+    C -->|"Llamar a la oficina"| E["encola office_called"]
+    D & E & F["Pasa el tiempo de espera"] --> G{"computeNoAnswerStatus:<br/>¿las 3 condiciones?"}
+    G -->|"sí"| H["Se activa el deslizable No me atendieron"]
+    H --> I["confirmNoAnswer()<br/>encola no_answer_confirmed"]
+    I --> J["Visita Hecha (no_answer) y la siguiente En camino"]
+```
 
-## Qué falta (siguientes pasos)
-2. Salida ("Llevo todo"), Llegué manual, cola local con Drift y 10 s para deshacer.
-3. No me abren (espera, llamadas, "No me atendieron").
-4. Extras, solicitudes y garantía.
-5. Plan y Por validar (ingeniero).
-6. Pantalla del jefe de ruta.
-7. Llegué automático (geocerca) y notificaciones push.
-8. API real y pruebas sin señal.
+La espera es `espera base + minutos por km × km` (parámetros del servidor), redondeada hacia arriba al minuto. Siempre se calcula desde la hora de llegada guardada; el reloj de la pantalla solo la redibuja cada segundo.
+
+| Archivo | Qué hace |
+|---|---|
+| `domain/no_answer.dart` | `noAnswerWait`, `waitKm` y `computeNoAnswerStatus`: toda la regla de "No me abren" como funciones puras. |
+| `data/visit_actions.dart` | `reportNoAnswer`, `registerClientContact`, `registerOfficeCall` y `confirmNoAnswer`. |
+| `data/local/outbox_repository.dart` | `exists()`: evita avisar dos veces a la oficina. |
+| `core/contact_launcher.dart` | Abre el marcador y WhatsApp. Devuelve si se pudo abrir. |
+| `features/no_answer/no_answer_screen.dart` | Pantalla C4: cuenta regresiva, requisitos, botones y deslizable. |
+| `data/providers.dart` | `tickProvider`: reloj de 1 s solo para redibujar. |
+
+| Parámetro | Para qué |
+|---|---|
+| `wait_base_min`, `wait_per_km_min` | Cuánto espera el técnico |
+| `min_client_contacts`, `min_office_calls` | Intentos mínimos antes de poder irse |
+| `office_phone` | Teléfono del botón "Llamar a la oficina" |
 
 ## Aviso
 Si `flutter run` o `flutter analyze` marcan errores, probablemente sean detalles menores

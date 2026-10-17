@@ -16,6 +16,7 @@ class AppSettings {
     required this.creditAuthorizationWaitMin,
     required this.photoTargetKb,
     required this.videoMaxS,
+    required this.officePhone,
   });
 
   final int arrivalRadiusM;
@@ -28,6 +29,7 @@ class AppSettings {
   final int creditAuthorizationWaitMin;
   final int photoTargetKb;
   final int videoMaxS;
+  final String officePhone;
 
   factory AppSettings.fromMap(Map<String, dynamic> j) => AppSettings(
     arrivalRadiusM: (j['arrival_radius_m'] as num).toInt(), 
@@ -39,7 +41,8 @@ class AppSettings {
     undoSeconds: (j['undo_seconds']as num).toInt(), 
     creditAuthorizationWaitMin: (j['credit_authorization_wait_min']as num).toInt(), 
     photoTargetKb: (j['photo_target_kb']as num).toInt(), 
-    videoMaxS: (j['video_max_s'] as num).toInt()
+    videoMaxS: (j['video_max_s'] as num).toInt(),
+    officePhone: j['office_phone'] as String,
   );
   
   Map<String, dynamic> toMap() => {
@@ -53,6 +56,7 @@ class AppSettings {
     'credit_authorization_wait_min': creditAuthorizationWaitMin,
     'photo_target_kb': photoTargetKb,
     'video_max_s': videoMaxS,
+    'office_phone': officePhone,
   };
 
 }

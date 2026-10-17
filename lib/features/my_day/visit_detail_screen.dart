@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/core/widgets/undo_bar.dart';
 import 'package:telyser_app/data/providers.dart';
 import 'package:telyser_app/features/my_day/arrival_panel.dart';
+import 'package:telyser_app/features/no_answer/no_answer.dart';
 import 'package:telyser_app/features/site/site_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -69,6 +70,23 @@ class VisitDetailScreen extends ConsumerWidget {
     } catch (_) { // no se pudo guardar en la base local
       messenger.showSnackBar(const SnackBar(
         content: Text("No se pudo guardar tu llegada. Intenta de nuevo")));
+    }
+  }
+    /// se ejecuta al tocar "No me abren" en el panel
+    Future<void> _noAnswer(BuildContext context, WidgetRef ref) async { 
+    final navigator = Navigator.of(context); 
+    final messenger = ScaffoldMessenger.of(context); 
+    try { 
+      await ref.read(visitActionsProvider).reportNoAnswer(visitId: visit.id); // avisa a la oficina una sola vez
+      navigator.push( 
+        MaterialPageRoute<void>( 
+          builder: (_) => NoAnswerScreen(visitId: visit.id), 
+        ),
+      );
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar( 
+        content: Text('No se pudo guardar. Intenta de nuevo.'), 
+      ));
     }
   }
 
@@ -231,11 +249,9 @@ class VisitDetailScreen extends ConsumerWidget {
                 )
               ), 
               // al tocar 'no me abren'
-              onNoAnswer: () => _toast(
-                context,
-                'TODO: La cuenta regresiva '
-              )
+              onNoAnswer: () => _noAnswer(context, ref)
             )
+            
           // si no ha llegado y la visita no está terminada
           else if (visit.status != VisitStatus.done)
             Container (

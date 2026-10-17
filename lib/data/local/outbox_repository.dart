@@ -85,4 +85,14 @@ class OutboxRepository {
   Stream<List<OutboxEvent>> watchAll() => (_db.select(_db.outboxEvents)
     ..orderBy([(e) => OrderingTerm.asc(e.seq)]))
     .watch();
+
+  /// exists() revisa si ya existe una accion para no duplicar avisos y regresa valor booleano
+  Future<bool> exists({required String type, required int visitId}) async {
+    final row = await (_db.select(_db.outboxEvents) // consulta la tabla de la cola
+          ..where((e) => e.type.equals(type) & e.visitId.equals(visitId)) // mismo tipo y misma visita
+          ..limit(1)) // con una fila basta para saber que existe
+        .getSingleOrNull(); // devuelve la fila o null si no hay ninguna
+    return row != null;
+  }
 }
+

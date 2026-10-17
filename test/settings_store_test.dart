@@ -25,6 +25,7 @@ void main(){
     expect (settings.undoSeconds, 10);
     expect(settings.arrivalRadiusM, 150);
     expect(settings.videoMaxS, 60);
+    expect(settings.officePhone, '3220000000'); // el teléfono de la oficina llega del JSON
   });
 
   test('sin nada guardado, load devuelve null', () async {

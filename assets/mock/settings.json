@@ -1,8 +1,8 @@
 {
   "arrival_radius_m": 150,
   "arrival_dwell_s": 60,
-  "wait_base_min": 1,
-  "wait_per_km_min": 0,
+  "wait_base_min": 10,
+  "wait_per_km_min": 1,
   "min_client_contacts": 1,
   "min_office_calls": 1,
   "undo_seconds": 10,

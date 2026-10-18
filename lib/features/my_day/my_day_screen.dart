@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:telyser_app/features/site/site_screen.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/time/time_utils.dart';
@@ -123,7 +124,9 @@ class _Content extends StatelessWidget {
                         visit: v,
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute<void>(
-                            builder: (_) => VisitDetailLoader(visitId: v.id),
+                            builder: (_) => v.status == VisitStatus.onSite // si la visita ya está En sitio
+                              ? SiteScreen(visitId: v.id) // abre la pantalla de trabajo
+                              : VisitDetailLoader(visitId: v.id), // si no, abre la tarjeta de visita
                           ),
                         ),
                       ),

@@ -129,5 +129,16 @@ class VisitActions {
     }
   }
 
+    /// Deslizable "Termine el trabajo" (versión simple: sin confirmar extras todavía).
+  Future<ActionReceipt> finish({required int visitId}) async { 
+    final grace = await _graceSeconds(); // segundos para deshacer, de los parámetros
+    final uuid = await _outbox.enqueue( // guarda el cierre en la cola
+      type: EventTypes.finished, // tipo: "termine el trabajo"
+      graceSeconds: grace, // es deslizable: lleva tiempo para deshacer
+      visitId: visitId, 
+    );
+    return ActionReceipt([uuid], grace); // comprobante para poder deshacer
+  }
+
 }
 

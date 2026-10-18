@@ -270,6 +270,22 @@ La espera es `espera base + minutos por km × km` (parámetros del servidor), re
 | `min_client_contacts`, `min_office_calls` | Intentos mínimos antes de poder irse |
 | `office_phone` | Teléfono del botón "Llamar a la oficina" |
 
+### Pantalla En sitio y fotos
+
+Las fotos se copian a `<documentos de la app>/media/visit_<id>/<uuid>.jpg` y se registran en `media_queue` con estado `pending`. La carpeta de la cámara es temporal y Android puede borrarla, por eso se copia.
+
+| Archivo | Qué hace |
+|---|---|
+| `data/local/media_repository.dart` | `addPhoto` (copia el archivo y crea la fila) y `watchForVisit` (fotos de una visita, en vivo). |
+| `data/visit_actions.dart` | `finish()`: encola `finished` con tiempo para deshacer. |
+| `features/site/site_screen.dart` | Pantalla C5: fotos, extras (4b), cierre. Los acompañantes no ven los botones de cierre. |
+
+| Regla | Dónde |
+|---|---|
+| Solo el responsable cierra la visita | `visit.responsible` en `SiteScreen` |
+| En garantía no se puede terminar sin el bloque de garantía | `isWarranty` deshabilita el deslizable (4c) |
+| Las visitas En sitio abren directo C5 desde Mi día | `my_day_screen.dart` |
+
 ## Aviso
 Si `flutter run` o `flutter analyze` marcan errores, probablemente sean detalles menores
 de sintaxis o de versión de paquetes.

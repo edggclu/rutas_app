@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:telyser_app/data/local/media/media_repository.dart';
 import 'package:telyser_app/data/visit_actions.dart';
 
 import '../domain/app_settings.dart';
@@ -136,3 +138,15 @@ final tickProvider = StreamProvider.autoDispose<DateTime> (// autoDispose: se ap
   )
 
 );
+/// Repositorio de fotos. La carpeta base es la carpeta privada de la app.
+final mediaRepositoryProvider = Provider<MediaRepository>( // crea y comparte el repositorio
+    (ref) => MediaRepository( // lo construye
+          ref.watch(databaseProvider), // con la base local
+          baseDir: getApplicationDocumentsDirectory, // y la carpeta documentos de la app
+        ));
+
+/// Fotos de una visita (se actualiza sola al tomar una foto nueva).
+final mediaForVisitProvider = StreamProvider.autoDispose // autoDispose: se apaga al salir de la pantalla
+    .family<List<MediaQueueData>, int>( // family: una por cada id de visita
+        (ref, visitId) => // recibe el id de la visita
+            ref.watch(mediaRepositoryProvider).watchForVisit(visitId)); // escucha las fotos de esa visita

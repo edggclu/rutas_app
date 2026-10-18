@@ -130,4 +130,14 @@ void main() {
     expect(await db.select(db.outboxEvents).get(), isEmpty); // la cola queda vacía
   });
 
+    test('Terminé el trabajo queda en gracia y se puede deshacer', () async { // cierre simple
+    final actions = build(null); // las acciones
+    final receipt = await actions.finish(visitId: 101); // desliza "Terminé"
+    final row = (await db.select(db.outboxEvents).get()).single; // la única fila
+    expect(row.type, EventTypes.finished); // tipo correcto
+    expect(row.visitId, 101); // visita correcta
+    expect(row.state, 'grace'); // en tiempo de gracia
+    await actions.undo(receipt); // deshace
+    expect(await db.select(db.outboxEvents).get(), isEmpty); // la cola queda vacía
+  });
 }

@@ -1,0 +1,8 @@
+[
+  { "id": 301, "name": "Cámara IP 4 MP", "unit": "piece", "price": 1850, "is_equipment": true },
+  { "id": 303, "name": "Grabador NVR 8 canales", "unit": "piece", "price": 4200, "is_equipment": true },
+  { "id": 302, "name": "Cable UTP Cat6 (metro)", "unit": "piece", "price": 14, "is_equipment": false },
+  { "id": 310, "name": "Conector RJ45", "unit": "piece", "price": 12, "is_equipment": false },
+  { "id": 311, "name": "Canaleta 20x10 (tramo)", "unit": "piece", "price": 38, "is_equipment": false },
+  { "id": 320, "name": "Mano de obra por punto adicional", "unit": "service", "price": 350, "is_equipment": false }
+]

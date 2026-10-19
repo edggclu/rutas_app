@@ -1,4 +1,5 @@
 import 'package:telyser_app/domain/app_settings.dart';
+import 'package:telyser_app/domain/product.dart';
 
 import '../domain/models.dart';
 
@@ -18,4 +19,8 @@ abstract class VisitRepository {
 
 abstract class SettingsRepository {
   Future<AppSettings> fetch();
+}
+
+abstract class ProductRepository {
+  Future<List<Product>> search(String query); // devuelve los productos cuyo nombre coincide
 }

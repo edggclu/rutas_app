@@ -11,4 +11,7 @@ class EventTypes {
   static const missingItems = 'missing_items';
   static const clientContacted = 'client_contacted'; // el técnico tocó llamar o WhatsApp al cliente (payload: channel)
   static const officeCalled = 'office_called'; // el técnico tocó "Llamar a la oficina"
+  static const extraAdded = 'extra_added'; // el técnico registró un extra hecho en la visita
+  static const requestAdded = 'request_added'; // algo para cotizar después (no se hace en esta visita)
+  static const routeDelayReported = 'route_delay_reported'; // un extra va a retrasar las siguientes visitas (le llega al jefe)
 }

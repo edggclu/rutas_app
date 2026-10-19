@@ -10,6 +10,7 @@ Future<bool> callPhone (String phone) async {
 }
 /// Abre WhatsApp con una conversación con ese número. Devuelve true si se pudo abrir.
 Future<bool> openWhatsApp(String phone) async {
+  // ignore: unnecessary_string_escapes
   var digits = phone.replaceAll(RegExp('r\D'), ''); // quita espacios y guines, se queda solo con los digitos
   if (digits.length == 10) digits = '52$digits'; // lada de mexico hardcodeada
   try {

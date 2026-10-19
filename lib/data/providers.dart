@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -91,11 +93,11 @@ final myDayBaseProvider = FutureProvider<DayRoute>((ref) async {
 final visitEventsProvider = StreamProvider<List<VisitEvent>>((ref) {
   return ref.watch(outboxRepositoryProvider).watchAll().map((rows) => [
         for (final r in rows)
-          VisitEvent(
-            type: r.type,
-            visitId: r.visitId,
-            // Drift devuelve la hora en local: se normaliza a UTC.
-            occurredAt: r.occurredAtUtc.toUtc(),
+          VisitEvent( // una acción de la cola
+            type: r.type, // tipo
+            visitId: r.visitId, // visita
+            occurredAt: r.occurredAtUtc.toUtc(), // hora, normalizada a UTC
+            payload: jsonDecode(r.payloadJson) as Map<String, dynamic>, // datos extra (nombre, cantidad,etc)
           ),
       ]);
 });
@@ -150,3 +152,7 @@ final mediaForVisitProvider = StreamProvider.autoDispose // autoDispose: se apag
     .family<List<MediaQueueData>, int>( // family: una por cada id de visita
         (ref, visitId) => // recibe el id de la visita
             ref.watch(mediaRepositoryProvider).watchForVisit(visitId)); // escucha las fotos de esa visita
+
+/// Catálogo de productos. Para la API real: cambiar esta linea.
+final productRepositoryProvider = Provider<ProductRepository>( // crea y comparte el repositorio
+    (ref) => MockProductRepository()); // por ahora, el de prueba

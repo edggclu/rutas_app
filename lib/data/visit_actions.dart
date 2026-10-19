@@ -2,6 +2,7 @@ import 'package:telyser_app/data/local/outbox_repository.dart';
 import 'package:telyser_app/data/location_service.dart';
 import 'package:telyser_app/domain/enums.dart';
 import 'package:telyser_app/domain/event_types.dart';
+import 'package:telyser_app/domain/extras.dart';
 import 'package:telyser_app/domain/models.dart';
 
 /// Comprobante de lo que se encolo, sirve para deshacerlo
@@ -14,6 +15,13 @@ class ActionReceipt {
   final int graceSeconds;
   
   const ActionReceipt(this.uuids, this.graceSeconds);
+}
+
+/// Resultado de guardar un extra: qué decidió la app y el comprobante para deshacer.
+class ExtraResult { // lo que devuelve addExtra
+  const ExtraResult(this.outcome, this.receipt); 
+  final ExtraOutcome outcome; // que se decidió / se hizo, o quedo como solicitud
+  final ActionReceipt receipt; // para poder deshacer
 }
 
 /// Acciones del tecnico. Cada metodo guarda eventos en la cola (en estado 'grace') y devuelve un comprobante.
@@ -120,7 +128,82 @@ class VisitActions {
     return ActionReceipt([uuid], grace); // comprobante para poder deshacer
   }
 
+  /// Datos del extra tal como viajan al servidor (llaves en snake_case, como el contrato).
+  Map<String, dynamic> _extraPayload(ExtraDraft d, Visit visit) => { // arma el mapa de datos
+        'name': d.name, // nombre
+        'product_id': d.productId, // id del catálogo (null si lo escribió)
+        'quantity': d.quantity, // cantidad
+        'unit': d.unit, // unidad
+        'source': d.source.code, // de dónde salió
+        'reason': d.reason.code, // por qué
+        'requested_by': d.requestedByAuthorized ? 'authorized_contact' : 'other', // quién lo pidió
+        'requester_name': d.requestedByAuthorized ? visit.place.contact?.name : null, // nombre del contacto, si fue él
+        'not_installed': d.notInstalled, // ¿es "no se instaló"?
+      };
 
+  /// Guarda un extra aplicando las reglas del negocio.
+  Future<ExtraResult> addExtra({required Visit visit, required ExtraDraft draft}) async { // visita y formulario llenado
+    final grace = await _graceSeconds(); // segundos para deshacer (parámetro del servidor)
+    final outcome = decideExtra( // aplica las reglas
+      requestedByAuthorized: draft.requestedByAuthorized, // ¿lo pidió el contacto autorizado?
+      clientOverdue: visit.client.overdue, // ¿el cliente tiene saldo vencido?
+      isEquipment: draft.isEquipment, // ¿es equipo?
+      notInstalled: draft.notInstalled, // ¿es "no se instaló"?
+    );
+    final uuids = <String>[]; // ids de las filas que se creen
+
+    if (outcome == ExtraOutcome.register) { // se hace y se anota
+      uuids.add(await _outbox.enqueue( // guarda el extra en la cola
+        type: EventTypes.extraAdded, // tipo: extra
+        graceSeconds: grace, // con tiempo para deshacer
+        visitId: visit.id, // visita
+        payload: _extraPayload(draft, visit), // datos del extra
+      ));
+      final minutes = draft.delayMinutes; // retraso estimado
+      if (minutes != null && minutes > 0) { // si va a retrasar las siguientes visitas
+        uuids.add(await _outbox.enqueue( // avisa al jefe
+          type: EventTypes.routeDelayReported, // tipo: retraso de ruta
+          graceSeconds: grace, // con tiempo para deshacer
+          visitId: visit.id, // visita
+          payload: {'minutes': minutes, 'reason': 'extra', 'extra_name': draft.name}, // cuánto y por qué
+        ));
+      }
+    } else { // no se hace: queda como solicitud para después
+      uuids.add(await _outbox.enqueue( // guarda la solicitud en la cola
+        type: EventTypes.requestAdded, // tipo: solicitud
+        graceSeconds: grace, // con tiempo para deshacer
+        visitId: visit.id, // visita
+        payload: { // datos de la solicitud
+          ..._extraPayload(draft, visit), // los mismos datos del extra
+          'description': '${quantityText(draft.quantity)} × ${draft.name}', // texto para administración
+          'origin': outcome == ExtraOutcome.laterOtherPerson // por qué quedó como solicitud
+              ? 'other_person' // la pidió otra persona
+              : 'credit_hold', // el cliente tiene saldo vencido
+        },
+      ));
+    }
+    return ExtraResult(outcome, ActionReceipt(uuids, grace)); // devuelve qué pasó y cómo deshacerlo
+  }
+
+  /// Guarda una solicitud para después (lo que no se puede hacer en esta visita).
+  Future<ActionReceipt> addRequest({ // devuelve el comprobante para deshacer
+    required int visitId, // visita
+    required String description, // qué pidió el cliente
+    String? requestedBy, // quién lo pidió (opcional)
+  }) async {
+    final grace = await _graceSeconds(); // segundos para deshacer
+    final uuid = await _outbox.enqueue( // guarda la solicitud en la cola
+      type: EventTypes.requestAdded, // tipo: solicitud
+      graceSeconds: grace, // con tiempo para deshacer
+      visitId: visitId, // visita
+      payload: { // datos
+        'description': description, // descripción
+        'requested_by': requestedBy, // quién la pidió
+        'origin': 'cannot_do_now', // se creó con el botón "Solicitud después"
+      },
+    );
+    return ActionReceipt([uuid], grace); // comprobante
+  }
 
   /// Deshace todo lo que contiene el comprobante.
   Future<void> undo(ActionReceipt receipt) async { // recibe el comprobante de la acción

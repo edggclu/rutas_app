@@ -3,15 +3,17 @@ import 'package:telyser_app/domain/event_types.dart';
 import 'package:telyser_app/domain/models.dart';
 
 /// Una acción de la cola, sin depender de Drift (así se prueba fácil).
-class VisitEvent {
-  const VisitEvent ({
-    required this.type,
-    required this.occurredAt,
-    this.visitId,
+class VisitEvent { 
+  const VisitEvent({ 
+    required this.type, // tipo de acción
+    required this.occurredAt, // hora en que pasó (UTC)
+    this.visitId, // visita a la que pertenece
+    this.payload = const {}, // datos extra (nombre del extra, cantidad, canal,etc)
   });
-  final String type;
-  final int? visitId;
-  final DateTime occurredAt;
+  final String type; // tipo de acción
+  final int? visitId; 
+  final DateTime occurredAt; // hora
+  final Map<String, dynamic> payload; // datos extra de la acción / opcional
 }
 
 /// Estado real de la ruta = lo descargado + las acciones de la cola, en orden.

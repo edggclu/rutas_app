@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:telyser_app/domain/app_settings.dart';
+import 'package:telyser_app/domain/product.dart';
 
 import '../../domain/models.dart';
 import '../repositories.dart';
@@ -43,4 +44,20 @@ class MockSettingsRepository implements SettingsRepository {
   @override
   Future<AppSettings> fetch() async =>
       AppSettings.fromMap(await _loadJson('assets/mock/settings.json'));
+}
+
+/// Catálogo de prueba: lee assets/mock/products.json y filtra por nombre.
+class MockProductRepository implements ProductRepository { 
+  @override
+  Future<List<Product>> search(String query) async { // busca por texto
+    final raw = await rootBundle.loadString('assets/mock/products.json'); // lee el archivo de prueba
+    final all = (json.decode(raw) as List) // lo convierte en lista
+        .map((e) => Product.fromJson(e as Map<String, dynamic>)) 
+        .toList();
+    final q = query.trim().toLowerCase(); // el texto buscado, sin espacios y en minúsculas
+    return all
+        .where((p) => p.name.toLowerCase().contains(q)) 
+        .take(5) // máximo 5 sugerencias
+        .toList();
+  }
 }

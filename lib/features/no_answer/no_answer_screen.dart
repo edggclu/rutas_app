@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/core/contact_launcher.dart';
 import 'package:telyser_app/core/theme/app_colors.dart';
+import 'package:telyser_app/core/widgets/app_card.dart';
 import 'package:telyser_app/core/widgets/app_header.dart';
 import 'package:telyser_app/core/widgets/slide_to_confirm.dart';
 import 'package:telyser_app/core/widgets/toast.dart';
@@ -177,38 +178,31 @@ class _CountdownCard extends StatelessWidget {
   final int perKm; 
   final String clock; 
 
+    // ---- _CountdownCard ----
   @override
-  Widget build(BuildContext context) { 
-    return Container( 
-      width: double.infinity, 
-      padding: const EdgeInsets.all(20), 
-      decoration: BoxDecoration( 
-        color: Colors.white, 
-        borderRadius: BorderRadius.circular(12), // esquinas redondeadas
-        border: Border.all(color: AppColors.gris200), 
-      ),
-      child: Column( 
+  Widget build(BuildContext context) { // dibuja la tarjeta
+    return AppCard( // la caja compartida
+      padding: const EdgeInsets.all(20), // margen interno más grande
+      child: Column( // textos uno debajo de otro
         children: [
-          Text( 
+          Text( // título pequeño
             status.timeDone ? 'Tiempo cumplido' : 'Tiempo de espera', // cambia al terminar
-            style: const TextStyle(color: AppColors.gris600, fontWeight: FontWeight.w600), 
+            style: const TextStyle(color: AppColors.gris600, fontWeight: FontWeight.w600), // gris
           ),
-          const SizedBox(height: 4), 
-          // la cuenta regresiva mm:ss
-          Text( 
-            clock, 
-            style: TextStyle( 
-              fontSize: 56,
-              fontWeight: FontWeight.w700, 
+          const SizedBox(height: 4), // espacio vertical
+          Text( // la cuenta regresiva
+            clock, // mm:ss
+            style: TextStyle( // estilo grande
+              fontSize: 56, // tamaño
+              fontWeight: FontWeight.w700, // negritas
               color: status.timeDone ? AppColors.ok : AppColors.navy900, // verde al terminar, navy mientras corre
             ),
           ),
-          const SizedBox(height: 4),
-          // como se calculó la espera
-          Text( 
-            '$baseMin min base + ${_kmLabel(status.km)} km x $perKm min = ${status.wait.inMinutes} min', // "10 min base + 5 km × 1 min = 15 min"
-            textAlign: TextAlign.center, 
-            style: const TextStyle(color: AppColors.gris600, fontSize: 12), 
+          const SizedBox(height: 4), // espacio vertical
+          Text( // cómo se calculó la espera
+            '$baseMin min base + ${_kmLabel(status.km)} km x $perKm min = ${status.wait.inMinutes} min', // ej. "10 min base + 5 km × 1 min = 15 min"
+            textAlign: TextAlign.center, // centrado
+            style: const TextStyle(color: AppColors.gris600, fontSize: 12), // gris y pequeño
           ),
         ],
       ),
@@ -223,40 +217,32 @@ class _RequirementsCard extends StatelessWidget {
   // el estado calculado
   final NoAnswerStatus status; 
 
+    // ---- _RequirementsCard ----
   @override
-  Widget build(BuildContext context) { 
-    return Container( 
-      width: double.infinity, 
-      padding: const EdgeInsets.all(14), 
-      decoration: BoxDecoration( 
-        color: Colors.white, 
-        borderRadius: BorderRadius.circular(12), 
-        border: Border.all(color: AppColors.gris200), 
-      ),
-      child: Column( 
-        crossAxisAlignment: CrossAxisAlignment.start, 
+  Widget build(BuildContext context) { // dibuja la tarjeta
+    return AppCard( // la caja compartida
+      child: Column( // filas una debajo de otra
+        crossAxisAlignment: CrossAxisAlignment.start, // alineadas a la izquierda
         children: [
-          const Text( 
-            'Para poder irte necesitas', 
-            style: TextStyle(fontWeight: FontWeight.w700), 
+          const Text( // título de la tarjeta
+            'Para poder irte necesitas', // texto
+            style: TextStyle(fontWeight: FontWeight.w700), // negritas
           ),
-          const SizedBox(height: 8), 
-
-          // Rwquisitos, 1: contactos al cliente / 2: llamada / 3: tiempo esperado
-          _RequirementRow( 
-            label: 'Contactar al cliente', 
-            detail: '${status.clientContacts}/${status.clientContactsNeeded}', 
-            done: status.clientOk, 
+          const SizedBox(height: 8), // espacio vertical
+          _RequirementRow( // primer requisito
+            label: 'Contactar al cliente', // texto
+            detail: '${status.clientContacts}/${status.clientContactsNeeded}', // ej. "0/1"
+            done: status.clientOk, // ¿cumplido?
           ),
-          _RequirementRow( 
-            label: 'Llamar a la oficina', 
-            detail: '${status.officeCalls}/${status.officeCallsNeeded}', 
-            done: status.officeOk, 
+          _RequirementRow( // segundo requisito
+            label: 'Llamar a la oficina', // texto
+            detail: '${status.officeCalls}/${status.officeCallsNeeded}', // ej. "1/1"
+            done: status.officeOk, // ¿cumplido?
           ),
-          _RequirementRow( 
-            label: 'Esperar el tiempo', 
-            detail: status.timeDone ? 'Listo' : 'En curso', 
-            done: status.timeDone, 
+          _RequirementRow( // tercer requisito
+            label: 'Esperar el tiempo', // texto
+            detail: status.timeDone ? 'Listo' : 'En curso', // estado en palabras
+            done: status.timeDone, // ¿cumplido?
           ),
         ],
       ),

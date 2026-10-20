@@ -1,7 +1,7 @@
 import 'package:telyser_app/domain/app_settings.dart';
-import 'package:telyser_app/domain/event_types.dart';
 import 'package:telyser_app/domain/models.dart';
 import 'package:telyser_app/domain/visit_state.dart';
+import 'events/event_data.dart'; 
 
 /// Kilómetros que cuentan para la espera: desde la visita anterior; si ese dato
 /// falta, la distancia estimada desde la oficina que ya guarda el lugar. devuelve null si no hay ninguna de las 2
@@ -57,17 +57,20 @@ NoAnswerStatus computeNoAnswerStatus ({
   var remaining = start.add(wait).difference(now); // hora en que termina menos hora actual
   if (remaining.isNegative) remaining = Duration.zero;
 
-  // cuenta los eventos de un tipo para esta visita
-  int count(String type) => events
-    .where((e) => e.visitId == visit.id && e.type == type)
-    .length;
-  
-  return NoAnswerStatus(
-    km: km, 
-    wait: wait, 
-    remaining: remaining, 
-    clientContacts: count(EventTypes.clientContacted ), 
-    clientContactsNeeded: settings.minClientContacts, 
-    officeCalls: count(EventTypes.officeCalled), 
-    officeCallsNeeded: settings.minOfficeCalls);
+  final clientContacts = events // cuántas veces contactó al cliente en esta visita
+      .where((e) => e.visitId == visit.id && e.data is ClientContactedEvent) // eventos de esa clase
+      .length; // cuántos son
+  final officeCalls = events // cuántas veces llamó a la oficina en esta visita
+      .where((e) => e.visitId == visit.id && e.data is OfficeCalledEvent) // eventos de esa clase
+      .length; // cuántos son
+
+  return NoAnswerStatus( // arma la foto con todo lo calculado
+    km: km, // kilómetros
+    wait: wait, // espera total
+    remaining: remaining, // lo que falta
+    clientContacts: clientContacts, // intentos con el cliente
+    clientContactsNeeded: settings.minClientContacts, // mínimo exigido (parámetro)
+    officeCalls: officeCalls, // llamadas a la oficina
+    officeCallsNeeded: settings.minOfficeCalls, // mínimo exigido (parámetro)
+  );
 }

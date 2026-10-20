@@ -1,67 +1,8 @@
-import 'package:telyser_app/domain/event_types.dart';
-import 'package:telyser_app/domain/visit_state.dart';
+import 'events/event_data.dart'; // WarrantyDocumentedEvent
+import 'models/closing_models.dart'; // WarrantyCause, BlockReason, IncidentKind
+import 'visit_state.dart'; // VisitEvent
 
-/// Causa de la falla en una visita de garantía.
-enum WarrantyCause { // opciones del bloque de garantía
-  defect('defect', 'Defecto'), // defecto de fábrica
-  humiditySalt('humidity_salt', 'Humedad o salitre'), // el ambiente de la costa
-  impact('impact', 'Golpe'), // daño físico
-  powerSurge('power_surge', 'Variación eléctrica'), // picos o caídas de voltaje
-  tampering('tampering', 'Manipulación'), // alguien lo movió o lo abrió
-  unknown('unknown', 'No se sabe'); // el ingeniero lo dictamina después con las fotos
-
-  const WarrantyCause(this.code, this.label); // constructor de cada opción
-  final String code; // texto que viaja al servidor
-  final String label; // texto que ve el técnico
-
-  /// Causas claramente externas: probablemente se cobre al cliente, así que el
-  /// técnico debe llamar a la oficina ANTES de reparar. (Lista provisional.)
-  bool get isExternal => this == impact || this == tampering; // golpe o manipulación
-}
-
-/// Motivo de "No pude seguir". El servidor decide a quién avisar según el código.
-enum BlockReason { // los seis motivos del documento
-  missingMaterial('missing_material', 'Falta material o herramienta', 'Se avisa a Axel y al jefe'), // incluye equipo defectuoso
-  siteDiffers('site_differs', 'El sitio no es como el plan', 'Se avisa al ingeniero a cargo'), // ej. no hay corriente
-  cannotSolve('cannot_solve', 'No puedo resolverlo', 'Se avisa al jefe, al ingeniero y a administración'), // requiere segunda visita
-  client('client', 'Cliente: pago, garantía o inconformidad', 'Se avisa a administración'), // problema con el cliente
-  incident('incident', 'Incidente: seguridad, daño o accidente', 'Se avisa a administración'), // algo grave
-  other('other', 'Otro', 'Se avisa al jefe'); // cualquier otro caso
-
-  const BlockReason(this.code, this.label, this.notifies); // constructor de cada opción
-  final String code; // texto que viaja al servidor
-  final String label; // texto de la tarjeta
-  final String notifies; // a quién se avisa (solo ayuda visual para el técnico)
-}
-
-/// Subtipo cuando el motivo es un incidente.
-enum IncidentKind { // cada uno exige algo distinto
-  safety('safety', 'Seguridad'), // un riesgo
-  propertyDamage('property_damage', 'Daño a la propiedad'), // ej. rompí un azulejo: exige fotos
-  accident('accident', 'Accidente'); // alguien se lastimó: primero se pide ayuda
-
-  const IncidentKind(this.code, this.label); // constructor de cada opción
-  final String code; // texto que viaja al servidor
-  final String label; // texto que ve el técnico
-}
-
-/// Un renglón de material usado en "Sigo otro día".
-class MaterialUsed { // lo planeado contra lo realmente usado
-  const MaterialUsed({ // constructor
-    required this.id, // id del renglón de la lista de salida
-    required this.text, // nombre del material
-    required this.planned, // cantidad planeada
-    required this.used, // cantidad usada hoy
-  });
-
-  final int id; // id del renglón
-  final String text; // nombre
-  final num planned; // planeado
-  final num used; // usado
-
-  Map<String, dynamic> toJson() => // datos tal como viajan al servidor
-      {'id': id, 'text': text, 'planned': planned, 'used': used}; // las cuatro llaves
-}
+export 'models/closing_models.dart'; // quien importe closing.dart sigue viendo los tipos de cierre
 
 /// Bloque de garantía: causa elegida, al menos una foto de la falla y el número
 /// de serie (escrito o en foto de la etiqueta).
@@ -102,17 +43,13 @@ bool canSendBlocked({
 
 /// ¿Ya se documentó la garantía de esta visita? (se lee de la cola)
 bool warrantyDocumented(List<VisitEvent> events, int visitId) => // true si existe el evento
-    events.any((e) => e.visitId == visitId && e.type == EventTypes.warrantyDocumented); // busca ese tipo en esta visita
+    events.any((e) => e.visitId == visitId && e.data is WarrantyDocumentedEvent); // busca esa clase en esta visita
 
 /// Última causa documentada, para mostrarla en el resumen. null si no hay.
 WarrantyCause? lastWarrantyCause(List<VisitEvent> events, int visitId) {
-  for (final e in events.reversed) { 
-    if (e.visitId == visitId && e.type == EventTypes.warrantyDocumented) { // la primera que coincida es la última guardada
-      for (final c in WarrantyCause.values) { // busca la causa por su código
-        if (c.code == e.payload['cause']) return c; 
-      }
-      return null; 
-    }
+  for (final e in events.reversed) { // de la acción más reciente a la más antigua
+    final d = e.data; // el evento tipado
+    if (e.visitId == visitId && d is WarrantyDocumentedEvent) return d.cause; // la primera que coincida es la última guardada
   }
-  return null; 
+  return null; // nunca se documentó
 }

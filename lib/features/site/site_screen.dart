@@ -15,8 +15,8 @@ import '../../core/widgets/slide_to_confirm.dart'; // botón deslizable
 import '../../data/local/app_database.dart'; // MediaQueueData (una foto guardada)
 import '../../domain/closing.dart'; // warrantyDocumented, lastWarrantyCause
 import '../../domain/enums.dart'; // Coverage
-import '../../domain/event_types.dart'; // nombres de eventos
 import '../../domain/extras.dart'; // extrasOf y requestsOf
+import '../../domain/events/event_data.dart';
 import '../../domain/visit_state.dart'; // VisitEvent
 import '../closing/blocked_screen.dart'; // C7b
 import '../closing/continue_screen.dart'; // C7a
@@ -125,7 +125,7 @@ class _SiteScreenState extends ConsumerState<SiteScreen> { // el estado de la pa
     final extras = extrasOf(events, _id); // extras ya guardados de esta visita
     final requests = requestsOf(events, _id); // solicitudes ya guardadas de esta visita
     final reportedNoAnswer = events.any( // ¿alguna vez avisó que nadie abría?
-        (e) => e.visitId == _id && e.type == EventTypes.noAnswerReported); // acción de este tipo para esta visita
+        (e) => e.visitId == _id && e.type is NoAnswerReportedEvent); // acción de este tipo para esta visita
     final arrived = visit.arrivedAt; // hora de llegada (null si se deshizo)
     final isWarranty = visit.job.coverage == Coverage.warranty; // ¿es una visita de garantía?
     final documented = warrantyDocumented(events, _id); // ¿ya documentó la garantía?
@@ -280,11 +280,11 @@ class _SiteScreenState extends ConsumerState<SiteScreen> { // el estado de la pa
                     _EntryRow( // un renglón
                       icon: Icons.schedule, // ícono de reloj
                       text: r.description, // descripción
-                      tag: r.origin == 'other_person' // etiqueta según el origen
+                          tag: r.origin == RequestOrigin.otherPerson // etiqueta según el origen
                           ? 'La pidió otra persona' // la pidió otra persona
-                          : r.origin == 'credit_hold' // o saldo vencido
+                          : r.origin == RequestOrigin.creditHold // o saldo vencido
                               ? 'Saldo vencido' // el cliente tiene saldo vencido
-                              : null, // si la creó el técnico, sin etiqueta
+                              : null, // si la creó el técnico, sin etiqueta, // si la creó el técnico, sin etiqueta
                     ),
                 ],
                 if (!visit.responsible) ...[ // si es acompañante (no responsable)

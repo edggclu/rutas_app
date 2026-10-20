@@ -87,7 +87,7 @@ void main() {
     test('las solicitudes se leen con su origen', () { // lectura de solicitudes
       final r = requestsOf(events, 101); // solicitudes de la 101
       expect(r.single.description, 'Cámaras en la alberca'); // descripción
-      expect(r.single.origin, 'cannot_do_now'); // origen
+      expect(r.single.origin, RequestOrigin.cannotDoNow); // origen (ahora es un enum, no un texto)
       expect(requestsOf(events, 102), isEmpty); // la 102 no tiene
     });
   });

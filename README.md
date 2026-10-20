@@ -30,6 +30,15 @@ core/         widgets y utilidades genéricas, sin reglas del negocio
 | `providers/` | Conecta todo con Riverpod, un archivo por tema | — |
 | `features/` | Pantallas y sus widgets | — |
 
+### Cómo agregar una acción del técnico
+
+1. **Tipo de evento:** una constante en `domain/event_types.dart`.
+2. **Regla** (si hay decisiones): una función pura en `domain/`, con su test.
+3. **Acción:** un método en la clase del área en `application/` (`departure`, `arrival`, `noAnswer`, `extras` o `closing`). Usa `_writer.undoable([...])` para acciones deslizables o con formulario, y `_writer.instant(...)` para botones normales.
+4. **Pantalla:** `runUndoable(context, ref, action: (a) => a.<área>.<método>(...), message: '...', after: AfterSave.pop)`.
+5. **Estado:** si la acción cambia el estado de la visita, agrega su caso en `applyEvents`.
+6. **Contrato:** documenta los datos del evento en `docs/contrato_api.md`.
+
 ## Base de datos local (Drift / SQLite)
 
 Archivo `telyser.sqlite` dentro del teléfono. Definida en `lib/data/local/app_database.dart`.

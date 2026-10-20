@@ -5,10 +5,12 @@ import 'package:telyser_app/core/theme/app_colors.dart';
 import 'package:telyser_app/core/widgets/app_header.dart';
 import 'package:telyser_app/core/widgets/slide_to_confirm.dart';
 import 'package:telyser_app/core/widgets/undo_bar.dart';
-import 'package:telyser_app/data/providers.dart';
 import 'package:telyser_app/domain/models.dart';
 import 'package:telyser_app/domain/no_answer.dart';
 import 'package:telyser_app/domain/visit_state.dart';
+import 'package:telyser_app/providers/actions.provider.dart';
+import 'package:telyser_app/providers/route_providers.dart';
+import 'package:telyser_app/providers/settings_provider.dart';
 
 /// Muestra los kilometros sin .0 cuando son enteros 
 String _kmLabel(double? km) {

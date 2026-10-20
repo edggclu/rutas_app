@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:telyser_app/providers/session_provider.dart';
 
 import 'core/theme/app_theme.dart';
-import 'data/providers.dart';
 import 'features/auth/login_screen.dart';
 import 'features/shell/home_shell.dart';
 

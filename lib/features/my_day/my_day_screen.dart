@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/features/site/site_screen.dart';
+import 'package:telyser_app/providers/route_providers.dart';
+import 'package:telyser_app/providers/session_provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/time/time_utils.dart';
 import '../../core/widgets/app_header.dart';
 import '../../core/widgets/tag_chip.dart';
-import '../../data/providers.dart';
 import '../../domain/enums.dart';
 import '../../domain/models.dart';
 import '../../domain/technician_state.dart';

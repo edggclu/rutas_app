@@ -6,7 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:telyser_app/data/local/app_database.dart'; 
 import 'package:telyser_app/data/local/outbox_repository.dart'; 
 import 'package:telyser_app/data/location_service.dart'; 
-import 'package:telyser_app/data/visit_actions.dart'; 
+import 'package:telyser_app/data/visit_actions.dart';
+import 'package:telyser_app/domain/closing.dart'; 
 import 'package:telyser_app/domain/event_types.dart';
 import 'package:telyser_app/domain/extras.dart'; 
 import 'package:telyser_app/domain/models.dart'; 
@@ -220,5 +221,70 @@ void main() {
     expect(p['description'], 'Cámaras en la alberca'); // descripción
     expect(p['origin'], 'cannot_do_now'); // origen
     expect(p['requested_by'], 'Gerente'); // quién la pidió
+  });
+
+    test('Terminé con extras guarda quién los confirmó', () async { // confirmación de extras
+    await build(null).finish(visitId: 102, confirmedBy: 'Ing. Ramírez', confirmedRole: 'Mantenimiento'); // cierra con confirmación
+    final row = (await db.select(db.outboxEvents).get()).single; // la única fila
+    final p = jsonDecode(row.payloadJson) as Map<String, dynamic>; // sus datos
+    expect(row.type, EventTypes.finished); // tipo correcto
+    expect(p['extras_confirmed_by'], 'Ing. Ramírez'); // quién confirmó
+    expect(p['extras_confirmed_role'], 'Mantenimiento'); // su cargo
+  });
+
+  test('Terminé sin extras no lleva datos de confirmación', () async { // cierre simple
+    await build(null).finish(visitId: 102); // cierra sin confirmación
+    final row = (await db.select(db.outboxEvents).get()).single; // la única fila
+    expect(jsonDecode(row.payloadJson), isEmpty); // sin datos extra
+  });
+
+  test('documentar la garantía guarda causa y serial', () async { // bloque de garantía
+    await build(null).documentWarranty(visitId: 102, cause: WarrantyCause.humiditySalt, serial: 'SN-77'); // documenta
+    final row = (await db.select(db.outboxEvents).get()).single; // la única fila
+    final p = jsonDecode(row.payloadJson) as Map<String, dynamic>; // sus datos
+    expect(row.type, EventTypes.warrantyDocumented); // tipo correcto
+    expect(p['cause'], 'humidity_salt'); // causa guardada
+    expect(p['serial'], 'SN-77'); // serial guardado
+  });
+
+  test('Sigo otro día guarda material, lo que falta y el cableado', () async { // C7a
+    final receipt = await build(null).continueTomorrow( // marca sigo otro día
+      visitId: 101, // visita
+      materials: const [MaterialUsed(id: 2, text: 'Cable UTP (m)', planned: 120, used: 70)], // 70 de 120 m
+      leftOnSite: 'Cámaras en el cuarto de mantenimiento', // lo que se queda
+      missing: '  Cámaras del segundo piso ', // lo que falta (con espacios)
+      laidCable: true, // tendió cable
+    );
+    final row = (await db.select(db.outboxEvents).get()).single; // la única fila
+    final p = jsonDecode(row.payloadJson) as Map<String, dynamic>; // sus datos
+    expect(row.type, EventTypes.continueTomorrow); // tipo correcto
+    expect(row.state, 'grace'); // con tiempo para deshacer
+    expect(p['materials_used'][0]['used'], 70); // lo usado
+    expect(p['materials_used'][0]['planned'], 120); // lo planeado
+    expect(p['missing'], 'Cámaras del segundo piso'); // sin espacios sobrantes
+    expect(p['laid_cable'], isTrue); // tendió cable
+    expect(receipt.uuids, [row.uuid]); // el comprobante apunta a esa fila
+  });
+
+  test('No pude seguir guarda motivo, tipo de incidente y nota', () async { // C7b
+    await build(null).blockVisit( // marca no pude seguir
+      visitId: 101, // visita
+      reason: BlockReason.incident, // incidente
+      incidentKind: IncidentKind.accident, // accidente
+      note: ' Se cayó de la escalera ', // nota (con espacios)
+    );
+    final row = (await db.select(db.outboxEvents).get()).single; // la única fila
+    final p = jsonDecode(row.payloadJson) as Map<String, dynamic>; // sus datos
+    expect(row.type, EventTypes.blocked); // tipo correcto
+    expect(p['reason'], 'incident'); // motivo
+    expect(p['incident_kind'], 'accident'); // tipo de incidente
+    expect(p['note'], 'Se cayó de la escalera'); // nota sin espacios sobrantes
+  });
+
+  test('pedir ayuda al ingeniero se registra sin tiempo de deshacer', () async { // botón normal
+    await build(null).requestHelp(visitId: 101); // pide ayuda
+    final row = (await db.select(db.outboxEvents).get()).single; // la única fila
+    expect(row.type, EventTypes.helpRequested); // tipo correcto
+    expect(row.visitId, 101); // visita correcta
   });
 }

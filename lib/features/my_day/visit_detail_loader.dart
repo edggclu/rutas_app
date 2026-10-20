@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:telyser_app/data/providers.dart';
 import 'package:telyser_app/features/my_day/visit_detail_screen.dart';
+import 'package:telyser_app/providers/route_providers.dart';
 
 /// Lee la visita actual por su id y se la pasa a la tarjeta
 /// Asi al tarjeta se redibujara sola cuando cambia el estado 

@@ -51,4 +51,8 @@ void main() {
     expect(c.materials[1].quantityLabel, 'x120');
     expect(route.visits[1].checklist.source, ChecklistSource.none);
   });
+
+  test('el ingeniero trae su teléfono', () { // para pedir ayuda por WhatsApp
+    expect(route.visits.first.job.engineer?.phone, '3220000002'); // teléfono del mock
+  });
 }

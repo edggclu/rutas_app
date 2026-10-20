@@ -54,4 +54,14 @@ void main() {
     expect((await repo.watchForVisit(101).first).length, 2); // la 101 tiene dos
     expect((await repo.watchForVisit(102).first).length, 1); // la 102 tiene una
   });
+
+  test('un video espera Wi-Fi y conserva su tipo', () async { // los videos pesan mucho
+    final clip = File('${tmp.path}/clip.mp4')..writeAsBytesSync([9, 9]); // video falso de 2 bytes
+    await repo.addVideo(visitId: 101, sourcePath: clip.path); // guarda el video
+    final row = (await db.select(db.mediaQueue).get()).single; // la única fila
+    expect(row.kind, 'cabling_video'); // tipo por defecto
+    expect(row.wifiOnly, isTrue); // espera Wi-Fi
+    expect(row.localPath.endsWith('.mp4'), isTrue); // conserva su extensión
+    expect(File(row.localPath).readAsBytesSync(), [9, 9]); // el contenido se copió
+  });
 }

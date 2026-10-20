@@ -14,4 +14,6 @@ class EventTypes {
   static const extraAdded = 'extra_added'; // el técnico registró un extra hecho en la visita
   static const requestAdded = 'request_added'; // algo para cotizar después (no se hace en esta visita)
   static const routeDelayReported = 'route_delay_reported'; // un extra va a retrasar las siguientes visitas (le llega al jefe)
+    static const warrantyDocumented = 'warranty_documented'; // el técnico documento la causa y el serial de una garantía
+  static const helpRequested = 'help_requested'; // el tecnico pidió ayuda al ingeniero
 }

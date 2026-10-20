@@ -3,13 +3,16 @@ import 'enums.dart';
 /// Modelos del contrato `GET /api/my-day` (ver docs/contrato_api.md).
 /// Se parsean a mano para no depender de generación de código en el paso 1.
 
-class Person {
-  const Person({required this.id, required this.name});
-  final int id;
-  final String name;
+class Person { // una persona: ingeniero o acompañante
+  const Person({required this.id, required this.name, this.phone}); // el telefono es opcional
+  final int id; // id
+  final String name; // nombre
+  final String? phone; // teléfono (se usa para pedir ayuda por WhatsApp)
 
-  factory Person.fromJson(Map<String, dynamic> j) =>
-      Person(id: j['id'] as int, name: j['name'] as String);
+  factory Person.fromJson(Map<String, dynamic> j) => Person( // convierte el JSON
+      id: j['id'] as int, // id
+      name: j['name'] as String, // nombre
+      phone: j['phone'] as String?); // teléfono, o null si no viene
 }
 
 class Contact {

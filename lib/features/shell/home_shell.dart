@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:telyser_app/providers/session_provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_header.dart';
-import '../../data/providers.dart';
 import '../my_day/my_day_screen.dart';
 import 'app_tab_bar.dart';
 

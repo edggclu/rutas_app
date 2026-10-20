@@ -187,7 +187,7 @@ sequenceDiagram
 | `data/local/settings_store.dart` | Guarda y lee los parámetros (`undo_seconds`, 150 m, etc.) en `settings_kv`. |
 | `data/local/route_store.dart` | Guarda la ruta del día en `cached_visits` (JSON completo más columnas consultables) y la lee sin señal. |
 | `data/visit_actions.dart` | Decide qué eventos se encolan por cada acción del técnico y devuelve un comprobante para deshacer. |
-| `data/providers.dart` | Conecta todo con Riverpod. `myDayBaseProvider` baja y guarda la ruta, `visitEventsProvider` escucha la cola y `myDayProvider` los combina. |
+| `providers/providers.dart` | Conecta todo con Riverpod. `myDayBaseProvider` baja y guarda la ruta, `visitEventsProvider` escucha la cola y `myDayProvider` los combina. |
 | `domain/app_settings.dart` | Modelo de los parámetros del servidor. |
 | `domain/event_types.dart` | Nombres de los tipos de evento (`arrived`, `finished`…). |
 | `domain/visit_state.dart` | `applyEvents`: función pura que calcula el estado real de la ruta. Se prueba sin pantallas. |
@@ -234,7 +234,7 @@ sequenceDiagram
 |---|---|
 | `data/location_service.dart` | `LocationService` (contrato) y `DeviceLocationService` (GPS real). Lee la ubicación una sola vez. Si falla, devuelve `null` y Llegué se marca igual. |
 | `data/visit_actions.dart` | `arrive()` encola `arrived` con `{mode, lat, lng}`. |
-| `data/providers.dart` | `visitByIdProvider`: una visita por id con su estado actual (servidor + cola). |
+| `providers/providers.dart` | `visitByIdProvider`: una visita por id con su estado actual (servidor + cola). |
 | `features/my_day/visit_detail_loader.dart` | Lee la visita actual y se la pasa a la tarjeta para que se redibuje sola. |
 | `features/my_day/arrival_panel.dart` | Panel "¿Ya te abrieron?" con Empezar y No me abren. |
 | `features/site/site_screen.dart` | Pantalla En sitio (provisional hasta el paso 4). |
@@ -262,7 +262,7 @@ La espera es `espera base + minutos por km × km` (parámetros del servidor), re
 | `data/local/outbox_repository.dart` | `exists()`: evita avisar dos veces a la oficina. |
 | `core/contact_launcher.dart` | Abre el marcador y WhatsApp. Devuelve si se pudo abrir. |
 | `features/no_answer/no_answer_screen.dart` | Pantalla C4: cuenta regresiva, requisitos, botones y deslizable. |
-| `data/providers.dart` | `tickProvider`: reloj de 1 s solo para redibujar. |
+| `providers/providers.dart` | `tickProvider`: reloj de 1 s solo para redibujar. |
 
 | Parámetro | Para qué |
 |---|---|
@@ -285,6 +285,53 @@ Las fotos se copian a `<documentos de la app>/media/visit_<id>/<uuid>.jpg` y se 
 | Solo el responsable cierra la visita | `visit.responsible` en `SiteScreen` |
 | En garantía no se puede terminar sin el bloque de garantía | `isWarranty` deshabilita el deslizable (4c) |
 | Las visitas En sitio abren directo C5 desde Mi día | `my_day_screen.dart` |
+
+### Extras y solicitudes para después
+
+```mermaid
+flowchart TD
+    A["Formulario Agregar extra"] --> B{"decideExtra()"}
+    B -->|"lo pidió otra persona"| C["request_added (origin: other_person)"]
+    B -->|"saldo vencido + equipo"| D["request_added (origin: credit_hold)"]
+    B -->|"cualquier otro caso"| E["extra_added"]
+    E -->|"retrasa las siguientes visitas"| F["route_delay_reported (jefe)"]
+    G["Botón Solicitud después"] --> H["request_added (origin: cannot_do_now)"]
+```
+
+| Archivo | Qué hace |
+|---|---|
+| `domain/extras.dart` | `decideExtra` (las reglas), `ExtraDraft`, enums de origen y motivo, `extrasOf` y `requestsOf` (leen la cola). |
+| `domain/product.dart` | Un producto del catálogo. `isEquipment` alimenta la regla del saldo vencido. |
+| `data/visit_actions.dart` | `addExtra` (aplica las reglas y encola) y `addRequest`. |
+| `features/extras/add_extra_screen.dart` | Formulario E1. |
+| `features/extras/add_request_screen.dart` | Formulario E4, con fotos. |
+| `features/site/capture_photo.dart` | Abre la cámara y guarda la foto. |
+
+### Cierre de la visita (4c)
+
+```mermaid
+flowchart TD
+    A["En sitio"] -->|"desliza Terminé"| B{"¿hubo extras?"}
+    B -->|"no"| E["finished"]
+    B -->|"sí"| C["Hoja: el contacto escribe su nombre"]
+    C -->|"confirma"| E
+    C -->|"cancela"| A
+    A -->|"desliza No lo terminé"| D{"¿qué pasó?"}
+    D -->|"Sigo otro día"| F["continue_tomorrow<br/>(material, qué falta, video si hubo cable)"]
+    D -->|"No pude seguir"| G["blocked<br/>(motivo, nota, fotos)"]
+    H["Visita de garantía"] -->|"documentar causa, foto y serial"| I["warranty_documented"]
+    I -->|"habilita"| E
+```
+
+| Archivo | Qué hace |
+|---|---|
+| `domain/closing.dart` | Causas de garantía, motivos de "No pude seguir", y las reglas `canSaveWarranty`, `canContinueTomorrow`, `canSendBlocked`. |
+| `features/site/warranty_*.dart` | Tarjeta y pantalla del bloque de garantía (G1 y G1b). |
+| `features/closing/finish_sheet.dart` | C6: confirmación de extras. |
+| `features/closing/not_finished_sheet.dart` | C7: elegir entre las dos opciones. |
+| `features/closing/continue_screen.dart` | C7a: Sigo otro día. |
+| `features/closing/blocked_screen.dart` | C7b: No pude seguir. |
+| `core/widgets/choice_group.dart` | Grupo de chips compartido. |
 
 ## Aviso
 Si `flutter run` o `flutter analyze` marcan errores, probablemente sean detalles menores

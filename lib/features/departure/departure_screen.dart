@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:telyser_app/providers/actions.provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/time/time_utils.dart';
 import '../../core/widgets/app_header.dart';
 import '../../core/widgets/slide_to_confirm.dart';
 import '../../core/widgets/undo_bar.dart';
-import '../../data/providers.dart';
 import '../../domain/enums.dart';
 import '../../domain/models.dart';
 

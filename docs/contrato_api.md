@@ -113,3 +113,47 @@ Tipos de evento: `departure_confirmed`, `missing_items`, `arrived` (automático 
 `PUT /api/jobs/{id}/plan` · `GET /api/review` · `POST /api/jobs/{id}/review` ·
 `GET /api/dispatch/today|unassigned|decisions` · `POST /api/visits` · `PATCH /api/visits/{id}` ·
 `POST /api/devices`.
+
+### Datos (payload) de los eventos de extras
+
+`extra_added`:
+```json
+{ "name": "Cámara IP 4 MP", "product_id": 301, "quantity": 1, "unit": "piece",
+  "source": "own_stock", "reason": "client_asked",
+  "requested_by": "authorized_contact", "requester_name": "Ing. Ramírez",
+  "not_installed": false }
+```
+`source`: `job_reserved` · `own_stock` · `bought_on_route`. `reason`: `client_asked` · `site_required`.
+El servidor marca como absorbido el cable, la canaleta y el tubo; la app no manda ese dato.
+
+`request_added`: mismos datos del extra (si viene de un extra rechazado) más
+`description` y `origin` (`other_person` · `credit_hold` · `cannot_do_now`).
+
+`route_delay_reported`: `{ "minutes": 120, "reason": "extra", "extra_name": "Cámara IP 4 MP" }`
+
+### Datos (payload) de los eventos de cierre
+
+`finished`: `{}` o, si hubo extras, `{ "extras_confirmed_by": "Ing. Ramírez", "extras_confirmed_role": "Mantenimiento" }`
+
+`warranty_documented`: `{ "cause": "humidity_salt", "serial": "SN-77" }`
+`cause`: `defect` · `humidity_salt` · `impact` · `power_surge` · `tampering` · `unknown`.
+`serial` puede ser `null` si el técnico solo fotografió la etiqueta (archivo `warranty_serial`).
+
+`continue_tomorrow`:
+```json
+{ "materials_used": [{ "id": 2, "text": "Cable UTP (m)", "planned": 120, "used": 70 }],
+  "left_on_site": "4 cámaras en el cuarto de mantenimiento",
+  "missing": "Cámaras del segundo piso y configurar el grabador",
+  "laid_cable": true }
+```
+El servidor decide si propone una jornada el siguiente día hábil con el mismo técnico.
+
+`blocked`: `{ "reason": "incident", "incident_kind": "accident", "note": "…" }`
+`reason`: `missing_material` · `site_differs` · `cannot_solve` · `client` · `incident` · `other`.
+`incident_kind`: `safety` · `property_damage` · `accident` (solo con `incident`; si no, `null`).
+El servidor decide a quién avisar según `reason` (tabla de la sección 11 del documento de requisitos).
+
+`help_requested`: `{}` (el técnico abrió WhatsApp con el ingeniero a cargo).
+
+### Tipos de archivo (`kind`)
+`progress` · `warranty` (falla) · `warranty_serial` (etiqueta) · `damage` · `request` · `cabling_video` (video, espera Wi-Fi).

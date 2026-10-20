@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:telyser_app/providers/actions.provider.dart';
+import 'package:telyser_app/providers/infra_providers.dart';
+import '../../core/widgets/choice_group.dart';
 import 'package:intl/intl.dart';
 import 'package:telyser_app/core/theme/app_colors.dart';
 import 'package:telyser_app/core/widgets/alert_box.dart';
 import 'package:telyser_app/core/widgets/app_header.dart';
 import 'package:telyser_app/core/widgets/undo_bar.dart';
-import 'package:telyser_app/data/providers.dart';
 import 'package:telyser_app/domain/extras.dart';
 import 'package:telyser_app/domain/models.dart';
 import 'package:telyser_app/domain/product.dart';
@@ -203,19 +205,19 @@ class _AddExtraScreenState extends ConsumerState<AddExtraScreen> { // el estado 
                   ),
                 ),
                 const SizedBox(height: 16), // espacio vertical
-                _ChoiceGroup<ExtraSource>( // grupo "De dónde salió"
+                ChoiceGroup<ExtraSource>( // grupo "De dónde salió"
                   title: 'De dónde salió', // título
                   options: [for (final s in ExtraSource.values) (s, s.label)], // las tres opciones
                   selected: _source, // la elegida
                   onSelected: (v) => setState(() => _source = v), // al elegir, la guarda
                 ),
-                _ChoiceGroup<ExtraReason>( // grupo "Por qué"
+                ChoiceGroup<ExtraReason>( // grupo "Por qué"
                   title: 'Por qué', // título
                   options: [for (final r in ExtraReason.values) (r, r.label)], // las dos opciones
                   selected: _reason, // la elegida
                   onSelected: (v) => setState(() => _reason = v), // al elegir, la guarda
                 ),
-                _ChoiceGroup<bool>( // grupo "Quién lo pidió"
+                ChoiceGroup<bool>( // grupo "Quién lo pidió"
                   title: 'Quién lo pidió', // título
                   options: [
                     (true, hasAuthorized ? 'El contacto autorizado (${contact.name})' : 'El contacto autorizado'), // con su nombre si existe
@@ -263,58 +265,6 @@ class _AddExtraScreenState extends ConsumerState<AddExtraScreen> { // el estado 
               onPressed: _canSave && !_saving ? _save : null, // null = deshabilitado
               child: const Text('Guardar extra'), // texto
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Un grupo de opciones tipo chip: una sola elegida a la vez.
-class _ChoiceGroup<T> extends StatelessWidget { // T = tipo del valor (enum o bool)
-  const _ChoiceGroup({ // constructor
-    required this.title, // título del grupo
-    required this.options, // lista de (valor, texto)
-    required this.selected, // el valor elegido (null = ninguno)
-    required this.onSelected, // qué hacer al elegir
-    this.disabled = const {}, // valores que no se pueden elegir
-  });
-
-  final String title; // título
-  final List<(T, String)> options; // opciones: pares (valor, texto)
-  final T? selected; // el valor elegido
-  final ValueChanged<T> onSelected; // función al elegir
-  final Set<T> disabled; // valores bloqueados
-
-  @override
-  Widget build(BuildContext context) { // dibuja el grupo
-    return Padding( // margen abajo
-      padding: const EdgeInsets.only(bottom: 12), // 12 de margen inferior
-      child: Column( // título y chips
-        crossAxisAlignment: CrossAxisAlignment.start, // alineados a la izquierda
-        children: [
-          Text( // título
-            title, // texto
-            style: const TextStyle( // estilo
-              fontSize: 13, // tamaño
-              fontWeight: FontWeight.w700, // negritas
-              color: AppColors.gris600, // gris
-            ),
-          ),
-          const SizedBox(height: 6), // espacio vertical
-          Wrap( // chips en fila, que bajan de renglón si no caben
-            spacing: 8, // espacio horizontal
-            runSpacing: 8, // espacio vertical
-            children: [
-              for (final (value, label) in options) // por cada opción
-                ChoiceChip( // chip elegible
-                  label: Text(label), // texto
-                  selected: selected == value, // ¿es la elegida?
-                  onSelected: disabled.contains(value) // si está bloqueada
-                      ? null // no responde
-                      : (_) => onSelected(value), // si no, avisa cuál se eligió
-                ),
-            ],
           ),
         ],
       ),

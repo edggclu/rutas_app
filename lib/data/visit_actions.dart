@@ -1,5 +1,6 @@
 import 'package:telyser_app/data/local/outbox_repository.dart';
 import 'package:telyser_app/data/location_service.dart';
+import 'package:telyser_app/domain/closing.dart';
 import 'package:telyser_app/domain/enums.dart';
 import 'package:telyser_app/domain/event_types.dart';
 import 'package:telyser_app/domain/extras.dart';
@@ -205,6 +206,75 @@ class VisitActions {
     return ActionReceipt([uuid], grace); // comprobante
   }
 
+    /// Guarda el bloque de garantía: causa y número de serie (las fotos van aparte, en media_queue).
+  Future<ActionReceipt> documentWarranty({ // devuelve el comprobante
+    required int visitId, // visita
+    required WarrantyCause cause, // causa elegida
+    String? serial, // número de serie escrito (null si solo fotografió la etiqueta)
+  }) async {
+    final grace = await _graceSeconds(); // segundos para deshacer
+    final uuid = await _outbox.enqueue( // guarda en la cola
+      type: EventTypes.warrantyDocumented, // tipo: garantía documentada
+      graceSeconds: grace, // con tiempo para deshacer
+      visitId: visitId, // visita
+      payload: {'cause': cause.code, 'serial': serial}, // causa y serial
+    );
+    return ActionReceipt([uuid], grace); // comprobante
+  }
+
+  /// "Sigo otro día": cierra la visita sin terminar el trabajo.
+  Future<ActionReceipt> continueTomorrow({ // devuelve el comprobante
+    required int visitId, // visita
+    required List<MaterialUsed> materials, // material usado hoy
+    required String leftOnSite, // qué se queda en el sitio
+    required String missing, // qué falta por hacer
+    required bool laidCable, // ¿se tendió cable hoy?
+  }) async {
+    final grace = await _graceSeconds(); // segundos para deshacer
+    final uuid = await _outbox.enqueue( // guarda en la cola
+      type: EventTypes.continueTomorrow, // tipo: sigo otro día
+      graceSeconds: grace, // con tiempo para deshacer
+      visitId: visitId, // visita
+      payload: { // datos para quien continúe el trabajo
+        'materials_used': [for (final m in materials) m.toJson()], // material usado
+        'left_on_site': leftOnSite.trim(), // lo que se queda
+        'missing': missing.trim(), // lo que falta
+        'laid_cable': laidCable, // si tendió cable
+      },
+    );
+    return ActionReceipt([uuid], grace); // comprobante
+  }
+
+  /// "No pude seguir": algo detiene el trabajo y alguien debe resolverlo.
+  Future<ActionReceipt> blockVisit({ // devuelve el comprobante
+    required int visitId, // visita
+    required BlockReason reason, // motivo (el servidor decide a quién avisar)
+    IncidentKind? incidentKind, // subtipo, solo si el motivo es incidente
+    required String note, // nota escrita
+  }) async {
+    final grace = await _graceSeconds(); // segundos para deshacer
+    final uuid = await _outbox.enqueue( // guarda en la cola
+      type: EventTypes.blocked, // tipo: no pude seguir
+      graceSeconds: grace, // con tiempo para deshacer
+      visitId: visitId, // visita
+      payload: { // datos
+        'reason': reason.code, // motivo
+        'incident_kind': incidentKind?.code, // subtipo (null si no aplica)
+        'note': note.trim(), // nota
+      },
+    );
+    return ActionReceipt([uuid], grace); // comprobante
+  }
+
+  /// Toque en "Pedir ayuda al ingeniero" (el WhatsApp se abre desde la pantalla).
+  Future<void> requestHelp({required int visitId}) async { // visita donde pide ayuda
+    await _outbox.enqueue( // guarda el aviso en la cola
+      type: EventTypes.helpRequested, // tipo: pidió ayuda
+      graceSeconds: 0, // botón normal: sin deshacer
+      visitId: visitId, // visita
+    );
+  }
+
   /// Deshace todo lo que contiene el comprobante.
   Future<void> undo(ActionReceipt receipt) async { // recibe el comprobante de la acción
     for (final id in receipt.uuids) { // recorre cada fila creada
@@ -212,13 +282,21 @@ class VisitActions {
     }
   }
 
-    /// Deslizable "Termine el trabajo" (versión simple: sin confirmar extras todavía).
-  Future<ActionReceipt> finish({required int visitId}) async { 
-    final grace = await _graceSeconds(); // segundos para deshacer, de los parámetros
+    /// Deslizable "Terminé el trabajo". Si hubo extras, lleva quién los confirmó.
+  Future<ActionReceipt> finish({ // devuelve el comprobante para deshacer
+    required int visitId, // visita que se cierra
+    String? confirmedBy, // nombre del contacto que confirmó los extras
+    String? confirmedRole, // su cargo (opcional)
+  }) async {
+    final grace = await _graceSeconds(); // segundos para deshacer
     final uuid = await _outbox.enqueue( // guarda el cierre en la cola
-      type: EventTypes.finished, // tipo: "termine el trabajo"
+      type: EventTypes.finished, // tipo: "terminé el trabajo"
       graceSeconds: grace, // es deslizable: lleva tiempo para deshacer
-      visitId: visitId, 
+      visitId: visitId, // visita
+      payload: { // datos extra (vacío si no hubo extras)
+        if (confirmedBy != null) 'extras_confirmed_by': confirmedBy, // quién confirmó
+        if (confirmedRole != null && confirmedRole.isNotEmpty) 'extras_confirmed_role': confirmedRole, // su cargo
+      },
     );
     return ActionReceipt([uuid], grace); // comprobante para poder deshacer
   }

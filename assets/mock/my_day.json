@@ -29,7 +29,7 @@
         "status": "in_progress",
         "description": "Instalar 8 cámaras en el estacionamiento.",
         "plan_summary": "Cable por el plafón del pasillo. 8 cámaras, 1 grabador y escalera de 6 m.",
-        "engineer": { "id": 2, "name": "Toño" }, "close_mode": "remote",
+        "engineer": { "id": 2, "name": "Toño", "phone": "3220000002"}, "close_mode": "remote",
         "warranty_guide": null, "block": null
       }
     },
@@ -39,6 +39,7 @@
       "companions": [],
       "arrived_at": null, "left_at": null, "km_from_previous": 5.0,
       "client": { "id": 2, "name": "Restaurante Mar Azul", "overdue": false },
+      "engineer": { "id": 2, "name": "Toño", "phone": "3220000002" },
       "place": {
         "id": 8, "name": "Restaurante Mar Azul", "address": "Calle Hidalgo 45, Centro, Puerto Vallarta",
         "lat": 20.6534, "lng": -105.2253, "estimated_km_from_office": 17.0,
@@ -51,7 +52,7 @@
         "status": "scheduled",
         "description": "La cámara de la caja ya no se ve.",
         "plan_summary": null,
-        "engineer": { "id": 2, "name": "Toño" }, "close_mode": "remote",
+        "engineer": { "id": 2, "name": "Toño", "phone": "3220000002"}, "close_mode": "remote",
         "warranty_guide": "Documenta la causa, toma foto de la falla y del número de serie. No le prometas al cliente que entra en garantía.",
         "block": null
       }
@@ -62,6 +63,7 @@
       "companions": [],
       "arrived_at": null, "left_at": null, "km_from_previous": 9.0,
       "client": { "id": 4, "name": "Condominio Las Palmas", "overdue": false },
+      
       "place": {
         "id": 12, "name": "Condominio Las Palmas", "address": "Blvd. Nayarit 880, Nuevo Vallarta",
         "lat": 20.7101, "lng": -105.2889, "estimated_km_from_office": 14.0,
@@ -74,7 +76,7 @@
         "status": "scheduled",
         "description": "Revisión trimestral: limpiar lentes por el salitre, revisar grabación, disco y no-break.",
         "plan_summary": null,
-        "engineer": { "id": 2, "name": "Toño" }, "close_mode": "remote",
+        "engineer": { "id": 2, "name": "Toño", "phone": "3220000002"}, "close_mode": "remote",
         "warranty_guide": null, "block": null
       }
     }

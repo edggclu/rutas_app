@@ -1,178 +1,248 @@
-import 'dart:io';
+import 'dart:io'; // File: para mostrar las fotos guardadas en el teléfono
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:telyser_app/core/theme/app_colors.dart';
-import 'package:telyser_app/core/time/time_utils.dart';
-import 'package:telyser_app/core/widgets/alert_box.dart';
-import 'package:telyser_app/core/widgets/app_header.dart';
-import 'package:telyser_app/core/widgets/slide_to_confirm.dart';
-import 'package:telyser_app/core/widgets/undo_bar.dart';
-import 'package:telyser_app/data/local/app_database.dart';
-import 'package:telyser_app/data/providers.dart';
-import 'package:telyser_app/domain/enums.dart';
-import 'package:telyser_app/domain/event_types.dart';
-import 'package:telyser_app/domain/extras.dart';
-import 'package:telyser_app/domain/visit_state.dart';
-import 'package:telyser_app/features/extras/add_extra_screen.dart';
-import 'package:telyser_app/features/extras/add_request_screen.dart';
-import 'package:telyser_app/features/my_day/visit_tags.dart';
+import 'package:flutter/material.dart'; // widgets básicos
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
+import 'package:telyser_app/features/closing/not_finished_sheet.dart';
 import 'package:telyser_app/features/no_answer/no_answer.dart';
+import 'package:telyser_app/providers/actions.provider.dart';
+import 'package:telyser_app/providers/route_providers.dart';
 
-/// En sitio: pantalla de trabajo durante la visita.
-class SiteScreen extends ConsumerWidget { 
-  const SiteScreen({super.key, required this.visitId}); 
+import '../../core/theme/app_colors.dart'; // colores
+import '../../core/time/time_utils.dart'; // formatClock
+import '../../core/widgets/alert_box.dart'; // caja de aviso
+import '../../core/widgets/app_header.dart'; // encabezado navy
+import '../../core/widgets/slide_to_confirm.dart'; // botón deslizable
+import '../../core/widgets/undo_bar.dart'; // barra de "Deshacer"
+import '../../data/local/app_database.dart'; // MediaQueueData (una foto guardada)
+import '../../domain/closing.dart'; // warrantyDocumented, lastWarrantyCause
+import '../../domain/enums.dart'; // Coverage
+import '../../domain/event_types.dart'; // nombres de eventos
+import '../../domain/extras.dart'; // extrasOf y requestsOf
+import '../../domain/visit_state.dart'; // VisitEvent
+import '../closing/blocked_screen.dart'; // C7b
+import '../closing/continue_screen.dart'; // C7a
+import '../closing/finish_sheet.dart'; // C6
+import '../extras/add_extra_screen.dart'; // el formulario de extras
+import '../extras/add_request_screen.dart'; // el formulario de solicitudes
+import '../my_day/visit_tags.dart'; // etiquetas (tipo, urgente, estado)
+import 'capture_photo.dart'; // capturePhoto
+import 'warranty_card.dart'; // tarjeta de garantía
+import 'warranty_screen.dart'; // pantalla de garantía
+
+/// C5 · En sitio: pantalla de trabajo durante la visita.
+class SiteScreen extends ConsumerStatefulWidget { // ahora con estado: guarda las llaves de los deslizables
+  const SiteScreen({super.key, required this.visitId}); // recibe solo el id de la visita
 
   final int visitId; // id de la visita
 
-  void _toast(BuildContext context, String msg) => 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  @override
+  ConsumerState<SiteScreen> createState() => _SiteScreenState(); // crea el estado
+}
 
-  /// Abre la camara y guarda la foto en el teléfono. / se ejecuta al tocar "Tomar foto"
-  Future<void> _takePhoto(BuildContext context, WidgetRef ref) async { 
-    final messenger = ScaffoldMessenger.of(context); 
-    final repo = ref.read(mediaRepositoryProvider); // el repositorio de fotos
-    try { 
-      final shot = await ImagePicker().pickImage( // abre la cámara y espera la foto
-        source: ImageSource.camera, // usar la cámara y no la galería
-        maxWidth: 1600, // reduce el ancho máximo para que pese poco
-        imageQuality: 70, // calidad JPEG de 0 a 100
-      );
-      if (shot == null) return; // el técnico canceló tomar la foto y no se guarda nada
-      await repo.addPhoto(visitId: visitId, sourcePath: shot.path); // copia la foto y la deja pendiente de subir
-    } catch (_) {
-      messenger.showSnackBar(const SnackBar(
-        content: Text('No se pudo guardar la foto. Intenta de nuevo.'), 
+class _SiteScreenState extends ConsumerState<SiteScreen> { // el estado de la pantalla
+  final _finishKey = GlobalKey<SlideToConfirmState>(); // para regresar "Terminé" si se cancela
+  final _notKey = GlobalKey<SlideToConfirmState>(); // para regresar "No lo terminé" si se cancela
+
+  int get _id => widget.visitId; // atajo al id de la visita
+
+  /// Abre la cámara y guarda la foto en el teléfono.
+  Future<void> _takePhoto() async { // se ejecuta al tocar "Tomar foto"
+    final messenger = ScaffoldMessenger.of(context); // se guarda antes del await
+    try { // si algo falla, se avisa
+      await capturePhoto(ref, visitId: _id); // abre la cámara y guarda
+    } catch (_) { // la cámara falló o no se pudo guardar
+      messenger.showSnackBar(const SnackBar( // aviso sencillo
+        content: Text('No se pudo guardar la foto. Intenta de nuevo.'), // mensaje
       ));
     }
   }
 
-  /// Desliza "Termine el trabajo": cierra la visita y regresa a Mi día.
-  Future<void> _finish(BuildContext context, WidgetRef ref) async { 
-    final messenger = ScaffoldMessenger.of(context); 
-    final navigator = Navigator.of(context); 
-    final actions = ref.read(visitActionsProvider); 
-    try { 
-      final receipt = await actions.finish(visitId: visitId); 
+  /// Desliza "Terminé el trabajo": si hubo extras, primero los confirma el contacto.
+  Future<void> _finish() async { // se ejecuta al completar el deslizamiento
+    final events = ref.read(visitEventsProvider).value ?? const <VisitEvent>[]; // las acciones de la cola
+    final extras = extrasOf(events, _id); // extras de esta visita
+    if (extras.isEmpty) { // sin extras no hay nada que confirmar
+      await _doFinish(); // cierra directo
+      return; // termina
+    }
+    final visit = ref.read(visitByIdProvider(_id)); // la visita actual
+    final who = await showFinishSheet( // muestra la hoja de confirmación
+      context, // sobre esta pantalla
+      extras: extras, // los extras
+      contactName: visit?.place.contact?.name, // nombre del contacto autorizado, como ayuda
+    );
+    if (!mounted) return; // si ya cerró la pantalla, termina
+    if (who == null) { // el técnico canceló
+      _finishKey.currentState?.reset(); // regresa el deslizable
+      return; // termina
+    }
+    await _doFinish(who); // cierra con la confirmación
+  }
+
+  /// Guarda el cierre en la cola y regresa a Mi día.
+  Future<void> _doFinish([FinishConfirmation? who]) async { // who = quién confirmó los extras (null si no hubo)
+    final messenger = ScaffoldMessenger.of(context); // se guarda antes del await
+    final navigator = Navigator.of(context); // se guarda antes del await
+    final actions = ref.read(visitActionsProvider); // las acciones del técnico
+    try { // si algo falla, se avisa
+      final receipt = await actions.finish( // guarda el cierre en la cola
+        visitId: _id, // visita
+        confirmedBy: who?.name, // quién confirmó los extras
+        confirmedRole: who?.role, // su cargo
+      );
       navigator.popUntil((route) => route.isFirst); // vuelve a Mi día
-      showUndoBar( 
-        messenger, 
-        message: 'Marcaste Terminé el trabajo', 
-        seconds: receipt.graceSeconds, 
+      showUndoBar( // barra con cuenta regresiva
+        messenger, // dónde mostrarla
+        message: 'Marcaste Terminé el trabajo', // texto
+        seconds: receipt.graceSeconds, // duración (parámetro del servidor)
         onUndo: () => actions.undo(receipt), // si toca Deshacer, se borra de la cola
       );
-    } catch (_) { 
-      messenger.showSnackBar(const SnackBar( 
-        content: Text('No se pudo guardar. Intenta de nuevo.'), 
+    } catch (_) { // no se pudo guardar
+      _finishKey.currentState?.reset(); // regresa el deslizable
+      messenger.showSnackBar(const SnackBar( // aviso sencillo
+        content: Text('No se pudo guardar. Intenta de nuevo.'), // mensaje
       ));
     }
+  }
+
+  /// Desliza "No lo terminé": pregunta cuál de las dos opciones y abre su pantalla.
+  Future<void> _notFinished() async { // se ejecuta al completar el deslizamiento
+    final choice = await showNotFinishedSheet(context); // muestra la hoja con las dos opciones
+    if (!mounted) return; // si ya cerró la pantalla, termina
+    if (choice == null) { // volvió a la visita
+      _notKey.currentState?.reset(); // regresa el deslizable
+      return; // termina
+    }
+    final visit = ref.read(visitByIdProvider(_id)); // la visita actual
+    if (visit == null) return; // sin visita no hay nada que hacer
+    await Navigator.of(context).push( // abre la pantalla elegida y espera a que se cierre
+      MaterialPageRoute<void>(
+        builder: (_) => choice == NotFinishedChoice.continueTomorrow // según la opción
+            ? ContinueScreen(visit: visit) // Sigo otro día
+            : BlockedScreen(visit: visit), // No pude seguir
+      ),
+    );
+    if (mounted) _notKey.currentState?.reset(); // si regresó sin enviar, regresa el deslizable
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) { 
-    final visit = ref.watch(visitByIdProvider(visitId)); 
+  Widget build(BuildContext context) { // dibuja la pantalla
+    final visit = ref.watch(visitByIdProvider(_id)); // la visita con su estado actual
     final events = ref.watch(visitEventsProvider).value ?? const <VisitEvent>[]; // las acciones de la cola
-    final photos = ref.watch(mediaForVisitProvider(visitId)).value ?? const <MediaQueueData>[]; // las fotos de esta visita
-    final extras = extrasOf(events, visitId); // extras ya guardados de esta visita
-    final requests = requestsOf(events, visitId); // solicitudes ya guardadas de esta visita
-    if (visit == null) { 
-      return const Scaffold(body: Center(child: CircularProgressIndicator())); 
+    final photos = ref.watch(mediaForVisitProvider(_id)).value ?? const <MediaQueueData>[]; // los archivos de esta visita
+    if (visit == null) { // todavía no carga
+      return const Scaffold(body: Center(child: CircularProgressIndicator())); // círculo de carga
     }
 
-    // alguna vez aviso que nadie abria?
-    final reportedNoAnswer = events.any( 
-        (e) => e.visitId == visitId && e.type == EventTypes.noAnswerReported); 
-    final arrived = visit.arrivedAt; // hora de llegada
-    final isWarranty = visit.job.coverage == Coverage.warranty; // verifica si es una visita de garantia
-    final bottom = MediaQuery.of(context).padding.bottom; 
+    final extras = extrasOf(events, _id); // extras ya guardados de esta visita
+    final requests = requestsOf(events, _id); // solicitudes ya guardadas de esta visita
+    final reportedNoAnswer = events.any( // ¿alguna vez avisó que nadie abría?
+        (e) => e.visitId == _id && e.type == EventTypes.noAnswerReported); // acción de este tipo para esta visita
+    final arrived = visit.arrivedAt; // hora de llegada (null si se deshizo)
+    final isWarranty = visit.job.coverage == Coverage.warranty; // ¿es una visita de garantía?
+    final documented = warrantyDocumented(events, _id); // ¿ya documentó la garantía?
+    final canFinish = !isWarranty || documented; // en garantía, solo puede terminar si ya la documentó
+    final shots = photos.where((m) => m.kind == 'progress').toList(); // solo las fotos de avance en la tira
+    final bottom = MediaQuery.of(context).padding.bottom; // alto de la barra de gestos
 
-    return Scaffold( 
-      body: Column(
+    return Scaffold( // estructura de la pantalla
+      body: Column( // elementos uno debajo de otro
         children: [
-          AppHeader( 
-            subtitle: visit.job.folio, 
-            title: visit.place.name, 
-            onBack: () => Navigator.of(context).pop(), 
-            bottom: Wrap( 
-              spacing: 6, 
-              runSpacing: 6, 
+          AppHeader( // encabezado navy
+            subtitle: visit.job.folio, // arriba: el folio
+            title: visit.place.name, // título: el lugar
+            onBack: () => Navigator.of(context).pop(), // flecha para regresar
+            bottom: Wrap( // etiquetas en fila
+              spacing: 6, // espacio horizontal entre etiquetas
+              runSpacing: 6, // espacio vertical si bajan de renglón
               children: [...visitTags(visit.job), statusChip(visit.status)], // tipo, urgente, cobertura y estado
             ),
           ),
-          Expanded( 
-            child: ListView( 
-              padding: const EdgeInsets.all(16), 
+          Expanded( // ocupa el espacio que queda
+            child: ListView( // contenido que se puede desplazar
+              padding: const EdgeInsets.all(16), // margen de 16
               children: [
                 if (reportedNoAnswer) ...[ // si en algún momento avisó que nadie abría
-                  const AlertBox( 
-                    title: 'Aviso a la oficina', 
-                    body: 'Reportaste que nadie abría.', 
-                    background: AppColors.alertaSuave, 
-                    foreground: AppColors.alerta, 
+                  const AlertBox( // caja de aviso ámbar
+                    title: 'Aviso a la oficina', // título
+                    body: 'Reportaste que nadie abría.', // texto
+                    background: AppColors.alertaSuave, // fondo ámbar claro
+                    foreground: AppColors.alerta, // texto ámbar
                   ),
-                  Align( 
-                    alignment: Alignment.centerLeft, 
-                    child: TextButton( 
-                      onPressed: () => Navigator.of(context).push( 
-                        MaterialPageRoute<void>( 
-                          builder: (_) => NoAnswerScreen(visitId: visitId), 
+                  Align( // alinea el enlace a la izquierda
+                    alignment: Alignment.centerLeft, // izquierda
+                    child: TextButton( // botón de texto
+                      onPressed: () => Navigator.of(context).push( // al tocarlo abre C4
+                        MaterialPageRoute<void>( // pantalla nueva
+                          builder: (_) => NoAnswerScreen(visitId: _id), // la pantalla de espera
                         ),
                       ),
-                      child: const Text('Ver espera >'), 
+                      child: const Text('Ver espera ›'), // texto del enlace
                     ),
                   ),
-                  const SizedBox(height: 4), 
+                  const SizedBox(height: 4), // espacio vertical
                 ],
-                Text( 
-                  arrived == null 
-                      ? 'Sin hora de llegada' 
-                      : 'Llegaste a las ${formatClock(arrived)}', // ejemplo : "Llegaste a las 8:20"
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700), 
+                Text( // hora de llegada
+                  arrived == null // si no hay hora (por ejemplo, se deshizo Llegué)
+                      ? 'Sin hora de llegada' // mensaje alterno
+                      : 'Llegaste a las ${formatClock(arrived)}', // ej. "Llegaste a las 8:20"
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700), // grande y en negritas
                 ),
                 if (visit.companions.isNotEmpty) // si va con acompañantes
-                  Text( 
-                    'Con: ${visit.companions.map((c) => c.name).join(', ')}', 
-                    style: const TextStyle(color: AppColors.gris600), 
+                  Text( // los nombres
+                    'Con: ${visit.companions.map((c) => c.name).join(', ')}', // ej. "Con: Toño"
+                    style: const TextStyle(color: AppColors.gris600), // gris
                   ),
-                const SizedBox(height: 16), 
-                Row( 
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween, 
-                  children: [
-                    const Text( 
-                      'Fotos', 
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700), 
+                if (isWarranty) ...[ // en visitas de garantía
+                  const SizedBox(height: 16), // espacio vertical
+                  WarrantyCard( // tarjeta con el estado de la garantía
+                    documented: documented, // ¿ya se documentó?
+                    causeLabel: lastWarrantyCause(events, _id)?.label, // causa guardada
+                    onOpen: () => Navigator.of(context).push( // abre la pantalla de garantía
+                      MaterialPageRoute<void>(
+                        builder: (_) => WarrantyScreen(visit: visit), // con esta visita
+                      ),
                     ),
-                    Text( 
-                      '${photos.length}', 
-                      style: const TextStyle(color: AppColors.gris600, fontWeight: FontWeight.w600), 
+                  ),
+                ],
+                const SizedBox(height: 16), // espacio vertical
+                Row( // título de fotos con su contador
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // uno a cada lado
+                  children: [
+                    const Text( // título
+                      'Fotos', // texto
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700), // negritas
+                    ),
+                    Text( // contador
+                      '${shots.length}', // cantidad de fotos de avance
+                      style: const TextStyle(color: AppColors.gris600, fontWeight: FontWeight.w600), // gris
                     ),
                   ],
                 ),
-                const SizedBox(height: 8), 
+                const SizedBox(height: 8), // espacio vertical
                 FilledButton.icon( // botón: tomar foto
-                  onPressed: () => _takePhoto(context, ref), // abre la cámara
+                  onPressed: _takePhoto, // abre la cámara
                   icon: const Icon(Icons.photo_camera), // ícono de cámara
-                  label: const Text('Tomar foto'), 
+                  label: const Text('Tomar foto'), // texto
                 ),
-                const SizedBox(height: 10), 
-                if (photos.isEmpty) // si todavía no hay fotos
-                  const Text( 
-                    'Todavía no hay fotos.', 
-                    style: TextStyle(color: AppColors.gris600),
+                const SizedBox(height: 10), // espacio vertical
+                if (shots.isEmpty) // si todavía no hay fotos
+                  const Text( // mensaje
+                    'Todavía no hay fotos.', // texto
+                    style: TextStyle(color: AppColors.gris600), // gris
                   )
                 else // si ya hay fotos
-                  SizedBox( 
+                  SizedBox( // altura fija para la tira
                     height: 84, // alto de cada miniatura
-                    child: ListView.separated( 
-                      scrollDirection: Axis.horizontal, 
-                      itemCount: photos.length, 
-                      separatorBuilder: (context, index) => const SizedBox(width: 8), 
-                      itemBuilder: (context, i) => _Thumb(photo: photos[i]), // dibuja cada miniatura
+                    child: ListView.separated( // lista horizontal con separadores
+                      scrollDirection: Axis.horizontal, // se desliza de lado
+                      itemCount: shots.length, // cuántas miniaturas
+                      separatorBuilder: (context, index) => const SizedBox(width: 8), // espacio entre miniaturas
+                      itemBuilder: (context, i) => _Thumb(photo: shots[i]), // dibuja cada miniatura
                     ),
                   ),
-                const SizedBox(height: 16), 
-                                Row( // dos botones lado a lado
+                const SizedBox(height: 16), // espacio vertical
+                Row( // dos botones lado a lado
                   children: [
                     Expanded( // cada botón ocupa la mitad
                       child: OutlinedButton( // botón: extra
@@ -229,41 +299,46 @@ class SiteScreen extends ConsumerWidget {
                               : null, // si la creó el técnico, sin etiqueta
                     ),
                 ],
-                if (!visit.responsible) ...[ 
-                  const SizedBox(height: 16), 
-                  const AlertBox( 
-                    title: 'Eres acompañante', 
-                    body: 'Puedes subir fotos. El responsable cierra la visita.', 
+                if (!visit.responsible) ...[ // si es acompañante (no responsable)
+                  const SizedBox(height: 16), // espacio vertical
+                  const AlertBox( // aviso
+                    title: 'Eres acompañante', // título
+                    body: 'Puedes subir fotos. El responsable cierra la visita.', // texto
                   ),
                 ],
               ],
             ),
           ),
           if (visit.responsible) // solo el responsable ve los botones de cierre
-            Container( 
-              color: Colors.white, 
-              padding: EdgeInsets.fromLTRB(16, 12, 16, 8 + bottom), 
-              child: Column( 
-                mainAxisSize: MainAxisSize.min, 
+            Container( // franja blanca de abajo
+              color: Colors.white, // fondo blanco
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 8 + bottom), // margen interno
+              child: Column( // elementos uno debajo de otro
+                mainAxisSize: MainAxisSize.min, // solo ocupa lo necesario
                 children: [
-                  if (isWarranty) 
-                    const Padding( 
-                      padding: EdgeInsets.only(bottom: 8), 
-                      child: Text( 
-                        'En garantía, el bloque de garantía es obligatorio antes de terminar (llega en 4c).', 
-                        textAlign: TextAlign.center, 
-                        style: TextStyle(color: AppColors.alerta, fontSize: 12), 
+                  if (!canFinish) // en garantía sin documentar
+                    const Padding( // aviso con margen abajo
+                      padding: EdgeInsets.only(bottom: 8), // 8 de margen inferior
+                      child: Text( // texto del aviso
+                        'Documenta la garantía para poder terminar.', // mensaje
+                        textAlign: TextAlign.center, // centrado
+                        style: TextStyle(color: AppColors.alerta, fontSize: 12), // ámbar y pequeño
                       ),
                     ),
                   SlideToConfirm( // el deslizable grande
-                    enabled: !isWarranty, // deshabilitado en garantía
-                    color: AppColors.ok, 
-                    label: 'Desliza: Terminé el trabajo', 
-                    onConfirmed: () => _finish(context, ref),
+                    key: _finishKey, // para poder regresarlo
+                    enabled: canFinish, // deshabilitado si falta la garantía
+                    color: AppColors.ok, // verde
+                    label: 'Desliza: Terminé el trabajo', // texto
+                    onConfirmed: _finish, // al completarlo, cierra (con confirmación si hubo extras)
                   ),
-                  TextButton( // botón chico: no lo termine
-                    onPressed: () => _toast(context, 'No lo terminé llega en el bloque 4c.'), 
-                    child: const Text('No lo terminé'), 
+                  const SizedBox(height: 8), // espacio vertical
+                  SlideToConfirm( // el deslizable chico
+                    key: _notKey, // para poder regresarlo
+                    height: 48, // más bajo que el principal
+                    color: AppColors.navy500, // gris azulado
+                    label: 'Desliza: No lo terminé', // texto
+                    onConfirmed: _notFinished, // al completarlo, pregunta qué pasó
                   ),
                 ],
               ),

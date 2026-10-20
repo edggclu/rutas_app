@@ -1,64 +1,31 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:telyser_app/features/my_day/arrival_panel.dart';
-import 'package:telyser_app/features/no_answer/no_answer_screen.dart';
-import 'package:telyser_app/features/shared/run_undoable.dart';
-import 'package:telyser_app/features/site/site_screen.dart';
+import 'package:flutter/material.dart'; // widgets básicos
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerWidget
+import 'package:telyser_app/domain/models/enums.dart';
+import 'package:telyser_app/domain/models/models.dart';
 import 'package:telyser_app/providers/actions.provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../core/widgets/alert_box.dart';
-import '../../core/widgets/app_header.dart';
-import '../../core/widgets/slide_to_confirm.dart';
-import '../../domain/models/enums.dart';
-import '../../domain/models/models.dart';
-import 'visit_tags.dart';
+import '../../core/theme/app_colors.dart'; // colores
+import '../../core/widgets/alert_box.dart'; // caja de aviso
+import '../../core/widgets/app_header.dart'; // encabezado navy
+import '../../core/widgets/slide_to_confirm.dart'; // botón deslizable
+import '../../core/widgets/toast.dart'; // avisos cortos
+import '../no_answer/no_answer_screen.dart'; // pantalla "No me abren"
+import '../shared/run_undoable.dart'; // runUndoable
+import '../site/site_screen.dart'; // pantalla En sitio
+import 'arrival_panel.dart'; // el panel "¿Ya te abrieron?"
+import 'visit_tags.dart'; // etiquetas (tipo, urgente, estado)
+import 'widgets/address_card.dart'; // dirección y mapa
+import 'widgets/contact_card.dart'; // contacto
+import 'widgets/task_card.dart'; // qué hay que hacer
 
 /// C3 · Tarjeta de visita: todo lo necesario para llegar y saber qué hacer.
 /// Abajo muestra el deslizable "Llegué" o, si ya llegó, el panel "¿Ya te abrieron?".
-class VisitDetailScreen extends ConsumerWidget {
-  const VisitDetailScreen({super.key, required this.visit});
+class VisitDetailScreen extends ConsumerWidget { // ConsumerWidget: puede leer providers con `ref`
+  const VisitDetailScreen({super.key, required this.visit}); // recibe la visita
 
-  final Visit visit;
+  final Visit visit; // la visita que se muestra
 
-  Future<void> _openMaps(BuildContext context) async {
-    final p = visit.place;
-    final label = Uri.encodeComponent(p.name);
-    final uris = <Uri>[
-      if (p.lat != null && p.lng != null)
-        // geo: abre el selector de Android (Maps, Waze…).
-        Uri.parse('geo:${p.lat},${p.lng}?q=${p.lat},${p.lng}($label)'),
-      Uri.parse(
-        'https://www.google.com/maps/search/?api=1&query='
-        '${p.lat != null && p.lng != null ? '${p.lat},${p.lng}' : Uri.encodeComponent(p.address)}',
-      ),
-    ];
-    for (final u in uris) {
-      try {
-        if (await launchUrl(u, mode: LaunchMode.externalApplication)) return;
-      } catch (_) {}
-    }
-    if (context.mounted) _toast(context, 'No se pudo abrir el mapa.');
-  }
-
-  // TODO(paso 2): cada toque de llamar / WhatsApp se registra en la bitácora.
-  Future<void> _call(BuildContext context, String phone) async {
-    final ok = await launchUrl(Uri(scheme: 'tel', path: phone));
-    if (!ok && context.mounted) _toast(context, 'No se pudo llamar.');
-  }
-
-  Future<void> _whatsapp(BuildContext context, String phone) async {
-    var digits = phone.replaceAll(RegExp(r'\D'), '');
-    if (digits.length == 10) digits = '52$digits';
-    final ok = await launchUrl(
-      Uri.parse('https://wa.me/$digits'),
-      mode: LaunchMode.externalApplication,
-    );
-    if (!ok && context.mounted) _toast(context, 'No se pudo abrir WhatsApp.');
-  }
-  
-    Future<void> _arrive(BuildContext context, WidgetRef ref) async { // se ejecuta al deslizar "Llegué"
+  Future<void> _arrive(BuildContext context, WidgetRef ref) async { // se ejecuta al deslizar "Llegué"
     await runUndoable( // guarda y muestra la barra
       context, ref, // dónde mostrar los avisos
       action: (a) => a.arrival.arrive(visitId: visit.id), // el área de llegada: lee el GPS y guarda
@@ -67,240 +34,97 @@ class VisitDetailScreen extends ConsumerWidget {
     );
   }
 
-    /// se ejecuta al tocar "No me abren" en el panel
-    Future<void> _noAnswer(BuildContext context, WidgetRef ref) async { 
-    final navigator = Navigator.of(context); 
-    final messenger = ScaffoldMessenger.of(context); 
-    try { 
+  /// "No me abren": avisa a la oficina (sin deshacer) y abre la cuenta regresiva.
+  Future<void> _noAnswer(BuildContext context, WidgetRef ref) async { // se ejecuta al tocar "No me abren" en el panel
+    final navigator = Navigator.of(context); // se guarda antes del await
+    final messenger = ScaffoldMessenger.of(context); // se guarda antes del await
+    try { // si algo falla, se avisa
       await ref.read(visitActionsProvider).noAnswer.reportNoAnswer(visitId: visit.id); // avisa a la oficina (una sola vez)
-      navigator.push( 
-        MaterialPageRoute<void>( 
-          builder: (_) => NoAnswerScreen(visitId: visit.id), 
+      navigator.push( // abre la pantalla C4
+        MaterialPageRoute<void>( // pantalla nueva
+          builder: (_) => NoAnswerScreen(visitId: visit.id), // con el id de esta visita
         ),
       );
-    } catch (_) {
-      messenger.showSnackBar(const SnackBar( 
-        content: Text('No se pudo guardar. Intenta de nuevo.'), 
-      ));
+    } catch (_) { // no se pudo guardar el aviso
+      messenger.toast('No se pudo guardar. Intenta de nuevo.'); // aviso
     }
   }
 
-  void _toast(BuildContext context, String msg) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final job = visit.job;
-    final place = visit.place;
-    final contact = place.contact;
+  Widget build(BuildContext context, WidgetRef ref) { // dibuja la pantalla
+    final job = visit.job; // el trabajo
+    final place = visit.place; // el lugar
+    final contact = place.contact; // contacto principal (puede faltar)
+    final bottom = MediaQuery.of(context).padding.bottom; // alto de la barra de gestos
 
-    return Scaffold(
-      body: Column(
+    return Scaffold( // estructura de la pantalla
+      body: Column( // elementos uno debajo de otro
         children: [
-          AppHeader(
-            subtitle: job.folio,
-            title: place.name,
-            onBack: () => Navigator.of(context).pop(),
-            bottom: Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [...visitTags(job), statusChip(visit.status)],
+          AppHeader( // encabezado navy
+            subtitle: job.folio, // arriba: el folio
+            title: place.name, // título: el lugar
+            onBack: () => Navigator.of(context).pop(), // flecha para regresar
+            bottom: Wrap( // etiquetas en fila
+              spacing: 6, // espacio horizontal entre etiquetas
+              runSpacing: 6, // espacio vertical si bajan de renglón
+              children: [...visitTags(job), statusChip(visit.status)], // tipo, urgente, cobertura y estado
             ),
           ),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
+          Expanded( // ocupa el espacio que queda
+            child: ListView( // contenido que se puede desplazar
+              padding: const EdgeInsets.all(16), // margen de 16
               children: [
-                _Box(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        place.address,
-                        style: const TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                      const SizedBox(height: 10),
-                      FilledButton(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.navy900,
-                          minimumSize: const Size.fromHeight(44),
-                        ),
-                        onPressed: () => _openMaps(context),
-                        child: const Text('Abrir en Maps / Waze'),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 10),
-                if (contact != null)
-                  _Box(
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                contact.name,
-                                style: const TextStyle(
-                                    fontSize: 15, fontWeight: FontWeight.w700),
-                              ),
-                              if (contact.role != null)
-                                Text(
-                                  contact.role!,
-                                  style: const TextStyle(
-                                      fontSize: 12, color: AppColors.gris600),
-                                ),
-                              Text(
-                                contact.phone,
-                                style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.gris600),
-                              ),
-                            ],
-                          ),
-                        ),
-                        _SmallButton(
-                          label: 'Llamar',
-                          color: AppColors.navy900,
-                          onTap: () => _call(context, contact.phone),
-                        ),
-                        const SizedBox(width: 8),
-                        _SmallButton(
-                          label: 'WhatsApp',
-                          color: AppColors.ok,
-                          onTap: () => _whatsapp(context, contact.phone),
-                        ),
-                      ],
-                    ),
-                  ),
-                if (place.accessNotes != null) ...[
-                  const SizedBox(height: 10),
-                  AlertBox(title: 'Notas de acceso', body: place.accessNotes!),
+                AddressCard(place: place), // dirección y botón de mapa
+                const SizedBox(height: 10), // espacio vertical
+                if (contact != null) ContactCard(contact: contact), // contacto, si lo hay
+                if (place.accessNotes != null) ...[ // si hay notas de acceso
+                  const SizedBox(height: 10), // espacio vertical
+                  AlertBox(title: 'Notas de acceso', body: place.accessNotes!), // las notas
                 ],
-                const SizedBox(height: 10),
-                _Box(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Qué hay que hacer',
-                        style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.gris600),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(job.description),
-                      if (job.planSummary != null) ...[
-                        const SizedBox(height: 4),
-                        Text(job.planSummary!),
-                        const SizedBox(height: 6),
-                        GestureDetector(
-                          // TODO(paso 5): pantalla D1 "Ver plan completo".
-                          onTap: () => _toast(context, 'El plan completo llega con el paso 5.'),
-                          child: const Text(
-                            'Ver plan completo ›',
-                            style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.rojo),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                if (visit.client.overdue) ...[
-                  const SizedBox(height: 10),
-                  const AlertBox(
-                    title: 'Saldo vencido',
-                    body: 'Este cliente tiene saldo vencido. '
-                        'No agregues equipo sin autorización.',
-                    background: AppColors.alertaSuave,
-                    foreground: AppColors.alerta,
+                const SizedBox(height: 10), // espacio vertical
+                TaskCard(job: job), // qué hay que hacer
+                if (visit.client.overdue) ...[ // si el cliente tiene saldo vencido
+                  const SizedBox(height: 10), // espacio vertical
+                  const AlertBox( // aviso ámbar (sin montos)
+                    title: 'Saldo vencido', // título
+                    body: 'Este cliente tiene saldo vencido. No agregues equipo sin autorización.', // texto
+                    background: AppColors.alertaSuave, // fondo ámbar claro
+                    foreground: AppColors.alerta, // texto ámbar
                   ),
                 ],
-                if (job.coverage == Coverage.warranty && job.warrantyGuide != null) ...[
-                  const SizedBox(height: 10),
-                  AlertBox(
-                    title: 'Guía de garantía',
-                    body: job.warrantyGuide!,
-                    background: AppColors.alertaSuave,
-                    foreground: AppColors.alerta,
+                if (job.coverage == Coverage.warranty && job.warrantyGuide != null) ...[ // si es garantía y hay guía
+                  const SizedBox(height: 10), // espacio vertical
+                  AlertBox( // la guía
+                    title: 'Guía de garantía', // título
+                    body: job.warrantyGuide!, // texto de la guía
+                    background: AppColors.alertaSuave, // fondo ámbar claro
+                    foreground: AppColors.alerta, // texto ámbar
                   ),
                 ],
               ],
             ),
           ),
-          if(visit.status == VisitStatus.onSite)
-            // si ya llego muestra: "Ya te abrieron?"
-            ArrivalPanel(
-              visit: visit, 
-              // al tocar "Empezar"
-              onStart: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => SiteScreen(visitId: visit.id),
-                )
-              ), 
-              // al tocar 'no me abren'
-              onNoAnswer: () => _noAnswer(context, ref)
+          if (visit.status == VisitStatus.onSite) // si ya llegó (estado calculado con la cola)
+            ArrivalPanel( // muestra "¿Ya te abrieron?"
+              visit: visit, // la visita
+              onStart: () => Navigator.of(context).push( // al tocar "Empezar"
+                MaterialPageRoute<void>( // abre una pantalla nueva
+                  builder: (_) => SiteScreen(visitId: visit.id), // la pantalla En sitio
+                ),
+              ),
+              onNoAnswer: () => _noAnswer(context, ref), // al tocar "No me abren": avisa y abre C4
             )
-            
-          // si no ha llegado y la visita no está terminada
-          else if (visit.status != VisitStatus.done)
-            Container (
-              color: Colors.white,
-              padding: EdgeInsets.fromLTRB(16, 12, 16,
-                        12 + MediaQuery.of(context).padding.bottom),
-              child: SlideToConfirm(
-                label: 'Desliza: LLegue', 
-                onConfirmed: () => _arrive(context,ref)),
-            )
+          else if (visit.status != VisitStatus.done) // si no ha llegado y la visita no está terminada
+            Container( // caja blanca que contiene el deslizable
+              color: Colors.white, // fondo blanco
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + bottom), // margen interno (deja espacio para la barra de gestos)
+              child: SlideToConfirm( // el deslizable
+                label: 'Desliza: Llegué', // texto
+                onConfirmed: () => _arrive(context, ref), // al completar el deslizamiento, marca la llegada
+              ),
+            ),
         ],
       ),
     );
   }
-}
-
-class _Box extends StatelessWidget {
-  const _Box({required this.child});
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.gris200),
-        ),
-        child: child,
-      );
-}
-
-class _SmallButton extends StatelessWidget {
-  const _SmallButton({required this.label, required this.color, required this.onTap});
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => Material(
-        color: color,
-        borderRadius: BorderRadius.circular(10),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(10),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-            child: Text(
-              label,
-              style: const TextStyle(
-                  color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ),
-      );
 }

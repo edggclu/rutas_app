@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:telyser_app/data/local/app_database.dart'; 
 import 'package:telyser_app/data/local/outbox_repository.dart'; 
 import 'package:telyser_app/data/location_service.dart'; 
-import 'package:telyser_app/data/visit_actions.dart';
+import 'package:telyser_app/application/visit_actions.dart';
 import 'package:telyser_app/domain/closing.dart'; 
 import 'package:telyser_app/domain/event_types.dart';
 import 'package:telyser_app/domain/extras.dart'; 

@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Provider
-import 'package:telyser_app/data/visit_actions.dart';
+import 'package:telyser_app/application/visit_actions.dart';
 
 import 'infra_providers.dart'; // cola y ubicación
 import 'settings_provider.dart'; // los parámetros (segundos para deshacer)

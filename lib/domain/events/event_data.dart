@@ -143,18 +143,18 @@ class RequestAddedEvent extends EventData { // algo para cotizar después
   final ExtraItem? item; // datos del extra, si nació de uno
   @override
   String get type => EventTypes.requestAdded; // su nombre
-  @override
-  Map<String, dynamic> toPayload() { // igual que antes, en sus dos variantes
+   @override
+  Map<String, dynamic> toPayload() { // en sus dos variantes
     final it = item; // atajo local
     if (it != null) return {...it.toPayload(), 'description': description, 'origin': origin.code}; // nació de un extra: sus datos más descripción y origen
-    return {'description': description, 'requested_by': requestedByText, 'origin': origin.code}; // creada con el botón "Solicitud después"
+    return {'description': description, 'requester_text': requestedByText, 'origin': origin.code}; // creada con "Solicitud después" (ahora con su propio nombre de llave)
   }
   factory RequestAddedEvent.fromPayload(Map<String, dynamic> p) { // lo reconstruye
     final fromExtra = p.containsKey('source'); // si trae "source", nació de un extra
     return RequestAddedEvent( // arma el evento
       description: readString(p, 'description') ?? '', // descripción
       origin: RequestOrigin.tryFromCode(readString(p, 'origin')) ?? RequestOrigin.cannotDoNow, // origen
-      requestedByText: fromExtra ? null : readString(p, 'requested_by'), // el nombre escrito solo existe en la otra variante
+      requestedByText: fromExtra ? null : (readString(p, 'requester_text') ?? readString(p, 'requested_by')), // al leer, también acepta la llave vieja
       item: fromExtra ? ExtraItem.fromPayload(p) : null, // los datos del extra, si los hay
     );
   }

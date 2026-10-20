@@ -70,12 +70,12 @@ void main() {
     test('extra y solicitudes', () { // las tres variantes de extras
       expect(const ExtraAddedEvent(item).toPayload(), itemMap); // el extra
       expect( // solicitud que nació de un extra
-        const RequestAddedEvent(description: '1 × Cámara IP 4 MP', origin: RequestOrigin.creditHold, item: item).toPayload(),
-        {...itemMap, 'description': '1 × Cámara IP 4 MP', 'origin': 'credit_hold'},
+        const RequestAddedEvent(description: '1 x Cámara IP 4 MP', origin: RequestOrigin.creditHold, item: item).toPayload(),
+        {...itemMap, 'description': '1 x Cámara IP 4 MP', 'origin': 'credit_hold'},
       );
       expect( // solicitud creada con "Solicitud después"
         const RequestAddedEvent(description: 'Cámaras en la alberca', origin: RequestOrigin.cannotDoNow, requestedByText: 'Gerente').toPayload(),
-        {'description': 'Cámaras en la alberca', 'requested_by': 'Gerente', 'origin': 'cannot_do_now'},
+              {'description': 'Cámaras en la alberca', 'requester_text': 'Gerente', 'origin': 'cannot_do_now'},
       );
       expect( // aviso de retraso
         const RouteDelayReportedEvent(minutes: 120, extraName: 'Cámara IP 4 MP').toPayload(),
@@ -146,18 +146,24 @@ void main() {
 
   group('lectura tolerante', () { // nunca se rompe la ruta
     test('un tipo desconocido se conserva tal cual', () { // versión más nueva de la app
+      
       final d = EventData.parse('something_new', {'a': 1}); // tipo que no existe
       expect(d, isA<UnknownEvent>()); // se reconoce como desconocido
       expect(d.type, 'something_new'); // conserva el tipo
-      expect(d.toPayload(), {'a': 1}); // conserva los datos
-    });
+      expect(d.toPayload(), {'a': 1}); 
+    });// conserva los datos
+    test('una solicitud guardada con la llave vieja se sigue leyendo', () { // datos de prueba anteriores a este cambio
+      final a = EventData.parse('request_added', {'description': 'x', 'requested_by': 'Gerente', 'origin': 'cannot_do_now'}); // llave vieja
+      expect((a as RequestAddedEvent).requestedByText, 'Gerente'); // se lee igual
+    });  
+
 
     test('un tipo conocido con datos vacíos usa valores por defecto', () { // no se pierde el cambio de estado
       expect(EventData.parse('blocked', {}), isA<BlockedEvent>()); // sigue siendo "no pude seguir"
       expect((EventData.parse('blocked', {}) as BlockedEvent).reason, BlockReason.other); // motivo por defecto
       expect((EventData.parse('arrived', {'mode': 5}) as ArrivedEvent).mode, ArrivalMode.manual); // dato de tipo equivocado: por defecto
     });
-  });
+});
 
   group('VisitEvent', () { // une lo crudo con lo tipado
     final t0 = DateTime.utc(2026, 10, 6, 14, 20); // hora fija de prueba

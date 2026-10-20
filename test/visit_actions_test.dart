@@ -221,7 +221,7 @@ void main() {
     expect(row.type, EventTypes.requestAdded); // tipo correcto
     expect(p['description'], 'Cámaras en la alberca'); // descripción
     expect(p['origin'], 'cannot_do_now'); // origen
-    expect(p['requested_by'], 'Gerente'); // quién la pidió
+    expect(p['requester_text'], 'Gerente'); // quién la pidió (llave nueva) // quién la pidió
   });
 
     test('Terminé con extras guarda quién los confirmó', () async { // confirmación de extras

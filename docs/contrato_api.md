@@ -126,7 +126,9 @@ Tipos de evento: `departure_confirmed`, `missing_items`, `arrived` (automático 
 `source`: `job_reserved` · `own_stock` · `bought_on_route`. `reason`: `client_asked` · `site_required`.
 El servidor marca como absorbido el cable, la canaleta y el tubo; la app no manda ese dato.
 
-`request_added`: mismos datos del extra (si viene de un extra rechazado) más
+`request_added`: `description` y `origin` (`other_person` · `credit_hold` · `cannot_do_now`), más:
+- si nació de un extra rechazado: los mismos datos del extra (`requested_by` = `authorized_contact` · `other`);
+- si la creó el técnico con "Solicitud después": `requester_text` (nombre escrito a mano, opcional).
 `description` y `origin` (`other_person` · `credit_hold` · `cannot_do_now`).
 
 `route_delay_reported`: `{ "minutes": 120, "reason": "extra", "extra_name": "Cámara IP 4 MP" }`

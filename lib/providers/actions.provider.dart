@@ -11,3 +11,9 @@ final visitActionsProvider = Provider<VisitActions>((ref) => VisitActions( // cr
       () async => (await ref.read(settingsProvider.future)).undoSeconds, // le da cómo leer los segundos de deshacer
       ref.watch(locationServiceProvider), // le da el servicio de ubicación
     ));
+    
+/// Borra lo guardado en el teléfono (cola y fotos). Solo para la demo.
+final demoResetProvider = Provider<Future<void> Function()>((ref) => () async { // devuelve una función que se ejecuta al llamarla
+      await ref.read(outboxRepositoryProvider).clearAll(); // borra la cola: las visitas vuelven a su estado inicial
+      await ref.read(mediaRepositoryProvider).clearAll(); // borra las fotos y videos
+    });

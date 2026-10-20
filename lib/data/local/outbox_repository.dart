@@ -94,5 +94,10 @@ class OutboxRepository {
         .getSingleOrNull(); // devuelve la fila o null si no hay ninguna
     return row != null;
   }
+
+  /// Borra toda la cola. Solo para reiniciar la demo.
+  Future<void> clearAll() async { // no devuelve nada
+    await _db.delete(_db.outboxEvents).go(); // borra todas las filas de la cola
+  }
 }
 

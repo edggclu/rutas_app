@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:telyser_app/features/my_day/widgets/account_menu.dart';
 import 'package:telyser_app/features/site/site_screen.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 import 'package:telyser_app/providers/session_provider.dart';
@@ -81,19 +82,7 @@ class _Content extends StatelessWidget {
         AppHeader(
           subtitle: formatLongDate(route.date),
           title: 'Hola, ${user.name}',
-          trailing: GestureDetector(
-            onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Mis trabajos llega con el paso 5.')),
-            ),
-            child: const Text(
-              'Mis trabajos ›',
-              style: TextStyle(
-                color: AppColors.rojoSuave,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
-            ),
-          ),
+          trailing: const AccountMenu(), // menú: cerrar sesión y reiniciar la demo
           bottom: Align(
             alignment: Alignment.centerLeft,
             child: _StateChip(state),

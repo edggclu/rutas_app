@@ -100,4 +100,16 @@ class MediaRepository { // aquí vive todo lo relacionado con fotos y videos gua
         }
         return items; // la lista convertida
   });
+  
+    /// Borra todas las fotos y videos guardados (filas y archivos). Solo para reiniciar la demo.
+  Future<void> clearAll() async { // no devuelve nada
+    final rows = await _db.select(_db.mediaQueue).get(); // primero se leen, para saber qué archivos borrar
+    await _db.delete(_db.mediaQueue).go(); // borra todas las filas
+    for (final r in rows) { // por cada archivo que había
+      try { // si uno falla, se sigue con el siguiente
+        final f = File(r.localPath); // el archivo en el teléfono
+        if (await f.exists()) await f.delete(); // lo borra si existe
+      } catch (_) {} // se ignora el error
+    }
+  }
 }

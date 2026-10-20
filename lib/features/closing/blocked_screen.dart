@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart'; // widgets básicos
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
 import 'package:telyser_app/core/widgets/toast.dart';
+import 'package:telyser_app/domain/models/media_item.dart';
 import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/providers/actions.provider.dart';
 import 'package:telyser_app/providers/route_providers.dart';
@@ -11,7 +12,6 @@ import '../../core/theme/app_colors.dart'; // colores
 import '../../core/widgets/alert_box.dart'; // caja de aviso
 import '../../core/widgets/app_header.dart'; // encabezado navy
 import '../../core/widgets/choice_group.dart'; // grupo de chips
-import '../../data/local/app_database.dart'; // MediaQueueData
 import '../../domain/rules/closing.dart'; // BlockReason, IncidentKind, canSendBlocked
 import '../../domain/models/models.dart'; // Visit
 import '../site/capture_photo.dart'; // capturePhoto
@@ -46,7 +46,7 @@ class _BlockedScreenState extends ConsumerState<BlockedScreen> { // el estado de
       await capturePhoto( // abre la cámara y guarda
         ref,
         visitId: widget.visit.id, // visita
-        kind: _reason == BlockReason.incident ? 'damage' : 'progress', // los incidentes se marcan como daño
+        kind: _reason == BlockReason.incident ? MediaKind.damage : MediaKind.progress, // los incidentes se marcan como daño
       );
     } catch (_) { // la cámara falló
       messenger.toast('No se pudo guardar la foto');
@@ -99,8 +99,8 @@ class _BlockedScreenState extends ConsumerState<BlockedScreen> { // el estado de
 
   @override
   Widget build(BuildContext context) { // dibuja la pantalla
-    final media = ref.watch(mediaForVisitProvider(widget.visit.id)).value ?? const <MediaQueueData>[]; // archivos de la visita
-    final damagePhotos = media.where((m) => m.kind == 'damage').length; // fotos del daño
+    final media = ref.watch(mediaForVisitProvider(widget.visit.id)).value ?? const <MediaItem>[]; // archivos de la visita
+    final damagePhotos = media.where((m) => m.kind == MediaKind.damage).length; // fotos del daño
     final canSend = canSendBlocked( // ¿ya se puede enviar?
       reason: _reason, // motivo
       incidentKind: _kind, // subtipo

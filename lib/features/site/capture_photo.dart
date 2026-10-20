@@ -1,12 +1,14 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // WidgetRef: acceso a los providers
+import 'package:image_picker/image_picker.dart'; // abre la cámara
 import 'package:telyser_app/providers/infra_providers.dart';
+
+import '../../domain/models/media_item.dart'; // MediaKind
 
 /// Abre la cámara y guarda la foto en el teléfono. Devuelve false si el técnico canceló.
 Future<bool> capturePhoto( // toma y guarda una foto
   WidgetRef ref, { // para leer el repositorio
   required int visitId, // visita a la que pertenece
-  String kind = 'progress', // tipo de foto
+  MediaKind kind = MediaKind.progress, // tipo de foto
 }) async {
   final shot = await ImagePicker().pickImage( // abre la cámara y espera la foto
     source: ImageSource.camera, // usar la cámara
@@ -24,7 +26,7 @@ Future<bool> captureVideo( // graba y guarda un video
   WidgetRef ref, { // para leer el repositorio
   required int visitId, // visita a la que pertenece
   required int maxSeconds, // duración máxima permitida
-  String kind = 'cabling_video', // tipo: video del cableado
+  MediaKind kind = MediaKind.cablingVideo, // tipo: video del cableado
 }) async {
   final clip = await ImagePicker().pickVideo( // abre la cámara en modo video
     source: ImageSource.camera, // usar la cámara

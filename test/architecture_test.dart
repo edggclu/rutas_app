@@ -41,7 +41,7 @@ void main() {
           u.startsWith('package:flutter') || // ni Flutter ni Riverpod
           u.startsWith('package:drift') || // ni la base de datos
           u == 'dart:io' || // ni archivos del sistema
-          touches(u, ['data', 'application', 'providers', 'features', 'core']), // ni ninguna capa de arriba
+          touches(u, ['data', 'application', 'providers', 'features', 'core']), // ni ninguna otra capa
     );
   });
 
@@ -51,6 +51,27 @@ void main() {
       (u) =>
           u.startsWith('package:flutter') || // ni Flutter
           touches(u, ['features', 'providers', 'core']), // ni pantallas, providers ni widgets
+    );
+  });
+
+  test('data no depende de pantallas, providers, application ni core', () { // la base y los repositorios no conocen a quien los usa
+    expectNoForbiddenImports(
+      'lib/data',
+      (u) => touches(u, ['features', 'providers', 'application', 'core']), // ninguna capa de arriba
+    );
+  });
+
+  test('core es genérico: no conoce el negocio', () { // los widgets compartidos sirven para cualquier app
+    expectNoForbiddenImports(
+      'lib/core',
+      (u) => touches(u, ['domain', 'data', 'application', 'providers', 'features']), // ninguna capa con reglas del negocio
+    );
+  });
+
+  test('las pantallas no tocan Drift ni data directamente', () { // pasan por providers y application
+    expectNoForbiddenImports(
+      'lib/features',
+      (u) => u.startsWith('package:drift') || touches(u, ['data']), // ni la base ni los repositorios
     );
   });
 }

@@ -2,11 +2,11 @@ import 'dart:io'; // File: para mostrar las fotos guardadas en el teléfono
 
 import 'package:flutter/material.dart'; // widgets básicos
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerWidget
+import 'package:telyser_app/domain/models/media_item.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 
 import '../../../core/theme/app_colors.dart'; // colores
 import '../../../core/widgets/toast.dart'; // avisos cortos
-import '../../../data/local/app_database.dart'; // MediaQueueData (una foto guardada)
 import '../capture_photo.dart'; // capturePhoto
 
 /// Fotos de avance de la visita: contador, botón para tomar y tira de miniaturas.
@@ -28,8 +28,9 @@ class PhotosSection extends ConsumerWidget { // widget que puede leer providers
 
   @override
   Widget build(BuildContext context, WidgetRef ref) { // dibuja la sección
-    final media = ref.watch(mediaForVisitProvider(visitId)).value ?? const <MediaQueueData>[]; // todos los archivos de la visita
-    final shots = media.where((m) => m.kind == 'progress').toList(); // solo las fotos de avance
+      final media = ref.watch(mediaForVisitProvider(visitId)).value ?? const <MediaItem>[]; // todos los archivos de la visita
+    final shots = media.where((m) => m.kind == MediaKind.progress).toList(); // solo las fotos de avance
+
     return Column( // elementos uno debajo de otro
       crossAxisAlignment: CrossAxisAlignment.start, // alineados a la izquierda
       children: [
@@ -77,11 +78,11 @@ class PhotosSection extends ConsumerWidget { // widget que puede leer providers
 class _Thumb extends StatelessWidget { // widget sin estado propio
   const _Thumb({required this.photo}); // recibe la fila de la foto
 
-  final MediaQueueData photo; // la foto guardada
+  final MediaItem photo; // la foto guardada
 
   @override
   Widget build(BuildContext context) { // dibuja la miniatura
-    final sent = photo.state == 'sent'; // ¿ya se subió al servidor?
+    final sent = photo.sent; // ¿ya se subió al servidor?
     return Stack( // apila la imagen y el indicador
       children: [
         ClipRRect( // recorta con esquinas redondeadas

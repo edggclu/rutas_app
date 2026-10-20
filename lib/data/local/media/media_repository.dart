@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 import 'package:path/path.dart' as p;
 import 'package:telyser_app/data/local/app_database.dart';
 import 'package:uuid/uuid.dart';
+import 'package:telyser_app/domain/models/media_item.dart';
 
 /// Fotos y videos de las visitas. Guarda el archivo en una carpeta propia de la
 /// app y deja una fila en `media_queue` para subirlo cuando haya señal (paso 8).
@@ -22,11 +23,11 @@ class MediaRepository { // aquí vive todo lo relacionado con fotos y videos gua
   final DateTime Function() _now; // cómo obtener la hora actual
   final Uuid _uuid; // el generador de ids
 
-  /// Foto: se sube apenas haya señal. Tipos: progress, warranty, warranty_serial, damage, request...
+  /// Foto: se sube apenas haya señal.
   Future<String> addPhoto({ // devuelve el id de la foto
     required int visitId, // a qué visita pertenece
     required String sourcePath, // dónde dejó la foto la cámara (carpeta temporal)
-    String kind = 'progress', // tipo de foto
+    MediaKind kind = MediaKind.progress, // tipo de foto
   }) =>
       _addFile( // usa el método compartido
         visitId: visitId, // visita
@@ -40,7 +41,7 @@ class MediaRepository { // aquí vive todo lo relacionado con fotos y videos gua
   Future<String> addVideo({ // devuelve el id del video
     required int visitId, // a qué visita pertenece
     required String sourcePath, // dónde dejó el video la cámara
-    String kind = 'cabling_video', // tipo: video del cableado
+    MediaKind kind = MediaKind.cablingVideo, // tipo: video del cableado
   }) =>
       _addFile( // usa el método compartido
         visitId: visitId, // visita
@@ -54,7 +55,7 @@ class MediaRepository { // aquí vive todo lo relacionado con fotos y videos gua
   Future<String> _addFile({ // lo que tienen en común fotos y videos
     required int visitId, // visita
     required String sourcePath, // archivo de origen
-    required String kind, // tipo
+    required MediaKind kind, // tipo
     required bool wifiOnly, // ¿espera Wi-Fi?
     required String defaultExt, // extensión por defecto
   }) async {
@@ -69,7 +70,7 @@ class MediaRepository { // aquí vive todo lo relacionado con fotos y videos gua
           MediaQueueCompanion.insert( // datos de la fila
             uuid: id, // id del archivo
             visitId: visitId, // visita
-            kind: kind, // tipo
+            kind: kind.code, // la base guarda el código de texto
             localPath: target, // dónde quedó guardado
             wifiOnly: Value(wifiOnly), // si espera Wi-Fi
             createdAtUtc: _now(), // hora en que se tomó (UTC)
@@ -79,10 +80,24 @@ class MediaRepository { // aquí vive todo lo relacionado con fotos y videos gua
   }
 
   /// Archivos de una visita, en el orden en que se tomaron. Se vuelve a emitir
-  /// cada vez que cambia la tabla (archivo nuevo, archivo subido).
-  Stream<List<MediaQueueData>> watchForVisit(int visitId) => // flujo de listas
+  /// cada vez que cambia la tabla. Devuelve `MediaItem`: las filas de Drift no salen de `data/`.
+  Stream<List<MediaItem>> watchForVisit(int visitId) => // flujo de listas
       (_db.select(_db.mediaQueue) // consulta la tabla
             ..where((m) => m.visitId.equals(visitId)) // solo los de esta visita
             ..orderBy([(m) => OrderingTerm.asc(m.createdAtUtc)])) // de más antiguo a más nuevo
-          .watch(); // escucha cambios en vez de leer una sola vez
+          .watch() // escucha cambios en vez de leer una sola vez
+          .map((rows) { // convierte cada lista de filas en MediaItem
+        final items = <MediaItem>[]; // aquí se juntan
+        for (final r in rows) { // por cada fila
+          final kind = MediaKind.tryFromCode(r.kind); // el tipo guardado
+          if (kind == null) continue; // si el código no se reconoce, se omite (no ensucia los contadores)
+          items.add(MediaItem( // arma el modelo de dominio
+            id: r.uuid, // id
+            kind: kind, // tipo
+            localPath: r.localPath, // ruta
+            sent: r.state == 'sent', // ¿ya se subió?
+          ));
+        }
+        return items; // la lista convertida
+  });
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart'; // widgets básicos
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
 import 'package:telyser_app/core/widgets/toast.dart';
+import 'package:telyser_app/domain/models/media_item.dart';
 import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 import 'package:telyser_app/providers/settings_provider.dart';
@@ -10,7 +11,6 @@ import '../../core/theme/app_colors.dart'; // colores
 import '../../core/widgets/alert_box.dart'; // caja de aviso
 import '../../core/widgets/app_header.dart'; // encabezado navy
 import '../../core/widgets/choice_group.dart'; // grupo de chips
-import '../../data/local/app_database.dart'; // MediaQueueData
 import '../../domain/rules/closing.dart'; // WarrantyCause, canSaveWarranty
 import '../../domain/models/models.dart'; // Visit
 import 'capture_photo.dart'; // capturePhoto
@@ -36,7 +36,7 @@ class _WarrantyScreenState extends ConsumerState<WarrantyScreen> { // el estado 
     super.dispose(); // termina de limpiar
   }
 
-  int _count(List<MediaQueueData> media, String kind) => // cuenta archivos de un tipo
+  int _count(List<MediaItem> media, MediaKind kind) => // cuenta archivos de un tipo
       media.where((m) => m.kind == kind).length; // los que coinciden con el tipo
 
   /// Elige una causa; si es externa, avisa que hay que llamar a la oficina antes de reparar (G1b).
@@ -63,12 +63,12 @@ class _WarrantyScreenState extends ConsumerState<WarrantyScreen> { // el estado 
     );
   }
 
-  Future<void> _photo(String kind) async { // toma una foto del tipo indicado
+  Future<void> _photo(MediaKind kind) async { // toma una foto del tipo indicado
     final messenger = ScaffoldMessenger.of(context); // se guarda antes del await
     try { // si algo falla, se avisa
       await capturePhoto(ref, visitId: widget.visit.id, kind: kind); // abre la cámara y guarda
     } catch (_) { // la cámara falló
-      messenger.toast('No se pudo guardar la foto.');
+      messenger.toast('No se pudo guardar la foto.'); // aviso
     }
   }
 
@@ -92,9 +92,10 @@ class _WarrantyScreenState extends ConsumerState<WarrantyScreen> { // el estado 
 
   @override
   Widget build(BuildContext context) { // dibuja la pantalla
-    final media = ref.watch(mediaForVisitProvider(widget.visit.id)).value ?? const <MediaQueueData>[]; // fotos de la visita
-    final failure = _count(media, 'warranty'); // fotos de la falla
-    final label = _count(media, 'warranty_serial'); // fotos de la etiqueta
+    final media = ref.watch(mediaForVisitProvider(widget.visit.id)).value ?? const <MediaItem>[]; // fotos de la visita
+    final failure = _count(media, MediaKind.warranty); // fotos de la falla
+    final label = _count(media, MediaKind.warrantySerial); // fotos de la etiqueta
+
     final guide = widget.visit.job.warrantyGuide; // guía de garantía (texto editable desde la web)
     final canSave = canSaveWarranty( // ¿ya se puede guardar?
       cause: _cause, // causa elegida
@@ -139,7 +140,7 @@ class _WarrantyScreenState extends ConsumerState<WarrantyScreen> { // el estado 
                   onSelected: _pickCause, // al elegir, la guarda y avisa si es externa
                 ),
                 OutlinedButton.icon( // foto de la falla
-                  onPressed: () => _photo('warranty'), // abre la cámara
+                  onPressed: () => _photo(MediaKind.warranty), // abre la cámara
                   icon: const Icon(Icons.photo_camera), // ícono
                   label: Text('Foto de la falla ($failure)'), // texto con contador
                 ),
@@ -151,7 +152,7 @@ class _WarrantyScreenState extends ConsumerState<WarrantyScreen> { // el estado 
                 ),
                 const SizedBox(height: 8), // espacio vertical
                 OutlinedButton.icon( // o foto de la etiqueta
-                  onPressed: () => _photo('warranty_serial'), // abre la cámara
+                  onPressed: () => _photo(MediaKind.warrantySerial), // abre la cámara
                   icon: const Icon(Icons.qr_code_2), // ícono
                   label: Text('O foto de la etiqueta ($label)'), // texto con contador
                 ),

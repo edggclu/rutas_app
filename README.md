@@ -30,6 +30,17 @@ core/         widgets y utilidades genéricas, sin reglas del negocio
 | `providers/` | Conecta todo con Riverpod, un archivo por tema | — |
 | `features/` | Pantallas y sus widgets | — |
 
+### Convenciones de pantalla
+
+| Necesito... | Uso |
+|---|---|
+| Guardar una acción con "Deshacer" | `runUndoable(context, ref, action: (a) => a.<área>.<método>(...), message: ..., after: AfterSave.pop)` |
+| Un aviso corto | `messenger.toast('...')` (con el `messenger` guardado antes del `await`) |
+| Una caja blanca con borde | `AppCard(child: ...)` |
+| Mostrar un número (cantidad, km) | `formatNumber(valor)` |
+| Abrir mapa, llamar o WhatsApp | `openMap(...)`, `callPhone(...)`, `openWhatsApp(...)` |
+| Una pantalla larga | Una pantalla que solo **compone** secciones en `widgets/`; cada sección lee lo que necesita con `ref.watch` |
+
 ### Cómo agregar una acción del técnico
 
 1. **Tipo de evento:** una constante en `domain/event_types.dart`.

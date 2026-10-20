@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:telyser_app/core/widgets/alert_box.dart';
 import 'package:telyser_app/core/widgets/app_header.dart';
 import 'package:telyser_app/core/widgets/toast.dart';
+import 'package:telyser_app/domain/models/media_item.dart';
 import 'package:telyser_app/domain/models/models.dart';
 import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/features/site/capture_photo.dart';
@@ -34,7 +35,7 @@ class _AddRequestScreenState extends ConsumerState<AddRequestScreen> { // el est
     final messenger = ScaffoldMessenger.of(context); // se guarda antes del await
     try { // si algo falla, se avisa
       final ok = await capturePhoto( // abre la cámara
-          ref, visitId: widget.visit.id, kind: 'request'); // la foto queda marcada como de solicitud
+          ref, visitId: widget.visit.id, kind: MediaKind.request); // la foto queda marcada como de solicitud
       if (ok && mounted) setState(() => _photos++); // si guardó, suma al contador
     } catch (_) { // la cámara falló
       messenger.toast('No se pudo guardar la foto.');

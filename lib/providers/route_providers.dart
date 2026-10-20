@@ -3,8 +3,8 @@ import 'dart:convert'; // jsonDecode: para leer los datos extra de cada acción
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // los distintos tipos de provider
 import 'package:intl/intl.dart'; // DateFormat: da formato a la fecha
 
-import '../data/local/app_database.dart'; // MediaQueueData
 import '../domain/models/models.dart'; // DayRoute y Visit
+import '../domain/models/media_item.dart';
 import '../domain/rules/visit_state.dart'; // VisitEvent y applyEvents
 import 'infra_providers.dart'; // repositorios y almacenes
 import 'session_provider.dart'; // sessionProvider
@@ -66,6 +66,6 @@ final tickProvider = StreamProvider.autoDispose<DateTime>( // autoDispose: se ap
 
 /// Fotos y videos de una visita (se actualiza solo al tomar uno nuevo).
 final mediaForVisitProvider = StreamProvider.autoDispose // autoDispose: se apaga al salir de la pantalla
-    .family<List<MediaQueueData>, int>( // family: uno por cada id de visita
+    .family<List<MediaItem>, int>( // family: uno por cada id de visita (ahora de MediaItem)
         (ref, visitId) => // recibe el id de la visita
             ref.watch(mediaRepositoryProvider).watchForVisit(visitId)); // escucha los archivos de esa visita

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart'; // widgets básicos
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
 import 'package:telyser_app/domain/format.dart';
+import 'package:telyser_app/domain/models/media_item.dart';
 import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 import 'package:telyser_app/providers/settings_provider.dart';
@@ -9,7 +10,6 @@ import '../../core/theme/app_colors.dart'; // colores
 import '../../core/widgets/alert_box.dart'; // caja de aviso
 import '../../core/widgets/app_header.dart'; // encabezado navy
 import '../../core/widgets/slide_to_confirm.dart'; // botón deslizable
-import '../../data/local/app_database.dart'; // MediaQueueData
 import '../../domain/rules/closing.dart'; // MaterialUsed, canContinueTomorrow
 import '../../domain/models/models.dart'; // Visit, ChecklistItem
 import '../site/capture_photo.dart'; // captureVideo
@@ -76,8 +76,8 @@ class _ContinueScreenState extends ConsumerState<ContinueScreen> { // el estado 
 
   @override
   Widget build(BuildContext context) { // dibuja la pantalla
-    final media = ref.watch(mediaForVisitProvider(widget.visit.id)).value ?? const <MediaQueueData>[]; // archivos de la visita
-    final videos = media.where((m) => m.kind == 'cabling_video').length; // videos del cableado
+    final media = ref.watch(mediaForVisitProvider(widget.visit.id)).value ?? const <MediaItem>[]; // archivos de la visita
+    final videos = media.where((m) => m.kind == MediaKind.cablingVideo).length; // videos del cableado
     final canConfirm = canContinueTomorrow( // ¿ya se puede continuar?
       missing: _missingCtrl.text, // lo que falta
       laidCable: _laidCable, // si tendió cable

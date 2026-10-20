@@ -1,17 +1,17 @@
+import 'package:telyser_app/domain/events/event_data.dart';
+
 import '../data/local/outbox_repository.dart'; // la cola
 import 'action_receipt.dart'; // el comprobante
 
 /// Un evento por guardar: lo que una acción del técnico quiere escribir en la cola.
 class PendingEvent { // solo agrupa los datos de un evento
   const PendingEvent( // constructor
-    this.type, { // tipo de evento (arrived, finished...)
+    this.data, { // el evento tipado (de él salen el tipo y los datos)
     this.visitId, // visita a la que pertenece
-    this.payload = const {}, // datos extra
   });
 
-  final String type; // tipo
+  final EventData data; // el evento, con sus datos tipados
   final int? visitId; // visita
-  final Map<String, dynamic> payload; // datos extra
 }
 
 /// Escribe en la cola. Aquí vive, una sola vez, lo que antes se repetía en cada acción.
@@ -28,10 +28,10 @@ class OutboxWriter { // el ayudante de todas las áreas
     final uuids = <String>[]; // aquí se juntan los ids de las filas creadas
     for (final e in events) { // en el orden en que se pidieron
       uuids.add(await _outbox.enqueue( // guarda el evento y recuerda su id
-        type: e.type, // tipo
+        type: e.data.type, // el tipo sale de la clase
         graceSeconds: grace, // con tiempo para deshacer
         visitId: e.visitId, // visita
-        payload: e.payload, // datos extra
+        payload: e.data.toPayload(), // los datos salen de la clase
       ));
     }
     return ActionReceipt(uuids, grace); // el comprobante con todos los ids
@@ -40,10 +40,10 @@ class OutboxWriter { // el ayudante de todas las áreas
   /// Guarda un evento SIN tiempo para deshacer (botones normales: llamar, avisar...).
   Future<void> instant(PendingEvent e) async { // no devuelve comprobante
     await _outbox.enqueue( // guarda el evento
-      type: e.type, // tipo
+      type: e.data.type, // el tipo sale de la clase
       graceSeconds: 0, // sin tiempo para deshacer
       visitId: e.visitId, // visita
-      payload: e.payload, // datos extra
+      payload: e.data.toPayload(), // los datos salen de la clase
     );
   }
 

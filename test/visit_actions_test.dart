@@ -10,6 +10,7 @@ import 'package:telyser_app/application/visit_actions.dart';
 import 'package:telyser_app/domain/closing.dart'; 
 import 'package:telyser_app/domain/event_types.dart';
 import 'package:telyser_app/domain/extras.dart'; 
+import 'package:telyser_app/domain/models/event_models.dart';
 import 'package:telyser_app/domain/models.dart'; 
 
 /// Ubicación falsa: devuelve siempre el punto que se le indique (o null).
@@ -109,7 +110,7 @@ void main() {
   });
 
   test('registrar contacto con el cliente guarda el canal', () async { // llamada o WhatsApp
-    await build(null).noAnswer.registerClientContact(visitId: 102, channel: 'whatsapp'); // toca WhatsApp
+    await build(null).noAnswer.registerClientContact(visitId: 102, channel: ContactChannel.whatsapp); // toca WhatsApp
     final row = (await db.select(db.outboxEvents).get()).single; // la única fila
     expect(row.type, EventTypes.clientContacted); // tipo correcto
     expect(jsonDecode(row.payloadJson)['channel'], 'whatsapp'); // guardó el canal

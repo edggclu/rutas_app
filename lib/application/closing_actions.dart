@@ -1,5 +1,5 @@
 import '../domain/closing.dart'; // WarrantyCause, BlockReason, IncidentKind, MaterialUsed
-import '../domain/event_types.dart'; // nombres de los eventos
+import '../domain/events/event_data.dart'; // los eventos
 import 'action_receipt.dart'; // el comprobante
 import 'outbox_writer.dart'; // el ayudante que escribe en la cola
 
@@ -17,12 +17,8 @@ class ClosingActions { // una clase por área
   }) =>
       _writer.undoable([ // es deslizable: con deshacer
         PendingEvent(
-          EventTypes.finished, // tipo: "terminé el trabajo"
+          FinishedEvent(confirmedBy: confirmedBy, confirmedRole: confirmedRole), // quién confirmó (si hubo extras)
           visitId: visitId, // visita
-          payload: { // datos extra (vacío si no hubo extras)
-            if (confirmedBy != null) 'extras_confirmed_by': confirmedBy, // quién confirmó
-            if (confirmedRole != null && confirmedRole.isNotEmpty) 'extras_confirmed_role': confirmedRole, // su cargo
-          },
         ),
       ]);
 
@@ -33,11 +29,7 @@ class ClosingActions { // una clase por área
     String? serial, // número de serie escrito (null si solo fotografió la etiqueta)
   }) =>
       _writer.undoable([ // con tiempo para deshacer
-        PendingEvent(
-          EventTypes.warrantyDocumented, // tipo: garantía documentada
-          visitId: visitId, // visita
-          payload: {'cause': cause.code, 'serial': serial}, // causa y serial
-        ),
+        PendingEvent(WarrantyDocumentedEvent(cause: cause, serial: serial), visitId: visitId), // causa y serial
       ]);
 
   /// "Sigo otro día": cierra la visita sin terminar el trabajo.
@@ -50,14 +42,13 @@ class ClosingActions { // una clase por área
   }) =>
       _writer.undoable([ // con tiempo para deshacer
         PendingEvent(
-          EventTypes.continueTomorrow, // tipo: sigo otro día
+          ContinueTomorrowEvent( // los datos para quien continúe el trabajo
+            materials: materials, // material usado
+            leftOnSite: leftOnSite.trim(), // lo que se queda, sin espacios sobrantes
+            missing: missing.trim(), // lo que falta, sin espacios sobrantes
+            laidCable: laidCable, // si tendió cable
+          ),
           visitId: visitId, // visita
-          payload: { // datos para quien continúe el trabajo
-            'materials_used': [for (final m in materials) m.toJson()], // material usado
-            'left_on_site': leftOnSite.trim(), // lo que se queda
-            'missing': missing.trim(), // lo que falta
-            'laid_cable': laidCable, // si tendió cable
-          },
         ),
       ]);
 
@@ -70,17 +61,12 @@ class ClosingActions { // una clase por área
   }) =>
       _writer.undoable([ // con tiempo para deshacer
         PendingEvent(
-          EventTypes.blocked, // tipo: no pude seguir
+          BlockedEvent(reason: reason, incidentKind: incidentKind, note: note.trim()), // motivo, subtipo y nota sin espacios sobrantes
           visitId: visitId, // visita
-          payload: { // datos
-            'reason': reason.code, // motivo
-            'incident_kind': incidentKind?.code, // subtipo (null si no aplica)
-            'note': note.trim(), // nota
-          },
         ),
       ]);
 
   /// Toque en "Pedir ayuda al ingeniero" (el WhatsApp se abre desde la pantalla).
   Future<void> requestHelp({required int visitId}) => // visita donde pide ayuda
-      _writer.instant(PendingEvent(EventTypes.helpRequested, visitId: visitId)); // botón normal: sin deshacer
+      _writer.instant(PendingEvent(const HelpRequestedEvent(), visitId: visitId)); // botón normal: sin deshacer
 }

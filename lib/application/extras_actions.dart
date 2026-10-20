@@ -1,5 +1,5 @@
-import '../domain/event_types.dart'; // nombres de los eventos
-import '../domain/extras.dart'; // ExtraDraft, ExtraOutcome, decideExtra, quantityText
+import '../domain/events/event_data.dart'; // los eventos
+import '../domain/extras.dart'; // ExtraDraft, ExtraItem, ExtraOutcome, RequestOrigin, decideExtra, quantityText
 import '../domain/models.dart'; // Visit
 import 'action_receipt.dart'; // el comprobante
 import 'outbox_writer.dart'; // el ayudante que escribe en la cola
@@ -17,18 +17,18 @@ class ExtrasActions { // una clase por área
 
   final OutboxWriter _writer; // escribe en la cola
 
-  /// Datos del extra tal como viajan al servidor (llaves en snake_case, como el contrato).
-  Map<String, dynamic> _extraPayload(ExtraDraft d, Visit visit) => { // arma el mapa de datos
-        'name': d.name, // nombre
-        'product_id': d.productId, // id del catálogo (null si lo escribió)
-        'quantity': d.quantity, // cantidad
-        'unit': d.unit, // unidad
-        'source': d.source.code, // de dónde salió
-        'reason': d.reason.code, // por qué
-        'requested_by': d.requestedByAuthorized ? 'authorized_contact' : 'other', // quién lo pidió
-        'requester_name': d.requestedByAuthorized ? visit.place.contact?.name : null, // nombre del contacto, si fue él
-        'not_installed': d.notInstalled, // ¿es "no se instaló"?
-      };
+  /// Convierte lo que se llenó en el formulario en los datos que se guardan.
+  ExtraItem _item(ExtraDraft d, Visit visit) => ExtraItem( // el renglón del extra
+        name: d.name, // nombre
+        productId: d.productId, // id del catálogo (null si lo escribió)
+        quantity: d.quantity, // cantidad
+        unit: d.unit, // unidad
+        source: d.source, // de dónde salió
+        reason: d.reason, // por qué
+        requestedByAuthorized: d.requestedByAuthorized, // quién lo pidió
+        requesterName: d.requestedByAuthorized ? visit.place.contact?.name : null, // nombre del contacto, si fue él
+        notInstalled: d.notInstalled, // ¿es "no se instaló"?
+      );
 
   /// Guarda un extra aplicando las reglas del negocio.
   Future<ExtraResult> addExtra({required Visit visit, required ExtraDraft draft}) async { // visita y formulario llenado
@@ -38,33 +38,28 @@ class ExtrasActions { // una clase por área
       isEquipment: draft.isEquipment, // ¿es equipo?
       notInstalled: draft.notInstalled, // ¿es "no se instaló"?
     );
+    final item = _item(draft, visit); // los datos del extra
     final events = <PendingEvent>[]; // los eventos que habrá que guardar
 
     if (outcome == ExtraOutcome.register) { // se hace y se anota
-      events.add(PendingEvent( // el extra
-        EventTypes.extraAdded, // tipo: extra
-        visitId: visit.id, // visita
-        payload: _extraPayload(draft, visit), // datos del extra
-      ));
+      events.add(PendingEvent(ExtraAddedEvent(item), visitId: visit.id)); // el extra
       final minutes = draft.delayMinutes; // retraso estimado
       if (minutes != null && minutes > 0) { // si va a retrasar las siguientes visitas
         events.add(PendingEvent( // aviso al jefe
-          EventTypes.routeDelayReported, // tipo: retraso de ruta
+          RouteDelayReportedEvent(minutes: minutes, extraName: draft.name), // cuánto y por qué extra
           visitId: visit.id, // visita
-          payload: {'minutes': minutes, 'reason': 'extra', 'extra_name': draft.name}, // cuánto y por qué
         ));
       }
     } else { // no se hace: queda como solicitud para después
       events.add(PendingEvent( // la solicitud
-        EventTypes.requestAdded, // tipo: solicitud
+        RequestAddedEvent(
+          description: '${quantityText(draft.quantity)} × ${draft.name}', // texto para administración
+          origin: outcome == ExtraOutcome.laterOtherPerson // por qué quedó como solicitud
+              ? RequestOrigin.otherPerson // la pidió otra persona
+              : RequestOrigin.creditHold, // el cliente tiene saldo vencido
+          item: item, // los datos del extra
+        ),
         visitId: visit.id, // visita
-        payload: { // datos de la solicitud
-          ..._extraPayload(draft, visit), // los mismos datos del extra
-          'description': '${quantityText(draft.quantity)} × ${draft.name}', // texto para administración
-          'origin': outcome == ExtraOutcome.laterOtherPerson // por qué quedó como solicitud
-              ? 'other_person' // la pidió otra persona
-              : 'credit_hold', // el cliente tiene saldo vencido
-        },
       ));
     }
     final receipt = await _writer.undoable(events); // guarda todo con un solo comprobante
@@ -79,13 +74,12 @@ class ExtrasActions { // una clase por área
   }) =>
       _writer.undoable([ // guarda con tiempo para deshacer
         PendingEvent(
-          EventTypes.requestAdded, // tipo: solicitud
+          RequestAddedEvent( // la solicitud
+            description: description, // descripción
+            origin: RequestOrigin.cannotDoNow, // se creó con el botón "Solicitud después"
+            requestedByText: requestedBy, // quién la pidió (texto escrito a mano)
+          ),
           visitId: visitId, // visita
-          payload: { // datos
-            'description': description, // descripción
-            'requested_by': requestedBy, // quién la pidió
-            'origin': 'cannot_do_now', // se creó con el botón "Solicitud después"
-          },
         ),
       ]);
 }

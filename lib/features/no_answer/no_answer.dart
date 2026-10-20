@@ -4,6 +4,7 @@ import 'package:telyser_app/core/contact_launcher.dart';
 import 'package:telyser_app/core/theme/app_colors.dart';
 import 'package:telyser_app/core/widgets/app_header.dart';
 import 'package:telyser_app/core/widgets/slide_to_confirm.dart';
+import 'package:telyser_app/domain/models/event_models.dart';
 import 'package:telyser_app/domain/models.dart';
 import 'package:telyser_app/domain/no_answer.dart';
 import 'package:telyser_app/domain/visit_state.dart';
@@ -34,15 +35,16 @@ class NoAnswerScreen extends ConsumerWidget {
 
   /// Llamar o whatsapp registra intento si se abrio la app
   /// Se ejecuta al tocar los botones
-  Future<void> _contactClient(
-    BuildContext context, WidgetRef ref, Visit visit, String channel) async { // channel: 'call' o 'whatsapp'
+    Future<void> _contactClient( // se ejecuta al tocar uno de los dos botones del cliente
+    // channel: llamada o WhatsApp // channel: 'call' o 'whatsapp'
+    BuildContext context, WidgetRef ref, Visit visit, ContactChannel channel) async { 
     final phone = visit.place.contact?.phone; // teléfono del contacto del lugar
     if (phone == null || phone.isEmpty) return;
     final messenger = ScaffoldMessenger.of(context); // se guarda antes del await
     final actions = ref.read(visitActionsProvider); // las acciones del técnico
-    final ok = channel == 'call' // según el canal elegido abre el marcador o whatsapp
-        ? await callPhone(phone) 
-        : await openWhatsApp(phone); 
+    final ok = channel == ContactChannel.call // según el canal elegido
+      ? await callPhone(phone) // abre el marcador
+      : await openWhatsApp(phone); // o abre WhatsApp
     if (!ok) { 
       messenger.showSnackBar(const SnackBar( 
         content: Text('No se pudo abrir la aplicación.'), 
@@ -119,7 +121,7 @@ class NoAnswerScreen extends ConsumerWidget {
                 // boton de llamar al cliente
                 OutlinedButton( 
                   onPressed: hasPhone 
-                      ? () => _contactClient(context, ref, visit, 'call') 
+                      ? () => _contactClient(context, ref, visit, ContactChannel.call) // llama y registra 
                       : null,
                   child: const Text('Llamar al cliente'), 
                 ),
@@ -127,7 +129,7 @@ class NoAnswerScreen extends ConsumerWidget {
                 // boton de whatsapp al cliente
                 OutlinedButton( 
                   onPressed: hasPhone // solo si hay teléfono
-                      ? () => _contactClient(context, ref, visit, 'whatsapp')
+                      ? () => _contactClient(context, ref, visit, ContactChannel.whatsapp) // abre WhatsApp y registra
                       : null, 
                   child: const Text('WhatsApp al cliente'), 
                 ),

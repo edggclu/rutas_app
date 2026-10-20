@@ -1,5 +1,7 @@
+import 'package:telyser_app/domain/models/event_models.dart';
+
 import '../data/location_service.dart'; // para leer la ubicación
-import '../domain/event_types.dart'; // nombres de los eventos
+import '../domain/events/event_data.dart'; // ArrivedEvent
 import 'action_receipt.dart'; // el comprobante
 import 'outbox_writer.dart'; // el ayudante que escribe en la cola
 
@@ -15,13 +17,8 @@ class ArrivalActions { // una clase por área
     final point = await _location.currentPosition(); // lee el GPS (puede ser null si no se pudo)
     return _writer.undoable([ // guarda la llegada con tiempo para deshacer
       PendingEvent(
-        EventTypes.arrived, // tipo: "llegué"
+        ArrivedEvent(mode: ArrivalMode.manual, lat: point?.lat, lng: point?.lng), // modo y ubicación (null si no hubo GPS)
         visitId: visitId, // en qué visita
-        payload: { // los datos que viajarán al servidor
-          'mode': 'manual', // se marcó deslizando (la automática será 'auto', paso 7)
-          'lat': point?.lat, // latitud, o null si no hubo ubicación
-          'lng': point?.lng, // longitud, o null si no hubo ubicación
-        },
       ),
     ]);
   }

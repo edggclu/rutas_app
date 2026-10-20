@@ -4,7 +4,7 @@ import 'package:flutter/material.dart'; // widgets básicos
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
 import 'package:telyser_app/features/closing/not_finished_sheet.dart';
 import 'package:telyser_app/features/no_answer/no_answer.dart';
-import 'package:telyser_app/providers/actions.provider.dart';
+import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 
 import '../../core/theme/app_colors.dart'; // colores
@@ -12,7 +12,6 @@ import '../../core/time/time_utils.dart'; // formatClock
 import '../../core/widgets/alert_box.dart'; // caja de aviso
 import '../../core/widgets/app_header.dart'; // encabezado navy
 import '../../core/widgets/slide_to_confirm.dart'; // botón deslizable
-import '../../core/widgets/undo_bar.dart'; // barra de "Deshacer"
 import '../../data/local/app_database.dart'; // MediaQueueData (una foto guardada)
 import '../../domain/closing.dart'; // warrantyDocumented, lastWarrantyCause
 import '../../domain/enums.dart'; // Coverage
@@ -79,30 +78,19 @@ class _SiteScreenState extends ConsumerState<SiteScreen> { // el estado de la pa
     await _doFinish(who); // cierra con la confirmación
   }
 
-  /// Guarda el cierre en la cola y regresa a Mi día.
+    /// Guarda el cierre en la cola y regresa a Mi día.
   Future<void> _doFinish([FinishConfirmation? who]) async { // who = quién confirmó los extras (null si no hubo)
-    final messenger = ScaffoldMessenger.of(context); // se guarda antes del await
-    final navigator = Navigator.of(context); // se guarda antes del await
-    final actions = ref.read(visitActionsProvider); // las acciones del técnico
-    try { // si algo falla, se avisa
-      final receipt = await actions.finish( // guarda el cierre en la cola
+    await runUndoable( // guarda, cierra y muestra la barra
+      context, ref, // dónde mostrar los avisos
+      action: (a) => a.closing.finish( // el área de cierre
         visitId: _id, // visita
         confirmedBy: who?.name, // quién confirmó los extras
         confirmedRole: who?.role, // su cargo
-      );
-      navigator.popUntil((route) => route.isFirst); // vuelve a Mi día
-      showUndoBar( // barra con cuenta regresiva
-        messenger, // dónde mostrarla
-        message: 'Marcaste Terminé el trabajo', // texto
-        seconds: receipt.graceSeconds, // duración (parámetro del servidor)
-        onUndo: () => actions.undo(receipt), // si toca Deshacer, se borra de la cola
-      );
-    } catch (_) { // no se pudo guardar
-      _finishKey.currentState?.reset(); // regresa el deslizable
-      messenger.showSnackBar(const SnackBar( // aviso sencillo
-        content: Text('No se pudo guardar. Intenta de nuevo.'), // mensaje
-      ));
-    }
+      ),
+      message: 'Marcaste Terminé el trabajo', // texto de la barra
+      after: AfterSave.popToRoot, // vuelve a Mi día
+      onError: () => _finishKey.currentState?.reset(), // regresa el deslizable
+    );
   }
 
   /// Desliza "No lo terminé": pregunta cuál de las dos opciones y abre su pantalla.

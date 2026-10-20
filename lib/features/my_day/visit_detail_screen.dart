@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:telyser_app/core/widgets/undo_bar.dart';
 import 'package:telyser_app/features/my_day/arrival_panel.dart';
 import 'package:telyser_app/features/no_answer/no_answer.dart';
+import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/features/site/site_screen.dart';
 import 'package:telyser_app/providers/actions.provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -57,27 +57,22 @@ class VisitDetailScreen extends ConsumerWidget {
     );
     if (!ok && context.mounted) _toast(context, 'No se pudo abrir WhatsApp.');
   }
-  Future<void> _arrive(BuildContext content, WidgetRef ref) async {
-    final messenger = ScaffoldMessenger.of(content);
-    final actions = ref.read(visitActionsProvider); // las acciones del técnico
-    try {
-      final receipt = await actions.arrive(visitId: visit.id); // lee GPS y guarda "llegué" en la cola
-      showUndoBar(
-        messenger, 
-        message: "Marcaste Llegue", 
-        seconds: receipt.graceSeconds, 
-        onUndo: () => actions.undo(receipt)); // qué hacer si toca Deshacer: borrar de la cola
-    } catch (_) { // no se pudo guardar en la base local
-      messenger.showSnackBar(const SnackBar(
-        content: Text("No se pudo guardar tu llegada. Intenta de nuevo")));
-    }
+  
+    Future<void> _arrive(BuildContext context, WidgetRef ref) async { // se ejecuta al deslizar "Llegué"
+    await runUndoable( // guarda y muestra la barra
+      context, ref, // dónde mostrar los avisos
+      action: (a) => a.arrival.arrive(visitId: visit.id), // el área de llegada: lee el GPS y guarda
+      message: 'Marcaste Llegué', // texto de la barra
+      errorMessage: 'No se pudo guardar tu llegada. Intenta de nuevo.', // texto del error
+    );
   }
+
     /// se ejecuta al tocar "No me abren" en el panel
     Future<void> _noAnswer(BuildContext context, WidgetRef ref) async { 
     final navigator = Navigator.of(context); 
     final messenger = ScaffoldMessenger.of(context); 
     try { 
-      await ref.read(visitActionsProvider).reportNoAnswer(visitId: visit.id); // avisa a la oficina una sola vez
+      await ref.read(visitActionsProvider).noAnswer.reportNoAnswer(visitId: visit.id); // avisa a la oficina (una sola vez)
       navigator.push( 
         MaterialPageRoute<void>( 
           builder: (_) => NoAnswerScreen(visitId: visit.id), 

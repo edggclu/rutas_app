@@ -4,10 +4,10 @@ import 'package:telyser_app/core/contact_launcher.dart';
 import 'package:telyser_app/core/theme/app_colors.dart';
 import 'package:telyser_app/core/widgets/app_header.dart';
 import 'package:telyser_app/core/widgets/slide_to_confirm.dart';
-import 'package:telyser_app/core/widgets/undo_bar.dart';
 import 'package:telyser_app/domain/models.dart';
 import 'package:telyser_app/domain/no_answer.dart';
 import 'package:telyser_app/domain/visit_state.dart';
+import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/providers/actions.provider.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 import 'package:telyser_app/providers/settings_provider.dart';
@@ -49,7 +49,7 @@ class NoAnswerScreen extends ConsumerWidget {
       ));
       return; // no se registra un intento que no ocurrió
     }
-    await actions.registerClientContact(visitId: visit.id, channel: channel); // guarda el intento en la cola
+    await actions.noAnswer.registerClientContact(visitId: visit.id, channel: channel); // guarda el intento en la cola  
   }
 
   /// Llamar a la oficina, registra el intento si se abrió el marcador.
@@ -65,30 +65,18 @@ class NoAnswerScreen extends ConsumerWidget {
       ));
       return; // no se registra
     }
-    await actions.registerOfficeCall(visitId: visit.id); // guarda el intento en la cola
+    await actions.noAnswer.registerOfficeCall(visitId: visit.id); // guarda el intento en la cola
   }
 
-  /// Desliza "No me atendieron", cierra la visita y regresa a Mi día.
-  Future<void> _confirm(BuildContext context, WidgetRef ref) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final navigator = Navigator.of(context);
-    final actions = ref.read(visitActionsProvider); // las acciones del técnico
-    try {
-      final receipt = await actions.confirmNoAnswer(visitId: visitId); // guarda el cierre en la cola
-      navigator.popUntil((route) => route.isFirst); // vuelve a mi dia
-      showUndoBar( // barra con cuenta regresiva
-        messenger, 
-        message: 'Marcaste No me atendieron', // texto
-        seconds: receipt.graceSeconds,
-        onUndo: () => actions.undo(receipt),
-      );
-    } catch (_) { // no se pudo guardar
-      messenger.showSnackBar(const SnackBar( 
-        content: Text('No se pudo guardar. Intenta de nuevo.'), 
-      ));
-    }
+    /// Desliza "No me atendieron": cierra la visita y regresa a Mi día.
+  Future<void> _confirm(BuildContext context, WidgetRef ref) async { // se ejecuta al completar el deslizamiento
+    await runUndoable( // guarda, cierra y muestra la barra
+      context, ref, // dónde mostrar los avisos
+      action: (a) => a.noAnswer.confirmNoAnswer(visitId: visitId), // el área de "No me abren"
+      message: 'Marcaste No me atendieron', // texto de la barra
+      after: AfterSave.popToRoot, // cierra C4 y la tarjeta: vuelve a Mi día
+    );
   }
-
   // dibuja la pantalla
   @override
   Widget build(BuildContext context, WidgetRef ref) { 

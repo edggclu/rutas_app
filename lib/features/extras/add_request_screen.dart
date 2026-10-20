@@ -2,10 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:telyser_app/core/widgets/alert_box.dart';
 import 'package:telyser_app/core/widgets/app_header.dart';
-import 'package:telyser_app/core/widgets/undo_bar.dart';
 import 'package:telyser_app/domain/models.dart';
+import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/features/site/capture_photo.dart';
-import 'package:telyser_app/providers/actions.provider.dart';
 
 /// E4 · Solicitud para después: algo que el cliente pidió y no se puede hacer hoy.
 class AddRequestScreen extends ConsumerStatefulWidget { // widget con estado
@@ -43,33 +42,24 @@ class _AddRequestScreenState extends ConsumerState<AddRequestScreen> { // el est
     }
   }
 
-  Future<void> _save() async { // se ejecuta al tocar Guardar
+    Future<void> _save() async { // se ejecuta al tocar Guardar
     setState(() => _saving = true); // bloquea el botón
-    final messenger = ScaffoldMessenger.of(context); // se guarda antes del await
-    final navigator = Navigator.of(context); // se guarda antes del await
-    final actions = ref.read(visitActionsProvider); // las acciones del técnico
-    try { // si algo falla, se avisa
-      final receipt = await actions.addRequest( // guarda la solicitud en la cola
+    final who = _whoCtrl.text.trim(); // quién la pidió
+    await runUndoable( // guarda, cierra y muestra la barra
+      context, ref, // dónde mostrar los avisos
+      action: (a) => a.extras.addRequest( // el área de extras
         visitId: widget.visit.id, // visita
         description: _descCtrl.text.trim(), // descripción
-        requestedBy: _whoCtrl.text.trim().isEmpty ? null : _whoCtrl.text.trim(), // quién la pidió (opcional)
-      );
-      navigator.pop(); // cierra el formulario
-      showUndoBar( // barra con cuenta regresiva
-        messenger, // dónde mostrarla
-        message: 'Solicitud guardada', // texto
-        seconds: receipt.graceSeconds, // duración (parámetro del servidor)
-        onUndo: () => actions.undo(receipt), // si toca Deshacer, se borra de la cola
-      );
-    } catch (_) { // no se pudo guardar
-      if (!mounted) return; // si ya cerró la pantalla, termina
-      setState(() => _saving = false); // desbloquea el botón
-      messenger.showSnackBar(const SnackBar( // aviso sencillo
-        content: Text('No se pudo guardar. Intenta de nuevo.'), // mensaje
-      ));
-    }
+        requestedBy: who.isEmpty ? null : who, // quién la pidió (opcional)
+      ),
+      message: 'Solicitud guardada', // texto de la barra
+      after: AfterSave.pop, // cierra el formulario
+      onError: () { // si falla
+        if (mounted) setState(() => _saving = false); // desbloquea el botón
+      },
+    );
   }
-
+  
   @override
   Widget build(BuildContext context) { // dibuja el formulario
     final bottom = MediaQuery.of(context).padding.bottom; // alto de la barra de gestos

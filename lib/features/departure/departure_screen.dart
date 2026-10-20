@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:telyser_app/providers/actions.provider.dart';
+import 'package:telyser_app/features/shared/run_undoable.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/time/time_utils.dart';
 import '../../core/widgets/app_header.dart';
 import '../../core/widgets/slide_to_confirm.dart';
-import '../../core/widgets/undo_bar.dart';
 import '../../domain/enums.dart';
 import '../../domain/models.dart';
 
@@ -53,36 +52,26 @@ class _DepartureScreenState extends ConsumerState<DepartureScreen> {
     return out;
   }
 
-  Future<void> _confirm() async {
-    setState(() => _saving = true);
-    // Se toman antes del await: después de cerrar la pantalla ya no hay context.
-    final messenger = ScaffoldMessenger.of(context);
-    final navigator = Navigator.of(context);
-    final actions = ref.read(visitActionsProvider);
-    final missingCount = _missing.length;
-
-    try {
-      final receipt = await actions.confirmDeparture(
-        visits: _pending,
-        missing: _missingByVisit(),
-      );
-      navigator.pop();
-      showUndoBar(
-        messenger,
-        message: missingCount == 0
-            ? 'Confirmaste la salida'
-            : 'Confirmaste la salida (te faltan $missingCount)',
-        seconds: receipt.graceSeconds,
-        onUndo: () => actions.undo(receipt),
-      );
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _saving = false);
-      _slideKey.currentState?.reset();
-      messenger.showSnackBar(const SnackBar(
-        content: Text('No se pudo guardar la salida. Intenta de nuevo.'),
-      ));
-    }
+    Future<void> _confirm() async { // se ejecuta al completar el deslizamiento
+    setState(() => _saving = true); // bloquea el deslizable mientras guarda
+    final missingCount = _missing.length; // cuántos renglones le faltan (para el texto)
+    await runUndoable( // guarda, cierra y muestra la barra
+      context, ref, // dónde mostrar los avisos
+      action: (a) => a.departure.confirmDeparture( // el área de salida
+        visits: _pending, // las visitas por hacer
+        missing: _missingByVisit(), // los renglones faltantes por visita
+      ),
+      message: missingCount == 0 // texto de la barra
+          ? 'Confirmaste la salida' // sin faltantes
+          : 'Confirmaste la salida (te faltan $missingCount)', // con faltantes
+      after: AfterSave.pop, // cierra la pantalla de Salida
+      errorMessage: 'No se pudo guardar la salida. Intenta de nuevo.', // texto del error
+      onError: () { // si falla
+        if (!mounted) return; // si ya cerró la pantalla, no hace nada
+        setState(() => _saving = false); // desbloquea
+        _slideKey.currentState?.reset(); // regresa el deslizable
+      },
+    );
   }
 
   @override

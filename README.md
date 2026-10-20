@@ -11,16 +11,24 @@ Usuarios de prueba (cualquier contraseña):
 - `pedro` (o cualquier otro): técnico. Pestañas Mi día y Avisos.
 - `tono`: técnico + ingeniero + coordina rutas. Pestañas Mi día, Rutas, Por validar y Avisos.
 
-## Estructura
+## Arquitectura
+
+Regla: las dependencias solo van hacia adentro. `test/architecture_test.dart` la vigila.
+
 ```
-lib/
-  core/        tema (colores de Figma), hora UTC -> México, widgets (deslizable, etiquetas…)
-  domain/      modelos del contrato my-day, enums, estado del técnico (calculado)
-    data/        repositories.dart (interfaces) + mock/ (datos de prueba) + local/ (base Drift y cola) + providers.dart
-  features/    auth · shell (pestañas por permisos) · my_day (lista y tarjeta de visita)
-assets/mock/   JSON de ejemplo: my_day, sesión de técnico y de jefe, settings
-docs/          contrato_api.md y base_local_drift.dart.txt (para el paso 2)
+features/     pantallas  ──►  providers/  ──►  application/  ──►  domain/
+                                  │                 │
+                                  └──────►  data/ ◄─┘   (data implementa contratos)
+core/         widgets y utilidades genéricas, sin reglas del negocio
 ```
+
+| Carpeta | Qué contiene | Qué NO puede importar |
+|---|---|---|
+| `domain/` | Modelos, eventos y reglas en Dart puro | Flutter, Drift, `dart:io`, ni ninguna otra capa |
+| `application/` | Qué pasa cuando el técnico hace algo (una clase por área) | Flutter, pantallas, providers |
+| `data/` | Drift, repositorios (de prueba hoy, API mañana) | Pantallas |
+| `providers/` | Conecta todo con Riverpod, un archivo por tema | — |
+| `features/` | Pantallas y sus widgets | — |
 
 ## Base de datos local (Drift / SQLite)
 
@@ -209,7 +217,7 @@ sequenceDiagram
 sequenceDiagram
     actor T as Técnico
     participant D as VisitDetailScreen
-    participant A as VisitActions.arrive()
+    participant A as VisitActions.arrival.arrive()
     participant L as LocationService (GPS)
     participant O as outbox_events (cola)
     participant S as myDayProvider (applyEvents)

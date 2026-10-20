@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart'; // widgets básicos
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
-import 'package:telyser_app/providers/actions.provider.dart';
+import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 import 'package:telyser_app/providers/settings_provider.dart';
 
@@ -9,7 +9,6 @@ import '../../core/theme/app_colors.dart'; // colores
 import '../../core/widgets/alert_box.dart'; // caja de aviso
 import '../../core/widgets/app_header.dart'; // encabezado navy
 import '../../core/widgets/choice_group.dart'; // grupo de chips
-import '../../core/widgets/undo_bar.dart'; // barra de "Deshacer"
 import '../../data/local/app_database.dart'; // MediaQueueData
 import '../../domain/closing.dart'; // WarrantyCause, canSaveWarranty
 import '../../domain/models.dart'; // Visit
@@ -74,32 +73,22 @@ class _WarrantyScreenState extends ConsumerState<WarrantyScreen> { // el estado 
     }
   }
 
-  Future<void> _save() async { // se ejecuta al tocar Guardar
+    Future<void> _save() async { // se ejecuta al tocar Guardar
     setState(() => _saving = true); // bloquea el botón
-    final messenger = ScaffoldMessenger.of(context); // se guarda antes del await
-    final navigator = Navigator.of(context); // se guarda antes del await
-    final actions = ref.read(visitActionsProvider); // las acciones del técnico
     final serial = _serialCtrl.text.trim(); // serial escrito
-    try { // si algo falla, se avisa
-      final receipt = await actions.documentWarranty( // guarda en la cola
+    await runUndoable( // guarda, cierra y muestra la barra
+      context, ref, // dónde mostrar los avisos
+      action: (a) => a.closing.documentWarranty( // el área de cierre
         visitId: widget.visit.id, // visita
         cause: _cause!, // causa (ya validada)
         serial: serial.isEmpty ? null : serial, // null si solo fotografió la etiqueta
-      );
-      navigator.pop(); // vuelve a En sitio
-      showUndoBar( // barra con cuenta regresiva
-        messenger, // dónde mostrarla
-        message: 'Garantía documentada', // texto
-        seconds: receipt.graceSeconds, // duración (parámetro del servidor)
-        onUndo: () => actions.undo(receipt), // si toca Deshacer, se borra de la cola
-      );
-    } catch (_) { // no se pudo guardar
-      if (!mounted) return; // si ya cerró la pantalla, termina
-      setState(() => _saving = false); // desbloquea el botón
-      messenger.showSnackBar(const SnackBar( // aviso sencillo
-        content: Text('No se pudo guardar. Intenta de nuevo.'), // mensaje
-      ));
-    }
+      ),
+      message: 'Garantía documentada', // texto de la barra
+      after: AfterSave.pop, // vuelve a En sitio
+      onError: () { // si falla
+        if (mounted) setState(() => _saving = false); // desbloquea el botón
+      },
+    );
   }
 
   @override

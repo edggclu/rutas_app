@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart'; // widgets básicos
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
-import 'package:telyser_app/providers/actions.provider.dart';
+import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 import 'package:telyser_app/providers/settings_provider.dart';
 
@@ -8,7 +8,6 @@ import '../../core/theme/app_colors.dart'; // colores
 import '../../core/widgets/alert_box.dart'; // caja de aviso
 import '../../core/widgets/app_header.dart'; // encabezado navy
 import '../../core/widgets/slide_to_confirm.dart'; // botón deslizable
-import '../../core/widgets/undo_bar.dart'; // barra de "Deshacer"
 import '../../data/local/app_database.dart'; // MediaQueueData
 import '../../domain/closing.dart'; // MaterialUsed, canContinueTomorrow
 import '../../domain/extras.dart'; // quantityText
@@ -56,12 +55,10 @@ class _ContinueScreenState extends ConsumerState<ContinueScreen> { // el estado 
     }
   }
 
-  Future<void> _confirm() async { // se ejecuta al completar el deslizamiento
-    final messenger = ScaffoldMessenger.of(context); // se guarda antes del await
-    final navigator = Navigator.of(context); // se guarda antes del await
-    final actions = ref.read(visitActionsProvider); // las acciones del técnico
-    try { // si algo falla, se avisa
-      final receipt = await actions.continueTomorrow( // guarda en la cola
+    Future<void> _confirm() async { // se ejecuta al completar el deslizamiento
+    await runUndoable( // guarda, cierra y muestra la barra
+      context, ref, // dónde mostrar los avisos
+      action: (a) => a.closing.continueTomorrow( // el área de cierre
         visitId: widget.visit.id, // visita
         materials: [ // material usado hoy
           for (final i in _materials) // por cada renglón
@@ -70,18 +67,11 @@ class _ContinueScreenState extends ConsumerState<ContinueScreen> { // el estado 
         leftOnSite: _leftCtrl.text, // lo que se queda
         missing: _missingCtrl.text, // lo que falta
         laidCable: _laidCable, // si tendió cable
-      );
-      navigator.popUntil((route) => route.isFirst); // vuelve a Mi día
-      showUndoBar( // barra con cuenta regresiva
-        messenger, // dónde mostrarla
-        message: 'Marcaste Sigo otro día', // texto
-        seconds: receipt.graceSeconds, // duración (parámetro del servidor)
-        onUndo: () => actions.undo(receipt), // si toca Deshacer, se borra de la cola
-      );
-    } catch (_) { // no se pudo guardar
-      _slideKey.currentState?.reset(); // regresa el deslizable
-      messenger.showSnackBar(const SnackBar(content: Text('No se pudo guardar. Intenta de nuevo.'))); // aviso
-    }
+      ),
+      message: 'Marcaste Sigo otro día', // texto de la barra
+      after: AfterSave.popToRoot, // vuelve a Mi día
+      onError: () => _slideKey.currentState?.reset(), // regresa el deslizable
+    );
   }
 
   @override

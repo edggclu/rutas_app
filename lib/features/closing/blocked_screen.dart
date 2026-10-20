@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart'; // widgets básicos
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
+import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/providers/actions.provider.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 import 'package:telyser_app/providers/settings_provider.dart';
@@ -9,7 +10,6 @@ import '../../core/theme/app_colors.dart'; // colores
 import '../../core/widgets/alert_box.dart'; // caja de aviso
 import '../../core/widgets/app_header.dart'; // encabezado navy
 import '../../core/widgets/choice_group.dart'; // grupo de chips
-import '../../core/widgets/undo_bar.dart'; // barra de "Deshacer"
 import '../../data/local/app_database.dart'; // MediaQueueData
 import '../../domain/closing.dart'; // BlockReason, IncidentKind, canSendBlocked
 import '../../domain/models.dart'; // Visit
@@ -75,33 +75,25 @@ class _BlockedScreenState extends ConsumerState<BlockedScreen> { // el estado de
       messenger.showSnackBar(const SnackBar(content: Text('No se pudo abrir WhatsApp.'))); // aviso
       return; // no se registra
     }
-    await actions.requestHelp(visitId: widget.visit.id); // registra la petición de ayuda
+    await actions.closing.requestHelp(visitId: widget.visit.id); // registra la petición de ayuda
   }
 
-  Future<void> _send() async { // se ejecuta al tocar Enviar
+    Future<void> _send() async { // se ejecuta al tocar Enviar
     setState(() => _saving = true); // bloquea el botón
-    final messenger = ScaffoldMessenger.of(context); // se guarda antes del await
-    final navigator = Navigator.of(context); // se guarda antes del await
-    final actions = ref.read(visitActionsProvider); // las acciones del técnico
-    try { // si algo falla, se avisa
-      final receipt = await actions.blockVisit( // guarda en la cola
+    await runUndoable( // guarda, cierra y muestra la barra
+      context, ref, // dónde mostrar los avisos
+      action: (a) => a.closing.blockVisit( // el área de cierre
         visitId: widget.visit.id, // visita
         reason: _reason!, // motivo (ya validado)
         incidentKind: _reason == BlockReason.incident ? _kind : null, // subtipo solo si es incidente
         note: _noteCtrl.text, // nota
-      );
-      navigator.popUntil((route) => route.isFirst); // vuelve a Mi día
-      showUndoBar( // barra con cuenta regresiva
-        messenger, // dónde mostrarla
-        message: 'Marcaste No pude seguir', // texto
-        seconds: receipt.graceSeconds, // duración (parámetro del servidor)
-        onUndo: () => actions.undo(receipt), // si toca Deshacer, se borra de la cola
-      );
-    } catch (_) { // no se pudo guardar
-      if (!mounted) return; // si ya cerró la pantalla, termina
-      setState(() => _saving = false); // desbloquea el botón
-      messenger.showSnackBar(const SnackBar(content: Text('No se pudo guardar. Intenta de nuevo.'))); // aviso
-    }
+      ),
+      message: 'Marcaste No pude seguir', // texto de la barra
+      after: AfterSave.popToRoot, // vuelve a Mi día
+      onError: () { // si falla
+        if (mounted) setState(() => _saving = false); // desbloquea el botón
+      },
+    );
   }
 
   @override

@@ -38,7 +38,7 @@ void main() {
       VisitActions(outbox, () async => 10, _FakeLocation(point)); // 10 = segundos para deshacer
 
   test('salida sin faltantes: solo encola la salida, en gracia', () async {
-    final receipt = await build(null).confirmDeparture(visits: visits, missing: {}); // confirma la salida sin faltantes
+    final receipt = await build(null).departure.confirmDeparture(visits: visits, missing: {}); // confirma la salida sin faltantes
     final rows = await db.select(db.outboxEvents).get(); // lee la cola completa
 
     expect(rows.map((e) => e.type), [EventTypes.departureConfirmed]); // solo hay un evento: la salida
@@ -50,7 +50,7 @@ void main() {
 
   test('con faltantes: el aviso va ANTES que la salida', () async {
     final tools = visits.first.checklist.tools; // las herramientas de la visita 101
-    await build(null).confirmDeparture(visits: visits, missing: {101: tools}); // confirma con la escalera faltante
+    await build(null).departure.confirmDeparture(visits: visits, missing: {101: tools}); // confirma con la escalera faltante
     final rows = await db.select(db.outboxEvents).get(); // lee la cola
 
     expect(rows.map((e) => e.type), // el orden de los eventos
@@ -63,13 +63,13 @@ void main() {
   test('deshacer borra todo lo que se encoló', () async {
     final actions = build(null); // las acciones
     final tools = visits.first.checklist.tools; // herramientas de la visita 101
-    final receipt = await actions.confirmDeparture(visits: visits, missing: {101: tools}); // encola dos eventos
+    final receipt = await actions.departure.confirmDeparture(visits: visits, missing: {101: tools}); // encola dos eventos
     await actions.undo(receipt); // deshace
     expect(await db.select(db.outboxEvents).get(), isEmpty); // la cola queda vacía
   });
 
   test('Llegué guarda el modo manual y las coordenadas', () async {
-    final receipt = await build(const GeoPoint(20.7002, -105.2943)).arrive(visitId: 101); // llega con ubicación
+    final receipt = await build(const GeoPoint(20.7002, -105.2943)).arrival.arrive(visitId: 101); // llega con ubicación
     final row = (await db.select(db.outboxEvents).get()).single; // la única fila de la cola
     final payload = jsonDecode(row.payloadJson) as Map<String, dynamic>; // los datos guardados
 
@@ -83,7 +83,7 @@ void main() {
   });
 
   test('Llegué funciona aunque no haya ubicación', () async {
-    await build(null).arrive(visitId: 101); // llega sin GPS
+    await build(null).arrival.arrive(visitId: 101); // llega sin GPS
     final row = (await db.select(db.outboxEvents).get()).single; // la fila guardada
     final payload = jsonDecode(row.payloadJson) as Map<String, dynamic>; // sus datos
 
@@ -94,29 +94,29 @@ void main() {
 
   test('deshacer Llegué borra la fila', () async {
     final actions = build(null); // las acciones
-    final receipt = await actions.arrive(visitId: 101); // marca la llegada
+    final receipt = await actions.arrival.arrive(visitId: 101); // marca la llegada
     await actions.undo(receipt); // la deshace dentro de los 10 s
     expect(await db.select(db.outboxEvents).get(), isEmpty); // la cola queda vacía
   });
 
     test('No me abren avisa una sola vez por visita', () async { // no duplica el aviso
     final actions = build(null); // las acciones
-    await actions.reportNoAnswer(visitId: 102); // primer toque
-    await actions.reportNoAnswer(visitId: 102); // segundo toque (el técnico volvió a entrar)
+    await actions.noAnswer.reportNoAnswer(visitId: 102); // primer toque
+    await actions.noAnswer.reportNoAnswer(visitId: 102); // segundo toque (el técnico volvió a entrar)
     final rows = await db.select(db.outboxEvents).get(); // lee la cola
     expect(rows.length, 1); // solo hay un aviso
     expect(rows.single.type, EventTypes.noAnswerReported); // del tipo correcto
   });
 
   test('registrar contacto con el cliente guarda el canal', () async { // llamada o WhatsApp
-    await build(null).registerClientContact(visitId: 102, channel: 'whatsapp'); // toca WhatsApp
+    await build(null).noAnswer.registerClientContact(visitId: 102, channel: 'whatsapp'); // toca WhatsApp
     final row = (await db.select(db.outboxEvents).get()).single; // la única fila
     expect(row.type, EventTypes.clientContacted); // tipo correcto
     expect(jsonDecode(row.payloadJson)['channel'], 'whatsapp'); // guardó el canal
   });
 
   test('registrar llamada a la oficina guarda el evento', () async { // llamada a la oficina
-    await build(null).registerOfficeCall(visitId: 102); // toca llamar a la oficina
+    await build(null).noAnswer.registerOfficeCall(visitId: 102); // toca llamar a la oficina
     final row = (await db.select(db.outboxEvents).get()).single; // la única fila
     expect(row.type, EventTypes.officeCalled); // tipo correcto
     expect(row.visitId, 102); // de la visita correcta
@@ -124,7 +124,7 @@ void main() {
 
   test('No me atendieron queda en gracia y se puede deshacer', () async { // el cierre es deslizable
     final actions = build(null); // las acciones
-    final receipt = await actions.confirmNoAnswer(visitId: 102); // desliza
+    final receipt = await actions.noAnswer.confirmNoAnswer(visitId: 102); // desliza
     final row = (await db.select(db.outboxEvents).get()).single; // la única fila
     expect(row.type, EventTypes.noAnswerConfirmed); // tipo correcto
     expect(row.state, 'grace'); // en tiempo de gracia
@@ -134,7 +134,7 @@ void main() {
 
     test('Terminé el trabajo queda en gracia y se puede deshacer', () async { // cierre simple
     final actions = build(null); // las acciones
-    final receipt = await actions.finish(visitId: 101); // desliza "Terminé"
+    final receipt = await actions.closing.finish(visitId: 101); // desliza "Terminé"
     final row = (await db.select(db.outboxEvents).get()).single; // la única fila
     expect(row.type, EventTypes.finished); // tipo correcto
     expect(row.visitId, 101); // visita correcta
@@ -158,7 +158,7 @@ void main() {
       );
 
   test('un extra normal se guarda como extra_added con sus datos', () async { // caso normal
-    final r = await build(null).addExtra(visit: visits[1], draft: draft()); // la visita 102 (cliente al corriente)
+    final r = await build(null).extras.addExtra(visit: visits[1], draft: draft()); // la visita 102 (cliente al corriente)
     final row = (await db.select(db.outboxEvents).get()).single; // la única fila
     final p = jsonDecode(row.payloadJson) as Map<String, dynamic>; // sus datos
 
@@ -172,7 +172,7 @@ void main() {
   });
 
   test('si lo pide otra persona, solo queda la solicitud', () async { // regla 1
-    final r = await build(null).addExtra(visit: visits[1], draft: draft(authorized: false)); // otra persona
+    final r = await build(null).extras.addExtra(visit: visits[1], draft: draft(authorized: false)); // otra persona
     final rows = await db.select(db.outboxEvents).get(); // la cola
     expect(r.outcome, ExtraOutcome.laterOtherPerson); // quedó como solicitud
     expect(rows.map((e) => e.type), [EventTypes.requestAdded]); // no hay extra_added
@@ -180,7 +180,7 @@ void main() {
   });
 
   test('saldo vencido y equipo: queda como solicitud por saldo', () async { // regla 2
-    final r = await build(null).addExtra(visit: visits[0], draft: draft()); // la visita 101 (Hotel Bahía, saldo vencido)
+    final r = await build(null).extras.addExtra(visit: visits[0], draft: draft()); // la visita 101 (Hotel Bahía, saldo vencido)
     final row = (await db.select(db.outboxEvents).get()).single; // la única fila
     expect(r.outcome, ExtraOutcome.laterCreditHold); // quedó como solicitud
     expect(row.type, EventTypes.requestAdded); // tipo correcto
@@ -188,32 +188,32 @@ void main() {
   });
 
   test('saldo vencido pero material (no equipo): se registra', () async { // cable, conectores...
-    final r = await build(null).addExtra(visit: visits[0], draft: draft(equipment: false)); // no es equipo
+    final r = await build(null).extras.addExtra(visit: visits[0], draft: draft(equipment: false)); // no es equipo
     expect(r.outcome, ExtraOutcome.register); // se hace
   });
 
   test('si retrasa las visitas, también avisa al jefe', () async { // regla del retraso
-    await build(null).addExtra(visit: visits[1], draft: draft(delay: 120)); // retrasa 2 horas
+    await build(null).extras.addExtra(visit: visits[1], draft: draft(delay: 120)); // retrasa 2 horas
     final rows = await db.select(db.outboxEvents).get(); // la cola
     expect(rows.map((e) => e.type), [EventTypes.extraAdded, EventTypes.routeDelayReported]); // extra y aviso
     expect(jsonDecode(rows.last.payloadJson)['minutes'], 120); // minutos guardados
   });
 
   test('si el extra no se hace, no se avisa de retraso', () async { // no hay retraso si no se hizo
-    await build(null).addExtra(visit: visits[1], draft: draft(authorized: false, delay: 120)); // otra persona
+    await build(null).extras.addExtra(visit: visits[1], draft: draft(authorized: false, delay: 120)); // otra persona
     final rows = await db.select(db.outboxEvents).get(); // la cola
     expect(rows.map((e) => e.type), [EventTypes.requestAdded]); // solo la solicitud
   });
 
   test('deshacer un extra con retraso borra los dos eventos', () async { // el comprobante cubre todo
     final actions = build(null); // las acciones
-    final r = await actions.addExtra(visit: visits[1], draft: draft(delay: 60)); // extra con retraso
+    final r = await actions.extras.addExtra(visit: visits[1], draft: draft(delay: 60)); // extra con retraso
     await actions.undo(r.receipt); // deshace
     expect(await db.select(db.outboxEvents).get(), isEmpty); // la cola queda vacía
   });
 
   test('una solicitud para después guarda su descripción y origen', () async { // botón "Solicitud después"
-    await build(null).addRequest( // guarda una solicitud
+    await build(null).extras.addRequest( // guarda una solicitud
         visitId: 101, description: 'Cámaras en la alberca', requestedBy: 'Gerente'); // con quién la pidió
     final row = (await db.select(db.outboxEvents).get()).single; // la única fila
     final p = jsonDecode(row.payloadJson) as Map<String, dynamic>; // sus datos
@@ -224,7 +224,7 @@ void main() {
   });
 
     test('Terminé con extras guarda quién los confirmó', () async { // confirmación de extras
-    await build(null).finish(visitId: 102, confirmedBy: 'Ing. Ramírez', confirmedRole: 'Mantenimiento'); // cierra con confirmación
+    await build(null).closing.finish(visitId: 102, confirmedBy: 'Ing. Ramírez', confirmedRole: 'Mantenimiento'); // cierra con confirmación
     final row = (await db.select(db.outboxEvents).get()).single; // la única fila
     final p = jsonDecode(row.payloadJson) as Map<String, dynamic>; // sus datos
     expect(row.type, EventTypes.finished); // tipo correcto
@@ -233,13 +233,13 @@ void main() {
   });
 
   test('Terminé sin extras no lleva datos de confirmación', () async { // cierre simple
-    await build(null).finish(visitId: 102); // cierra sin confirmación
+    await build(null).closing.finish(visitId: 102); // cierra sin confirmación
     final row = (await db.select(db.outboxEvents).get()).single; // la única fila
     expect(jsonDecode(row.payloadJson), isEmpty); // sin datos extra
   });
 
   test('documentar la garantía guarda causa y serial', () async { // bloque de garantía
-    await build(null).documentWarranty(visitId: 102, cause: WarrantyCause.humiditySalt, serial: 'SN-77'); // documenta
+    await build(null).closing.documentWarranty(visitId: 102, cause: WarrantyCause.humiditySalt, serial: 'SN-77'); // documenta
     final row = (await db.select(db.outboxEvents).get()).single; // la única fila
     final p = jsonDecode(row.payloadJson) as Map<String, dynamic>; // sus datos
     expect(row.type, EventTypes.warrantyDocumented); // tipo correcto
@@ -248,7 +248,7 @@ void main() {
   });
 
   test('Sigo otro día guarda material, lo que falta y el cableado', () async { // C7a
-    final receipt = await build(null).continueTomorrow( // marca sigo otro día
+    final receipt = await build(null).closing.continueTomorrow( // marca sigo otro día
       visitId: 101, // visita
       materials: const [MaterialUsed(id: 2, text: 'Cable UTP (m)', planned: 120, used: 70)], // 70 de 120 m
       leftOnSite: 'Cámaras en el cuarto de mantenimiento', // lo que se queda
@@ -267,7 +267,7 @@ void main() {
   });
 
   test('No pude seguir guarda motivo, tipo de incidente y nota', () async { // C7b
-    await build(null).blockVisit( // marca no pude seguir
+    await build(null).closing.blockVisit( // marca no pude seguir
       visitId: 101, // visita
       reason: BlockReason.incident, // incidente
       incidentKind: IncidentKind.accident, // accidente
@@ -282,7 +282,7 @@ void main() {
   });
 
   test('pedir ayuda al ingeniero se registra sin tiempo de deshacer', () async { // botón normal
-    await build(null).requestHelp(visitId: 101); // pide ayuda
+    await build(null).closing.requestHelp(visitId: 101); // pide ayuda
     final row = (await db.select(db.outboxEvents).get()).single; // la única fila
     expect(row.type, EventTypes.helpRequested); // tipo correcto
     expect(row.visitId, 101); // visita correcta

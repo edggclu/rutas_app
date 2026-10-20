@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:telyser_app/providers/actions.provider.dart';
+import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/providers/infra_providers.dart';
 import '../../core/widgets/choice_group.dart';
 import 'package:intl/intl.dart';
 import 'package:telyser_app/core/theme/app_colors.dart';
 import 'package:telyser_app/core/widgets/alert_box.dart';
 import 'package:telyser_app/core/widgets/app_header.dart';
-import 'package:telyser_app/core/widgets/undo_bar.dart';
 import 'package:telyser_app/domain/extras.dart';
 import 'package:telyser_app/domain/models.dart';
 import 'package:telyser_app/domain/product.dart';
@@ -85,11 +84,8 @@ class _AddExtraScreenState extends ConsumerState<AddExtraScreen> { // el estado 
     });
   }
 
-  Future<void> _save() async { // se ejecuta al tocar Guardar
+    Future<void> _save() async { // se ejecuta al tocar Guardar
     setState(() => _saving = true); // bloquea el botón
-    final messenger = ScaffoldMessenger.of(context); // se guarda antes del await
-    final navigator = Navigator.of(context); // se guarda antes del await
-    final actions = ref.read(visitActionsProvider); // las acciones del técnico
     final draft = ExtraDraft( // arma el borrador con lo que se llenó
       name: _nameCtrl.text.trim(), // nombre
       productId: _product?.id, // id del catálogo (null si lo escribió)
@@ -102,15 +98,25 @@ class _AddExtraScreenState extends ConsumerState<AddExtraScreen> { // el estado 
       notInstalled: _notInstalled, // ¿no se instaló?
       delayMinutes: _delays ? _delayMinutes : null, // retraso, solo si activó el interruptor
     );
-    try { // si algo falla, se avisa
-      final result = await actions.addExtra(visit: widget.visit, draft: draft); // aplica las reglas y guarda
-      if (!mounted) return; // si ya cerró la pantalla, termina
-      if (result.outcome != ExtraOutcome.register) { // si NO se registró como extra
+    ExtraOutcome? outcome; // lo que decidió la app (se llena al guardar)
+    await runUndoable( // guarda, avisa, cierra y muestra la barra
+      context, ref, // dónde mostrar los avisos
+      action: (a) async { // el área de extras
+        final r = await a.extras.addExtra(visit: widget.visit, draft: draft); // aplica las reglas y guarda
+        outcome = r.outcome; // recuerda qué se decidió
+        return r.receipt; // el ayudante solo necesita el comprobante
+      },
+      messageBuilder: () => outcome == ExtraOutcome.register // texto según lo que pasó
+          ? 'Extra guardado' // se registró
+          : 'Solicitud guardada', // quedó como solicitud
+      after: AfterSave.pop, // cierra el formulario
+      beforeClose: () async { // antes de cerrar, explica si no se registró
+        if (!mounted || outcome == ExtraOutcome.register) return; // si se registró, no hay nada que explicar
         await showDialog<void>( // ventana que explica qué pasó
           context: context, // sobre esta pantalla
           builder: (ctx) => AlertDialog( // la ventana
             title: const Text('Se guardó como solicitud'), // título
-            content: Text(result.outcome == ExtraOutcome.laterOtherPerson // texto según el motivo
+            content: Text(outcome == ExtraOutcome.laterOtherPerson // texto según el motivo
                 ? 'Solo el contacto autorizado puede pedir extras. Esto no se hace en esta visita: administración lo confirmará con el cliente.' // lo pidió otra persona
                 : 'Este cliente tiene saldo vencido. No se agrega equipo sin autorización: quedó como solicitud para después y administración lo revisará.'), // saldo vencido
             actions: [ // botones de la ventana
@@ -121,24 +127,12 @@ class _AddExtraScreenState extends ConsumerState<AddExtraScreen> { // el estado 
             ],
           ),
         );
-      }
-      navigator.pop(); // cierra el formulario y vuelve a En sitio
-      showUndoBar( // barra con cuenta regresiva
-        messenger, // dónde mostrarla
-        message: result.outcome == ExtraOutcome.register // texto según lo que pasó
-            ? 'Extra guardado' // se registró
-            : 'Solicitud guardada', // quedó como solicitud
-        seconds: result.receipt.graceSeconds, // duración (parámetro del servidor)
-        onUndo: () => actions.undo(result.receipt), // si toca Deshacer, se borra de la cola
-      );
-    } catch (_) { // no se pudo guardar
-      if (!mounted) return; // si ya cerró la pantalla, termina
-      setState(() => _saving = false); // desbloquea el botón
-      messenger.showSnackBar(const SnackBar( // aviso sencillo
-        content: Text('No se pudo guardar. Intenta de nuevo.'), // mensaje
-      ));
-    }
-  }
+      },
+      onError: () { // si falla
+        if (mounted) setState(() => _saving = false); // desbloquea el botón
+      },
+    );
+  } 
 
   @override
   Widget build(BuildContext context) { // dibuja el formulario

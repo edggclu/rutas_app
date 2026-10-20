@@ -1,8 +1,8 @@
 import 'package:telyser_app/domain/models/event_models.dart';
 
-import '../domain/enums.dart'; // VisitStatus
+import '../domain/models/enums.dart'; // VisitStatus
 import '../domain/events/event_data.dart'; // los eventos
-import '../domain/models.dart'; // Visit y ChecklistItem
+import '../domain/models/models.dart'; // Visit y ChecklistItem
 import 'action_receipt.dart'; // el comprobante
 import 'outbox_writer.dart'; // el ayudante que escribe en la cola
 

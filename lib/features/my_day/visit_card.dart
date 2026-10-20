@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/time/time_utils.dart';
-import '../../domain/enums.dart';
-import '../../domain/models.dart';
+import '../../domain/models/enums.dart';
+import '../../domain/models/models.dart';
 import 'visit_tags.dart';
 
 /// Tarjeta de visita de la lista "Mi día".

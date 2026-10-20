@@ -1,4 +1,4 @@
-import '../domain/closing.dart'; // WarrantyCause, BlockReason, IncidentKind, MaterialUsed
+import '../domain/rules/closing.dart'; // WarrantyCause, BlockReason, IncidentKind, MaterialUsed
 import '../domain/events/event_data.dart'; // los eventos
 import 'action_receipt.dart'; // el comprobante
 import 'outbox_writer.dart'; // el ayudante que escribe en la cola

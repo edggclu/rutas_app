@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart';
 
-import '../../domain/app_settings.dart';
+import '../../domain/models/app_settings.dart';
 import 'app_database.dart';
 
 /// Guarda los parámetros en la tabla SettingsKv (clave, valor).

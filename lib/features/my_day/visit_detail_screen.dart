@@ -11,8 +11,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/alert_box.dart';
 import '../../core/widgets/app_header.dart';
 import '../../core/widgets/slide_to_confirm.dart';
-import '../../domain/enums.dart';
-import '../../domain/models.dart';
+import '../../domain/models/enums.dart';
+import '../../domain/models/models.dart';
 import 'visit_tags.dart';
 
 /// C3 · Tarjeta de visita: todo lo necesario para llegar y saber qué hacer.

@@ -1,6 +1,6 @@
 import 'package:telyser_app/domain/models/event_models.dart';
 
-import '../domain/event_types.dart'; // EventTypes: para preguntar si ya existe un aviso
+import '../domain/events/event_types.dart'; // EventTypes: para preguntar si ya existe un aviso
 import '../domain/events/event_data.dart'; // los eventos
 import 'action_receipt.dart'; // el comprobante
 import 'outbox_writer.dart'; // el ayudante que escribe en la cola

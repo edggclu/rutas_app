@@ -5,7 +5,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:telyser_app/data/local/app_database.dart';
 import 'package:telyser_app/data/local/settings_store.dart';
-import 'package:telyser_app/domain/app_settings.dart';
+import 'package:telyser_app/domain/models/app_settings.dart';
 
 void main(){
   late AppDatabase db;

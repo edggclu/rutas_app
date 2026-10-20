@@ -11,8 +11,8 @@ import '../../core/widgets/alert_box.dart'; // caja de aviso
 import '../../core/widgets/app_header.dart'; // encabezado navy
 import '../../core/widgets/choice_group.dart'; // grupo de chips
 import '../../data/local/app_database.dart'; // MediaQueueData
-import '../../domain/closing.dart'; // BlockReason, IncidentKind, canSendBlocked
-import '../../domain/models.dart'; // Visit
+import '../../domain/rules/closing.dart'; // BlockReason, IncidentKind, canSendBlocked
+import '../../domain/models/models.dart'; // Visit
 import '../site/capture_photo.dart'; // capturePhoto
 
 const _emergencyNumber = '911'; // número de emergencias en México (no es un parámetro de la empresa)

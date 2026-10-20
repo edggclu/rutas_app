@@ -1,5 +1,5 @@
-import 'enums.dart';
-import 'models.dart';
+import '../models/enums.dart';
+import '../models/models.dart';
 
 enum TechStateKind { enRoute, onSite, free }
 

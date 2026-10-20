@@ -1,7 +1,7 @@
-import 'package:telyser_app/domain/app_settings.dart';
-import 'package:telyser_app/domain/models.dart';
-import 'package:telyser_app/domain/visit_state.dart';
-import 'events/event_data.dart'; 
+import 'package:telyser_app/domain/models/app_settings.dart';
+import 'package:telyser_app/domain/models/models.dart';
+import 'package:telyser_app/domain/rules/visit_state.dart';
+import '../events/event_data.dart'; 
 
 /// Kilómetros que cuentan para la espera: desde la visita anterior; si ese dato
 /// falta, la distancia estimada desde la oficina que ya guarda el lugar. devuelve null si no hay ninguna de las 2

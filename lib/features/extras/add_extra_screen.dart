@@ -7,9 +7,9 @@ import 'package:intl/intl.dart';
 import 'package:telyser_app/core/theme/app_colors.dart';
 import 'package:telyser_app/core/widgets/alert_box.dart';
 import 'package:telyser_app/core/widgets/app_header.dart';
-import 'package:telyser_app/domain/extras.dart';
-import 'package:telyser_app/domain/models.dart';
-import 'package:telyser_app/domain/product.dart';
+import 'package:telyser_app/domain/rules/extras.dart';
+import 'package:telyser_app/domain/models/models.dart';
+import 'package:telyser_app/domain/models/product.dart';
 
 final _money = NumberFormat.currency(locale: 'es_MX', symbol: r'$', decimalDigits: 0); // formato de dinero: $1,850
 

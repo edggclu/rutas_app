@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart'; // widgets básicos
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
+import 'package:telyser_app/domain/format.dart';
 import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 import 'package:telyser_app/providers/settings_provider.dart';
@@ -9,9 +10,8 @@ import '../../core/widgets/alert_box.dart'; // caja de aviso
 import '../../core/widgets/app_header.dart'; // encabezado navy
 import '../../core/widgets/slide_to_confirm.dart'; // botón deslizable
 import '../../data/local/app_database.dart'; // MediaQueueData
-import '../../domain/closing.dart'; // MaterialUsed, canContinueTomorrow
-import '../../domain/extras.dart'; // quantityText
-import '../../domain/models.dart'; // Visit, ChecklistItem
+import '../../domain/rules/closing.dart'; // MaterialUsed, canContinueTomorrow
+import '../../domain/models/models.dart'; // Visit, ChecklistItem
 import '../site/capture_photo.dart'; // captureVideo
 
 /// C7a · Sigo otro día: lo que se usó, lo que queda en el sitio y lo que falta.
@@ -184,7 +184,7 @@ class _UsedRow extends StatefulWidget { // con estado: la cantidad cambia
 
 class _UsedRowState extends State<_UsedRow> { // el estado de la fila
   late final TextEditingController _ctrl = TextEditingController( // controla el campo de cantidad
-      text: quantityText(widget.item.quantity ?? 0)); // empieza igual a lo planeado
+      text: formatNumber(widget.item.quantity ?? 0)); // empieza igual a lo planeado
 
   @override
   void dispose() { // al cerrar
@@ -196,7 +196,7 @@ class _UsedRowState extends State<_UsedRow> { // el estado de la fila
 
   void _set(num v) { // cambia la cantidad con los botones
     final value = v < 0 ? 0 : v; // nunca baja de cero
-    _ctrl.text = quantityText(value); // actualiza el campo
+    _ctrl.text = formatNumber(value); // actualiza el campo
     widget.onChanged(value); // avisa a la pantalla
   }
 

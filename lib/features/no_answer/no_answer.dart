@@ -4,20 +4,18 @@ import 'package:telyser_app/core/contact_launcher.dart';
 import 'package:telyser_app/core/theme/app_colors.dart';
 import 'package:telyser_app/core/widgets/app_header.dart';
 import 'package:telyser_app/core/widgets/slide_to_confirm.dart';
+import 'package:telyser_app/domain/format.dart';
 import 'package:telyser_app/domain/models/event_models.dart';
-import 'package:telyser_app/domain/models.dart';
-import 'package:telyser_app/domain/no_answer.dart';
-import 'package:telyser_app/domain/visit_state.dart';
+import 'package:telyser_app/domain/models/models.dart';
+import 'package:telyser_app/domain/rules/no_answer.dart';
+import 'package:telyser_app/domain/rules/visit_state.dart';
 import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/providers/actions.provider.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 import 'package:telyser_app/providers/settings_provider.dart';
 
-/// Muestra los kilometros sin .0 cuando son enteros 
-String _kmLabel(double? km) {
-  if(km == null) return '0';
-  return km % 1==0 ? km.toInt().toString() : km.toStringAsFixed(1); // enseña el entero sin decimales, si tiene solo enseña  1
-}
+/// Muestra los kilómetros sin ".0" cuando son enteros (5.0 -> "5", 12.4 -> "12.4").
+String _kmLabel(double? km) => km == null ? '0' : formatNumber(km, decimals: 1); // sin dato: se muestra 0
 
 /// No me abren / Cuenta regresiva / intentos de contacto y salida
 class NoAnswerScreen extends ConsumerWidget {

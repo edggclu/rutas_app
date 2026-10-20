@@ -1,7 +1,8 @@
 import 'package:flutter_test/flutter_test.dart'; // herramientas de prueba
-import 'package:telyser_app/domain/event_types.dart'; // nombres de eventos
-import 'package:telyser_app/domain/extras.dart'; // lo que se prueba
-import 'package:telyser_app/domain/visit_state.dart'; // VisitEvent
+import 'package:telyser_app/domain/events/event_types.dart'; // nombres de eventos
+import 'package:telyser_app/domain/format.dart';
+import 'package:telyser_app/domain/rules/extras.dart'; // lo que se prueba
+import 'package:telyser_app/domain/rules/visit_state.dart'; // VisitEvent
 
 void main() {
   final t0 = DateTime.utc(2026, 10, 6, 14, 20); // hora fija de prueba
@@ -75,13 +76,13 @@ void main() {
     test('solo toma los extras de la visita pedida', () { // filtra por visita
       final x = extrasOf(events, 101); // extras de la 101
       expect(x.length, 2); // dos extras
-      expect(x.first.label, '1 × Cámara IP 4 MP'); // texto del primero
+      expect(x.first.label, '1 x Cámara IP 4 MP'); // texto del primero
       expect(x.last.notInstalled, isTrue); // el segundo es "no se instaló"
     });
 
     test('las cantidades enteras no llevan decimales', () { // 3.0 -> 3
-      expect(quantityText(3.0), '3'); // entera
-      expect(quantityText(1.5), '1.5'); // con decimales
+      expect(formatNumber(3.0), '3'); // entera
+      expect(formatNumber(1.5), '1.5'); // con decimales
     });
 
     test('las solicitudes se leen con su origen', () { // lectura de solicitudes

@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:telyser_app/core/widgets/alert_box.dart';
 import 'package:telyser_app/core/widgets/app_header.dart';
-import 'package:telyser_app/domain/models.dart';
+import 'package:telyser_app/domain/models/models.dart';
 import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/features/site/capture_photo.dart';
 

@@ -1,8 +1,8 @@
-import 'events/event_data.dart'; // WarrantyDocumentedEvent
-import 'models/closing_models.dart'; // WarrantyCause, BlockReason, IncidentKind
+import '../events/event_data.dart'; // WarrantyDocumentedEvent
+import '../models/closing_models.dart'; // WarrantyCause, BlockReason, IncidentKind
 import 'visit_state.dart'; // VisitEvent
 
-export 'models/closing_models.dart'; // quien importe closing.dart sigue viendo los tipos de cierre
+export '../models/closing_models.dart'; // quien importe closing.dart sigue viendo los tipos de cierre
 
 /// Bloque de garantía: causa elegida, al menos una foto de la falla y el número
 /// de serie (escrito o en foto de la etiqueta).

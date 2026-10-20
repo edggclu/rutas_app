@@ -10,8 +10,8 @@ import '../../core/widgets/alert_box.dart'; // caja de aviso
 import '../../core/widgets/app_header.dart'; // encabezado navy
 import '../../core/widgets/choice_group.dart'; // grupo de chips
 import '../../data/local/app_database.dart'; // MediaQueueData
-import '../../domain/closing.dart'; // WarrantyCause, canSaveWarranty
-import '../../domain/models.dart'; // Visit
+import '../../domain/rules/closing.dart'; // WarrantyCause, canSaveWarranty
+import '../../domain/models/models.dart'; // Visit
 import 'capture_photo.dart'; // capturePhoto
 
 /// G1 · Bloque de garantía (provisional: el ingeniero debe definir más campos).

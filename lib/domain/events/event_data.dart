@@ -1,6 +1,6 @@
 import 'package:telyser_app/domain/models/event_models.dart';
 
-import '../event_types.dart'; // los nombres de los eventos, escritos en un solo lugar
+import 'event_types.dart'; // los nombres de los eventos, escritos en un solo lugar
 import '../models/closing_models.dart'; // WarrantyCause, BlockReason, IncidentKind, MaterialUsed
 import '../models/extra_models.dart'; // ExtraItem, RequestOrigin
 import '../models/payload.dart'; // lectores de datos

@@ -1,6 +1,6 @@
-import 'enums.dart'; // VisitStatus y VisitResult
-import 'events/event_data.dart'; // las clases de evento
-import 'models.dart'; // DayRoute y Visit
+import '../models/enums.dart'; // VisitStatus y VisitResult
+import '../events/event_data.dart'; // las clases de evento
+import '../models/models.dart'; // DayRoute y Visit
 
 /// Una acción de la cola, sin depender de Drift (así se prueba fácil).
 /// Guarda el tipo y los datos TAL COMO están en la base, y ofrece `data` con

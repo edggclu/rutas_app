@@ -350,6 +350,18 @@ flowchart TD
 | `features/closing/blocked_screen.dart` | C7b: No pude seguir. |
 | `core/widgets/choice_group.dart` | Grupo de chips compartido. |
 
+### Cómo agregar un evento nuevo
+
+1. **Nombre:** una constante en `EventTypes`.
+2. **Clase:** una clase `...Event` en `domain/events/event_data.dart`, con sus datos tipados, `toPayload()` y `fromPayload()`; y una línea en `EventData.parse`.
+3. **Estado:** el compilador marcará el `switch` de `applyEvents` hasta que agregues el caso (aunque sea "no cambia el estado").
+4. **Ejemplo:** agrégalo a la lista de `test/events_test.dart` (la prueba "hay un ejemplo por cada tipo" avisa si falta).
+5. **Acción:** un método en la clase del área en `application/`, con `PendingEvent(MiEvento(...), visitId: ...)`.
+6. **Pantalla:** `runUndoable(context, ref, action: (a) => a.<área>.<método>(...), ...)`.
+7. **Contrato:** documenta los datos en `docs/contrato_api.md`.
+
+Lo que se guarda y viaja al servidor es siempre el mapa de `toPayload()`; la app nunca reescribe lo ya guardado.
+
 ## Aviso
 Si `flutter run` o `flutter analyze` marcan errores, probablemente sean detalles menores
 de sintaxis o de versión de paquetes.

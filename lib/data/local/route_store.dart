@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart';
 import 'package:telyser_app/data/local/app_database.dart';
-import 'package:telyser_app/domain/models.dart';
+import 'package:telyser_app/domain/models/models.dart';
 
 /// Caché de "mi día": una fila por visita, con el JSON completo tal como llegó.
 class RouteStore {

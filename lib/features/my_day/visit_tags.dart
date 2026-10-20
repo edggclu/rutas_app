@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/tag_chip.dart';
-import '../../domain/enums.dart';
-import '../../domain/models.dart';
+import '../../domain/models/enums.dart';
+import '../../domain/models/models.dart';
 
 Widget jobTypeChip(JobType t) {
   switch (t) {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart'; // widgets básicos
 
 import '../../core/theme/app_colors.dart'; // colores
-import '../../domain/extras.dart'; // ExtraEntry
+import '../../domain/rules/extras.dart'; // ExtraEntry
 
 /// Quién confirmó los extras.
 class FinishConfirmation { // datos de la confirmación

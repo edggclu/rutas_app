@@ -1,6 +1,8 @@
+import 'package:telyser_app/domain/format.dart';
+
 import '../domain/events/event_data.dart'; // los eventos
-import '../domain/extras.dart'; // ExtraDraft, ExtraItem, ExtraOutcome, RequestOrigin, decideExtra, quantityText
-import '../domain/models.dart'; // Visit
+import '../domain/rules/extras.dart'; // ExtraDraft, ExtraItem, ExtraOutcome, RequestOrigin, decideExtra, quantityText
+import '../domain/models/models.dart'; // Visit
 import 'action_receipt.dart'; // el comprobante
 import 'outbox_writer.dart'; // el ayudante que escribe en la cola
 
@@ -53,7 +55,7 @@ class ExtrasActions { // una clase por área
     } else { // no se hace: queda como solicitud para después
       events.add(PendingEvent( // la solicitud
         RequestAddedEvent(
-          description: '${quantityText(draft.quantity)} × ${draft.name}', // texto para administración
+          description: '${formatNumber(draft.quantity)} × ${draft.name}', // texto para administración
           origin: outcome == ExtraOutcome.laterOtherPerson // por qué quedó como solicitud
               ? RequestOrigin.otherPerson // la pidió otra persona
               : RequestOrigin.creditHold, // el cliente tiene saldo vencido

@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:telyser_app/domain/enums.dart';
-import 'package:telyser_app/domain/models.dart';
-import 'package:telyser_app/domain/technician_state.dart';
+import 'package:telyser_app/domain/models/enums.dart';
+import 'package:telyser_app/domain/models/models.dart';
+import 'package:telyser_app/domain/rules/technician_state.dart';
 
 void main() {
   late DayRoute route;

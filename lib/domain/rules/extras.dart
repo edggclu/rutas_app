@@ -1,8 +1,10 @@
-import 'events/event_data.dart'; // ExtraAddedEvent y RequestAddedEvent
-import 'models/extra_models.dart'; // ExtraOutcome, RequestOrigin...
+import 'package:telyser_app/domain/format.dart';
+
+import '../events/event_data.dart'; // ExtraAddedEvent y RequestAddedEvent
+import '../models/extra_models.dart'; // ExtraOutcome, RequestOrigin...
 import 'visit_state.dart'; // VisitEvent
 
-export 'models/extra_models.dart'; // quien importe extras.dart sigue viendo los tipos de extras
+export '../models/extra_models.dart'; // quien importe extras.dart sigue viendo los tipos de extras
 
 /// Aplica las reglas del documento. El orden importa: si lo pide otra persona,
 /// no se mira nada más.
@@ -19,8 +21,6 @@ ExtraOutcome decideExtra({
   return ExtraOutcome.register; // en cualquier otro caso se hace y se anota
 }
 
-/// Muestra una cantidad sin ".0" cuando es entera (2.0 -> "2", 1.5 -> "1.5").
-String quantityText(num q) => q % 1 == 0 ? q.toInt().toString() : q.toString(); // entero sin decimales
 
 /// Un extra ya guardado, listo para mostrarse en pantalla.
 class ExtraEntry { // renglón de la lista de extras
@@ -28,7 +28,7 @@ class ExtraEntry { // renglón de la lista de extras
   final String name; // nombre
   final num quantity; // cantidad
   final bool notInstalled; // ¿es una nota de "no se instaló"?
-  String get label => '${quantityText(quantity)} × $name'; // ej. "1 × Cámara IP 4 MP"
+  String get label => '${formatNumber(quantity)} x $name'; // ej. "1 × Cámara IP 4 MP"
 }
 
 /// Una solicitud para después ya guardada.

@@ -1,10 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:telyser_app/domain/app_settings.dart';
-import 'package:telyser_app/domain/product.dart';
+import 'package:telyser_app/domain/models/app_settings.dart';
+import 'package:telyser_app/domain/models/product.dart';
 
-import '../../domain/models.dart';
+import '../../domain/models/models.dart';
 import '../repositories.dart';
 
 Future<Map<String, dynamic>> _loadJson(String asset) async {

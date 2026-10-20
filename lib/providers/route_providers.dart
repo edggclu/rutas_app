@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart'; // los distintos tipos 
 import 'package:intl/intl.dart'; // DateFormat: da formato a la fecha
 
 import '../data/local/app_database.dart'; // MediaQueueData
-import '../domain/models.dart'; // DayRoute y Visit
-import '../domain/visit_state.dart'; // VisitEvent y applyEvents
+import '../domain/models/models.dart'; // DayRoute y Visit
+import '../domain/rules/visit_state.dart'; // VisitEvent y applyEvents
 import 'infra_providers.dart'; // repositorios y almacenes
 import 'session_provider.dart'; // sessionProvider
 

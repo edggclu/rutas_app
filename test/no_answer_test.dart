@@ -2,12 +2,12 @@ import 'dart:convert';
 import 'dart:io'; 
 
 import 'package:flutter_test/flutter_test.dart'; 
-import 'package:telyser_app/domain/app_settings.dart'; 
-import 'package:telyser_app/domain/enums.dart'; 
-import 'package:telyser_app/domain/event_types.dart';
-import 'package:telyser_app/domain/models.dart'; 
-import 'package:telyser_app/domain/no_answer.dart'; 
-import 'package:telyser_app/domain/visit_state.dart'; 
+import 'package:telyser_app/domain/models/app_settings.dart'; 
+import 'package:telyser_app/domain/models/enums.dart'; 
+import 'package:telyser_app/domain/events/event_types.dart';
+import 'package:telyser_app/domain/models/models.dart'; 
+import 'package:telyser_app/domain/rules/no_answer.dart'; 
+import 'package:telyser_app/domain/rules/visit_state.dart'; 
 
 void main() {
   late AppSettings settings; // parámetros de prueba 10 min base + 1 min por km

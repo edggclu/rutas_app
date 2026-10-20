@@ -6,8 +6,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/time/time_utils.dart';
 import '../../core/widgets/app_header.dart';
 import '../../core/widgets/slide_to_confirm.dart';
-import '../../domain/enums.dart';
-import '../../domain/models.dart';
+import '../../domain/models/enums.dart';
+import '../../domain/models/models.dart';
 
 /// C2 · Salida (inicio del día).
 ///

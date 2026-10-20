@@ -13,11 +13,11 @@ import '../../core/widgets/alert_box.dart'; // caja de aviso
 import '../../core/widgets/app_header.dart'; // encabezado navy
 import '../../core/widgets/slide_to_confirm.dart'; // botón deslizable
 import '../../data/local/app_database.dart'; // MediaQueueData (una foto guardada)
-import '../../domain/closing.dart'; // warrantyDocumented, lastWarrantyCause
-import '../../domain/enums.dart'; // Coverage
-import '../../domain/extras.dart'; // extrasOf y requestsOf
+import '../../domain/rules/closing.dart'; // warrantyDocumented, lastWarrantyCause
+import '../../domain/models/enums.dart'; // Coverage
+import '../../domain/rules/extras.dart'; // extrasOf y requestsOf
 import '../../domain/events/event_data.dart';
-import '../../domain/visit_state.dart'; // VisitEvent
+import '../../domain/rules/visit_state.dart'; // VisitEvent
 import '../closing/blocked_screen.dart'; // C7b
 import '../closing/continue_screen.dart'; // C7a
 import '../closing/finish_sheet.dart'; // C6

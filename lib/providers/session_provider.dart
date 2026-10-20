@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Notifier y NotifierProvider
 
-import '../domain/models.dart'; // Session
+import '../domain/models/models.dart'; // Session
 import 'infra_providers.dart'; // authRepositoryProvider
 
 /// Guarda la sesión actual (null = nadie ha iniciado sesión).

@@ -7,11 +7,11 @@ import 'package:telyser_app/data/local/app_database.dart';
 import 'package:telyser_app/data/local/outbox_repository.dart'; 
 import 'package:telyser_app/data/location_service.dart'; 
 import 'package:telyser_app/application/visit_actions.dart';
-import 'package:telyser_app/domain/closing.dart'; 
-import 'package:telyser_app/domain/event_types.dart';
-import 'package:telyser_app/domain/extras.dart'; 
+import 'package:telyser_app/domain/rules/closing.dart'; 
+import 'package:telyser_app/domain/events/event_types.dart';
+import 'package:telyser_app/domain/rules/extras.dart'; 
 import 'package:telyser_app/domain/models/event_models.dart';
-import 'package:telyser_app/domain/models.dart'; 
+import 'package:telyser_app/domain/models/models.dart'; 
 
 /// Ubicación falsa: devuelve siempre el punto que se le indique (o null).
 class _FakeLocation implements LocationService { 

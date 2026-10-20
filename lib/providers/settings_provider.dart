@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // FutureProvider
 
-import '../domain/app_settings.dart'; // AppSettings
+import '../domain/models/app_settings.dart'; // AppSettings
 import 'infra_providers.dart'; // repositorio y almacén de parámetros
 import 'session_provider.dart'; // sessionProvider
 

@@ -1,3 +1,5 @@
+import 'package:telyser_app/domain/format.dart';
+
 import 'enums.dart';
 
 /// Modelos del contrato `GET /api/my-day` (ver docs/contrato_api.md).
@@ -147,7 +149,7 @@ class ChecklistItem {
   String get quantityLabel {
     final q = quantity;
     if (q== null) return '';
-    return 'x${q% 1 == 0 ? q.toInt() : q}';
+    return 'x${formatNumber(q)}';
     // return (q==null) ? '' : 'x${q% 1 == 0 ? q.toInt() : q}';
   }
 

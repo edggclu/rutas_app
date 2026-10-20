@@ -1,7 +1,7 @@
-import 'package:telyser_app/domain/app_settings.dart';
-import 'package:telyser_app/domain/product.dart';
+import 'package:telyser_app/domain/models/app_settings.dart';
+import 'package:telyser_app/domain/models/product.dart';
 
-import '../domain/models.dart';
+import '../domain/models/models.dart';
 
 /// Las pantallas nunca hablan con la API: usan estas interfaces. Hoy se
 /// implementan con datos de prueba (lib/data/mock); cuando exista la API de

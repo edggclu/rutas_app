@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:telyser_app/core/theme/app_colors.dart';
 import 'package:telyser_app/core/time/time_utils.dart';
 import 'package:telyser_app/core/widgets/tag_chip.dart';
-import 'package:telyser_app/domain/models.dart';
+import 'package:telyser_app/domain/models/models.dart';
 
 /// Panel que aparece debajo de la tarjeta de visita cuando el tecnico marco 'Llegue' pregunta si ya te abrieron en la visita
 /// widget sin estado propio, solo muestra datos

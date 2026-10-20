@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:telyser_app/domain/enums.dart';
-import 'package:telyser_app/domain/event_types.dart';
-import 'package:telyser_app/domain/models.dart';
-import 'package:telyser_app/domain/technician_state.dart';
-import 'package:telyser_app/domain/visit_state.dart';
+import 'package:telyser_app/domain/models/enums.dart';
+import 'package:telyser_app/domain/events/event_types.dart';
+import 'package:telyser_app/domain/models/models.dart';
+import 'package:telyser_app/domain/rules/technician_state.dart';
+import 'package:telyser_app/domain/rules/visit_state.dart';
 
 void main() {
   late DayRoute route; // 101, 102 y 103: todas Por hacer

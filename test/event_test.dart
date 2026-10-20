@@ -1,13 +1,13 @@
 import 'dart:convert'; // jsonEncode y jsonDecode: simulan guardar en la base y leer de vuelta
 
 import 'package:flutter_test/flutter_test.dart'; // herramientas de prueba
-import 'package:telyser_app/domain/enums.dart'; // ChecklistKind
-import 'package:telyser_app/domain/event_types.dart'; // nombres de eventos
+import 'package:telyser_app/domain/models/enums.dart'; // ChecklistKind
+import 'package:telyser_app/domain/events/event_types.dart'; // nombres de eventos
 import 'package:telyser_app/domain/events/event_data.dart'; // lo que se prueba
 import 'package:telyser_app/domain/models/event_models.dart';
 import 'package:telyser_app/domain/models/closing_models.dart'; // enums de cierre
 import 'package:telyser_app/domain/models/extra_models.dart'; // enums de extras
-import 'package:telyser_app/domain/visit_state.dart'; // VisitEvent
+import 'package:telyser_app/domain/rules/visit_state.dart'; // VisitEvent
 
 void main() {
   const item = ExtraItem( // un extra de ejemplo

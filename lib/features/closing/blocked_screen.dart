@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart'; // widgets básicos
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
+import 'package:telyser_app/core/widgets/toast.dart';
 import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/providers/actions.provider.dart';
 import 'package:telyser_app/providers/route_providers.dart';
@@ -48,7 +49,7 @@ class _BlockedScreenState extends ConsumerState<BlockedScreen> { // el estado de
         kind: _reason == BlockReason.incident ? 'damage' : 'progress', // los incidentes se marcan como daño
       );
     } catch (_) { // la cámara falló
-      messenger.showSnackBar(const SnackBar(content: Text('No se pudo guardar la foto.'))); // aviso
+      messenger.toast('No se pudo guardar la foto');
     }
   }
 
@@ -64,7 +65,7 @@ class _BlockedScreenState extends ConsumerState<BlockedScreen> { // el estado de
     final messenger = ScaffoldMessenger.of(context); // se guarda antes del await
     final actions = ref.read(visitActionsProvider); // las acciones del técnico
     if (engineer == null || phone == null || phone.isEmpty) { // sin teléfono no se puede
-      messenger.showSnackBar(const SnackBar(content: Text('No hay teléfono del ingeniero.'))); // aviso
+      messenger.toast('No hay teléfono del ingeniero.');
       return; // termina
     }
     final note = _noteCtrl.text.trim(); // lo escrito en la nota
@@ -72,7 +73,7 @@ class _BlockedScreenState extends ConsumerState<BlockedScreen> { // el estado de
         '(${widget.visit.place.name}): ${note.isEmpty ? 'no logro resolverlo' : note}'; // ...lugar y la nota
     final ok = await openWhatsApp(phone, text: text); // abre WhatsApp
     if (!ok) { // no se pudo abrir
-      messenger.showSnackBar(const SnackBar(content: Text('No se pudo abrir WhatsApp.'))); // aviso
+      messenger.toast('No se pudo abrir WhatsApp.');
       return; // no se registra
     }
     await actions.closing.requestHelp(visitId: widget.visit.id); // registra la petición de ayuda

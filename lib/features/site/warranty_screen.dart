@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart'; // widgets básicos
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
+import 'package:telyser_app/core/widgets/toast.dart';
 import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 import 'package:telyser_app/providers/settings_provider.dart';
@@ -67,9 +68,7 @@ class _WarrantyScreenState extends ConsumerState<WarrantyScreen> { // el estado 
     try { // si algo falla, se avisa
       await capturePhoto(ref, visitId: widget.visit.id, kind: kind); // abre la cámara y guarda
     } catch (_) { // la cámara falló
-      messenger.showSnackBar(const SnackBar( // aviso sencillo
-        content: Text('No se pudo guardar la foto.'), // mensaje
-      ));
+      messenger.toast('No se pudo guardar la foto.');
     }
   }
 

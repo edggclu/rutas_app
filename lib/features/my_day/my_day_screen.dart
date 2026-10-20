@@ -141,11 +141,12 @@ class _Content extends StatelessWidget {
             color: Colors.white,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: FilledButton(
+              child: Text('Preparar Salida'),
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
                   builder: (_) => DepartureScreen(route: route),
                 )
-              ), child: null,
+              ),
             ),
           ),
       ],

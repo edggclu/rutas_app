@@ -4,6 +4,7 @@ import 'package:telyser_app/core/contact_launcher.dart';
 import 'package:telyser_app/core/theme/app_colors.dart';
 import 'package:telyser_app/core/widgets/app_header.dart';
 import 'package:telyser_app/core/widgets/slide_to_confirm.dart';
+import 'package:telyser_app/core/widgets/toast.dart';
 import 'package:telyser_app/domain/format.dart';
 import 'package:telyser_app/domain/models/event_models.dart';
 import 'package:telyser_app/domain/models/models.dart';
@@ -44,9 +45,7 @@ class NoAnswerScreen extends ConsumerWidget {
       ? await callPhone(phone) // abre el marcador
       : await openWhatsApp(phone); // o abre WhatsApp
     if (!ok) { 
-      messenger.showSnackBar(const SnackBar( 
-        content: Text('No se pudo abrir la aplicación.'), 
-      ));
+      messenger.toast( 'No se pudo abrir la aplicación.');
       return; // no se registra un intento que no ocurrió
     }
     await actions.noAnswer.registerClientContact(visitId: visit.id, channel: channel); // guarda el intento en la cola  
@@ -60,9 +59,8 @@ class NoAnswerScreen extends ConsumerWidget {
     final actions = ref.read(visitActionsProvider);
     final ok = await callPhone(officePhone); // abre el marcador con el número de la oficina
     if (!ok) { // no se pudo abrir
-      messenger.showSnackBar(const SnackBar(
-        content: Text('No se pudo abrir el teléfono.'), 
-      ));
+      messenger.toast('No se pudo abrir el teléfono.');
+
       return; // no se registra
     }
     await actions.noAnswer.registerOfficeCall(visitId: visit.id); // guarda el intento en la cola

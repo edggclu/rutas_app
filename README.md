@@ -7,9 +7,9 @@
 2. `flutter test` (prueba que `assets/mock/my_day.json` cumple el contrato y demas tests)
 3. `flutter run`
 
-Usuarios de prueba (cualquier contraseña):
-- `pedro` (o cualquier otro): técnico. Pestañas Mi día y Avisos.
-- `tono`: técnico + ingeniero + coordina rutas. Pestañas Mi día, Rutas, Por validar y Avisos.
+Usuarios de prueba:
+- `pedro` / `pedro123`: técnico. Pestañas Mi día y Avisos.
+- `tono` / `tono123`: técnico + ingeniero + coordina rutas. Pestañas Mi día, Rutas, Por validar y Avisos.
 
 ## Arquitectura
 

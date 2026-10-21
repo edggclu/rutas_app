@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart'; // widgets básicos
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerWidget
+import 'package:telyser_app/domain/arrival_rules.dart';
 import 'package:telyser_app/domain/models/enums.dart';
 import 'package:telyser_app/domain/models/models.dart';
 import 'package:telyser_app/providers/actions.provider.dart';
+import 'package:telyser_app/providers/route_providers.dart';
 
 import '../../core/theme/app_colors.dart'; // colores
 import '../../core/widgets/alert_box.dart'; // caja de aviso
@@ -56,6 +58,14 @@ class VisitDetailScreen extends ConsumerWidget { // ConsumerWidget: puede leer p
     final place = visit.place; // el lugar
     final contact = place.contact; // contacto principal (puede faltar)
     final bottom = MediaQuery.of(context).padding.bottom; // alto de la barra de gestos
+    final route = ref.watch(myDayProvider).value; // la ruta con el estado actual (null mientras carga)
+    final block = route == null ? null : arrivalBlock(visit, route.visits); // ¿por qué no puede marcar Llegué? (null = sí puede)
+    final active = route == null ? null : visitInProgress(route.visits); // la visita que está en curso
+    final blockText = switch (block) { // el texto que explica el bloqueo
+      null => null, // sin bloqueo: no hay texto
+      ArrivalBlock.routeNotStarted => 'Confirma la salida en Mi día (Preparar salida) para poder marcar Llegué.', // no ha salido
+      ArrivalBlock.anotherVisitInProgress => 'Primero termina tu visita en ${active?.place.name ?? 'la visita actual'}.', // hay otra en curso
+    };
 
     return Scaffold( // estructura de la pantalla
       body: Column( // elementos uno debajo de otro
@@ -114,13 +124,28 @@ class VisitDetailScreen extends ConsumerWidget { // ConsumerWidget: puede leer p
               ),
               onNoAnswer: () => _noAnswer(context, ref), // al tocar "No me abren": avisa y abre C4
             )
-          else if (visit.status != VisitStatus.done) // si no ha llegado y la visita no está terminada
+                    else if (visit.status != VisitStatus.done) // si no ha llegado y la visita no está terminada
             Container( // caja blanca que contiene el deslizable
               color: Colors.white, // fondo blanco
               padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + bottom), // margen interno (deja espacio para la barra de gestos)
-              child: SlideToConfirm( // el deslizable
-                label: 'Desliza: Llegué', // texto
-                onConfirmed: () => _arrive(context, ref), // al completar el deslizamiento, marca la llegada
+              child: Column( // aviso (si hay) y deslizable
+                mainAxisSize: MainAxisSize.min, // solo ocupa lo necesario
+                children: [
+                  if (blockText != null) // si no puede marcar Llegué
+                    Padding( // aviso con margen abajo
+                      padding: const EdgeInsets.only(bottom: 8), // 8 de margen inferior
+                      child: Text( // explica por qué
+                        blockText, // el texto de arriba
+                        textAlign: TextAlign.center, // centrado
+                        style: const TextStyle(color: AppColors.alerta, fontSize: 12), // ámbar y pequeño
+                      ),
+                    ),
+                  SlideToConfirm( // el deslizable
+                    enabled: block == null, // solo activo si puede marcar Llegué
+                    label: 'Desliza: Llegué', // texto
+                    onConfirmed: () => _arrive(context, ref), // al completar el deslizamiento, marca la llegada
+                  ),
+                ],
               ),
             ),
         ],

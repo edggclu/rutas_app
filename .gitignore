@@ -46,3 +46,7 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# extras
+/screenshots/
+/docs/documentacion_proyecto_telyser.docx

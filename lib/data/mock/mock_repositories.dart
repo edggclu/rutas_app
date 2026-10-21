@@ -16,25 +16,28 @@ Future<Map<String, dynamic>> _loadJson(String asset) async {
   return json.decode(raw) as Map<String, dynamic>;
 }
 
-/// Acepta cualquier contraseña. Usuario "tono" o "jefe" entra como Toño
-/// (técnico + ingeniero + coordina rutas); cualquier otro entra como Pedro.
-class MockAuthRepository implements AuthRepository {
+/// Usuarios de prueba: usuario (en minúsculas) -> contraseña y archivo de sesión.
+const _mockUsers = <String, ({String password, String session})>{ // los usuarios que existen en la demo
+  'pedro': (password: 'pedro123', session: 'assets/mock/session_tecnico.json'), // técnico
+  'tono': (password: 'tono123', session: 'assets/mock/session_jefe.json'), // técnico + ingeniero + coordina rutas
+  'toño': (password: 'tono123', session: 'assets/mock/session_jefe.json'), // el mismo usuario, escrito con ñ
+};
+
+/// Solo entran los usuarios de arriba y con su contraseña exacta.
+class MockAuthRepository implements AuthRepository { // el login de prueba
   @override
-  Future<Session> login(String username, String password) async {
-    await Future<void>.delayed(const Duration(milliseconds: 400));
-    final u = username.trim().toLowerCase();
-    if (u.isEmpty || password.isEmpty) {
-      throw Exception('credenciales vacías');
+  Future<Session> login(String username, String password) async { // devuelve la sesión o lanza error
+    await Future<void>.delayed(const Duration(milliseconds: 400)); // simula la espera de la red
+    final user = _mockUsers[username.trim().toLowerCase()]; // busca el usuario (sin importar mayúsculas)
+    if (user == null || user.password != password) { // no existe o la contraseña no coincide
+      throw Exception('credenciales incorrectas'); // la pantalla muestra "Usuario o contraseña incorrectos"
     }
-    final isBoss = u == 'tono' || u == 'toño' || u == 'jefe';
-    final data = await _loadJson(
-      isBoss ? 'assets/mock/session_jefe.json' : 'assets/mock/session_tecnico.json',
-    );
-    return Session.fromJson(data);
+    final data = await _loadJson(user.session); // lee la sesión de ese usuario
+    return Session.fromJson(data); // la convierte en modelo
   }
 
   @override
-  Future<void> logout() async {}
+  Future<void> logout() async {} // en la versión de prueba no hay nada que avisar al servidor
 }
 
 class MockVisitRepository implements VisitRepository { // la ruta de prueba

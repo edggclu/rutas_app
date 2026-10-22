@@ -55,4 +55,24 @@ void main() {
   test('el ingeniero trae su teléfono', () { // para pedir ayuda por WhatsApp
     expect(route.visits.first.job.engineer?.phone, '3220000002'); // teléfono del mock
   });
+
+    test('el plan del hotel trae material, herramienta, notas y croquis con pines', () { // contrato del plan
+    final plan = route.visits.first.job.plan!; // el plan de la visita 101
+    expect(plan.materials.length, 3); // tres renglones de material
+    expect(plan.tools.single.text, 'Escalera de 6 m'); // una herramienta
+    expect(plan.notes, isNotNull); // trae notas
+    expect(plan.sketch!.aspectRatio, 1.5); // proporción del croquis
+    expect(plan.sketch!.pins.length, 9); // C1 a C8 y NVR
+    expect(plan.sketch!.pins.first.label, 'C1'); // el primero es C1
+    for (final p in plan.sketch!.pins) { // cada pin
+      expect(p.x, inInclusiveRange(0, 1)); // posición horizontal relativa
+      expect(p.y, inInclusiveRange(0, 1)); // posición vertical relativa
+    }
+    expect(File(plan.sketch!.image).existsSync(), isTrue); // la imagen del croquis existe en assets/mock
+  });
+
+  test('las visitas sin plan no lo traen', () { // el plan es opcional
+    expect(route.visits[1].job.plan, isNull); // el restaurante
+    expect(route.visits[2].job.plan, isNull); // el condominio
+  });
 }

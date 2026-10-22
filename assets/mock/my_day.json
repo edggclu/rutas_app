@@ -29,6 +29,30 @@
         "status": "in_progress",
         "description": "Instalar 8 cámaras en el estacionamiento.",
         "plan_summary": "Cable por el plafón del pasillo. 8 cámaras, 1 grabador y escalera de 6 m.",
+                "plan": {
+          "notes": "El cable entra por el plafón del pasillo de servicio. Pedir al gerente de mantenimiento que abra el cuarto de máquinas. Cerrar el plafón solo después de grabar el video del cableado.",
+          "items": [
+            { "id": 1, "kind": "material", "text": "Cámaras IP", "quantity": 8, "product_id": 301 },
+            { "id": 2, "kind": "material", "text": "Cable UTP (m)", "quantity": 120, "product_id": 302 },
+            { "id": 3, "kind": "material", "text": "Grabador NVR", "quantity": 1, "product_id": 303 },
+            { "id": 4, "kind": "tool", "text": "Escalera de 6 m", "quantity": 1, "product_id": null }
+          ],
+          "sketch": {
+            "image": "assets/mock/croquis_hotel.png",
+            "aspect_ratio": 1.5,
+            "pins": [
+              { "id": 1, "label": "C1", "x": 0.13, "y": 0.68, "note": "Entrada del estacionamiento. Cámara en el poste de la caseta; cable por canaleta hasta el pasillo." },
+              { "id": 2, "label": "C2", "x": 0.225, "y": 0.49, "note": "Cámara bajo el alero, cable por el plafón del pasillo." },
+              { "id": 3, "label": "C3", "x": 0.475, "y": 0.49, "note": "Cámara bajo el alero, cable por el plafón del pasillo." },
+              { "id": 4, "label": "C4", "x": 0.725, "y": 0.49, "note": "Cámara bajo el alero, cable por el plafón del pasillo." },
+              { "id": 5, "label": "C5", "x": 0.225, "y": 0.84, "note": "Cámara en el muro del fondo. Usar la escalera de 6 m." },
+              { "id": 6, "label": "C6", "x": 0.475, "y": 0.84, "note": "Cámara en el muro del fondo. Usar la escalera de 6 m." },
+              { "id": 7, "label": "C7", "x": 0.725, "y": 0.84, "note": "Cámara en el muro del fondo. Usar la escalera de 6 m." },
+              { "id": 8, "label": "C8", "x": 0.87, "y": 0.36, "note": "Esquina del pasillo de servicio. Dejar 3 m de cable de reserva." },
+              { "id": 9, "label": "NVR", "x": 0.9, "y": 0.21, "note": "Grabador en el rack del cuarto de mantenimiento. Pedir que lo abran con el gerente." }
+            ]
+          }
+        },
         "engineer": { "id": 2, "name": "Toño", "phone": "3220000002"}, "close_mode": "remote",
         "warranty_guide": null, "block": null
       }

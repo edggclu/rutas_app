@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart'; // widgets básicos
-import 'package:telyser_app/domain/models/models.dart';
 
 import '../../../core/theme/app_colors.dart'; // colores
 import '../../../core/widgets/app_card.dart'; // la tarjeta compartida
-import '../../../core/widgets/toast.dart'; // avisos cortos
+import '../../../domain/models/models.dart'; // Job
+import '../../plan/plan_screen.dart'; // la pantalla del plan
 
 /// "Qué hay que hacer": descripción del trabajo y resumen del plan.
 class TaskCard extends StatelessWidget { // widget sin estado propio
@@ -24,13 +24,18 @@ class TaskCard extends StatelessWidget { // widget sin estado propio
           ),
           const SizedBox(height: 4), // espacio vertical
           Text(job.description), // descripción del trabajo
-          if (summary != null) ...[ // si hay plan
+          if (summary != null) ...[ // si hay resumen del plan
             const SizedBox(height: 4), // espacio vertical
-            Text(summary), // resumen del plan
+            Text(summary), // el resumen
+          ],
+          if (job.plan != null) ...[ // si el ingeniero dejó un plan completo
             const SizedBox(height: 6), // espacio vertical
             GestureDetector( // enlace tocable
-              // TODO(paso 5): abrir la pantalla D1 "Ver plan completo".
-              onTap: () => ScaffoldMessenger.of(context).toast('El plan completo llega con el paso 5.'), // aún no existe
+              onTap: () => Navigator.of(context).push( // abre la pantalla del plan
+                MaterialPageRoute<void>(
+                  builder: (_) => PlanScreen(job: job), // con este trabajo
+                ),
+              ),
               child: const Text( // texto del enlace
                 'Ver plan completo ›', // texto
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.rojo), // rojo

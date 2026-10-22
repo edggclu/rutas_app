@@ -101,6 +101,7 @@ class Job {
     this.planSummary,
     this.engineer,
     this.warrantyGuide,
+    this.plan
   });
 
   final int id;
@@ -112,6 +113,7 @@ class Job {
   final String? planSummary;
   final Person? engineer;
   final String? warrantyGuide;
+  final Plan? plan;
 
   factory Job.fromJson(Map<String, dynamic> j) => Job(
         id: j['id'] as int,
@@ -125,6 +127,9 @@ class Job {
             ? null
             : Person.fromJson(j['engineer'] as Map<String, dynamic>),
         warrantyGuide: j['warranty_guide'] as String?,
+        plan: j['plan'] == null // si el trabajo no tiene plan
+            ? null // queda vacío
+            : Plan.fromJson(j['plan'] as Map<String, dynamic>), // si no, lo convierte
       );
 }
 
@@ -331,5 +336,71 @@ class Session {
   factory Session.fromJson(Map<String, dynamic> j) => Session(
         token: j['token'] as String,
         user: AppUser.fromJson(j['user'] as Map<String, dynamic>),
+      );
+}
+
+/// Un punto numerado sobre el croquis (C1, C2...).
+class SketchPin { // dato de un pin
+  const SketchPin({ // constructor
+    required this.id, // id del pin
+    required this.label, // texto que se ve sobre el pin ("C1", "NVR")
+    required this.x, // posición horizontal, de 0 (izquierda) a 1 (derecha)
+    required this.y, // posición vertical, de 0 (arriba) a 1 (abajo)
+    this.note, // nota del ingeniero para ese punto
+  });
+
+  final int id; // id
+  final String label; // etiqueta
+  final double x; // posición relativa horizontal
+  final double y; // posición relativa vertical
+  final String? note; // nota (puede faltar)
+
+  factory SketchPin.fromJson(Map<String, dynamic> j) => SketchPin( // convierte el JSON
+        id: j['id'] as int, // id
+        label: j['label'] as String, // etiqueta
+        x: (j['x'] as num).toDouble(), // posición horizontal
+        y: (j['y'] as num).toDouble(), // posición vertical
+        note: j['note'] as String?, // nota
+      );
+}
+
+/// El croquis: una imagen con sus pines.
+class Sketch { // dato del croquis
+  const Sketch({required this.image, required this.aspectRatio, required this.pins}); // constructor
+
+  final String image; // ruta de la imagen (en prueba un asset; con la API real, una URL)
+  final double aspectRatio; // ancho / alto de la imagen (sirve para colocar los pines sin leer la imagen)
+  final List<SketchPin> pins; // los pines
+
+  factory Sketch.fromJson(Map<String, dynamic> j) => Sketch( // convierte el JSON
+        image: j['image'] as String, // imagen
+        aspectRatio: (j['aspect_ratio'] as num?)?.toDouble() ?? 1.5, // proporción (1.5 si falta)
+        pins: ((j['pins'] as List?) ?? const []) // lista de pines (vacía si falta)
+            .map((e) => SketchPin.fromJson(e as Map<String, dynamic>)) // cada pin
+            .toList(), // junta todo en una lista
+      );
+}
+
+/// El plan que define el ingeniero después del levantamiento.
+class Plan { // dato del plan
+  const Plan({required this.items, this.notes, this.sketch}); // constructor
+
+  final List<ChecklistItem> items; // renglones de material y herramienta (el mismo formato que la lista de salida)
+  final String? notes; // notas del ingeniero
+  final Sketch? sketch; // croquis con pines (puede faltar)
+
+  List<ChecklistItem> get materials => // solo el material
+      items.where((i) => i.kind == ChecklistKind.material).toList(); // los renglones de tipo material
+  List<ChecklistItem> get tools => // solo la herramienta
+      items.where((i) => i.kind == ChecklistKind.tool).toList(); // los renglones de tipo herramienta
+
+  factory Plan.fromJson(Map<String, dynamic> j) => Plan( // convierte el JSON
+        items: ((j['items'] as List?) ?? const []) // renglones (vacío si falta)
+            .map((e) => ChecklistItem.fromJson(e as Map<String, dynamic>)) // cada renglón
+            .toList(), // junta todo en una lista
+        notes: j['notes'] as String?, // notas
+        sketch: j['sketch'] == null // si no hay croquis
+            ? null // queda vacío
+            : Sketch.fromJson(j['sketch'] as Map<String, dynamic>), // si no, lo convierte
       );
 }

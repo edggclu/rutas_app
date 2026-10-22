@@ -82,13 +82,20 @@ con `contact = { name, role, phone, authorized }`. `authorized` = puede pedir y 
 | `close_mode` | `on_site` · `remote` | |
 | `block` | `{reason, waiting_for, since}` · null | "Detenido" = bloqueo encima del estado real |
 | `warranty_guide` | string · null | Texto editable desde la web |
+| `plan` | objeto · null | Plan completo del ingeniero (ver abajo). Null si todavía no hay |
 
-### Pendiente para el paso 2 (se agrega a la visita)
-- `checklist`: `{ source: "plan"|"quote"|"none", items: [{id, kind: "material"|"tool", text, quantity, product_id}] }`
-  para la pantalla Salida (sale del plan del ingeniero; si no hay, de la cotización).
-  La unidad (pieza o servicio) sale del producto del catálogo.
-- `plan` completo (material, herramienta, notas, croquis con pines y adjuntos PDF) para el paso 5.
-- `history`: visitas anteriores del lugar.
+### Plan del trabajo (`job.plan`)
+```json
+{ "notes": "El cable entra por el plafón del pasillo…",
+  "items": [{ "id": 1, "kind": "material", "text": "Cámaras IP", "quantity": 8, "product_id": 301 },
+            { "id": 4, "kind": "tool", "text": "Escalera de 6 m", "quantity": 1, "product_id": null }],
+  "sketch": { "image": "https://…/croquis.png", "aspect_ratio": 1.5,
+              "pins": [{ "id": 1, "label": "C1", "x": 0.13, "y": 0.68, "note": "…" }] } }
+```
+- `items` usa el mismo formato que `checklist.items`. La lista de salida sale de aquí.
+- `sketch.image`: URL de la imagen. `aspect_ratio` = ancho / alto, para colocar los pines sin leer la imagen.
+- `x` y `y` van de 0 a 1 sobre la imagen (0,0 = esquina superior izquierda), así no dependen del tamaño de pantalla.
+- `PUT /api/jobs/{id}/plan` lo guarda el ingeniero (paso 5d).
 
 ## POST /api/events
 Envía la cola de acciones **en orden**. El servidor ignora un `uuid` que ya recibió.

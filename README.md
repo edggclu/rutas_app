@@ -460,7 +460,7 @@ Los datos de prueba no cambian cuando el ingeniero valida o regresa en Por valid
 
 ### Un evento nuevo del técnico
 
-1. **Nombre:** una constante en `EventTypes` (`domain/event_types.dart`).
+1. **Nombre:** una constante en `EventTypes` (`domain/events/event_types.dart`).
 2. **Clase:** una clase `...Event` en `domain/events/event_data.dart`, con sus datos tipados, `toPayload()` y `fromPayload()`; y una línea en `EventData.parse`.
 3. **Estado:** el compilador marcará el `switch` de `applyEvents` hasta que agregues el caso (aunque sea "no cambia el estado").
 4. **Regla** (si hay decisiones): una función pura en `domain/`, con su prueba.

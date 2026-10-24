@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart'; // widgets básicos
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerWidget
-import 'package:telyser_app/providers/actions.provider.dart';
+import 'package:telyser_app/providers/actions_provider.dart';
 import 'package:telyser_app/providers/session_provider.dart';
 
 import '../../../core/theme/app_colors.dart'; // colores

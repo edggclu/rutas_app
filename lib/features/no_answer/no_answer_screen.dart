@@ -12,7 +12,7 @@ import 'package:telyser_app/domain/models/models.dart';
 import 'package:telyser_app/domain/rules/no_answer.dart';
 import 'package:telyser_app/domain/rules/visit_state.dart';
 import 'package:telyser_app/features/shared/run_undoable.dart';
-import 'package:telyser_app/providers/actions.provider.dart';
+import 'package:telyser_app/providers/actions_provider.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 import 'package:telyser_app/providers/settings_provider.dart';
 

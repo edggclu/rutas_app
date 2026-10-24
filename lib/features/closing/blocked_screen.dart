@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidg
 import 'package:telyser_app/core/widgets/toast.dart';
 import 'package:telyser_app/domain/models/media_item.dart';
 import 'package:telyser_app/features/shared/run_undoable.dart';
-import 'package:telyser_app/providers/actions.provider.dart';
+import 'package:telyser_app/providers/actions_provider.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 import 'package:telyser_app/providers/settings_provider.dart';
 

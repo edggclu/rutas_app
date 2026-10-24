@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerWidget
 import 'package:telyser_app/domain/arrival_rules.dart';
 import 'package:telyser_app/domain/models/enums.dart';
 import 'package:telyser_app/domain/models/models.dart';
-import 'package:telyser_app/providers/actions.provider.dart';
+import 'package:telyser_app/providers/actions_provider.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 
 import '../../core/theme/app_colors.dart'; // colores

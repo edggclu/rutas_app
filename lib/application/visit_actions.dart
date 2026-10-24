@@ -12,7 +12,7 @@ export 'action_receipt.dart'; // quien importe este archivo también ve ActionRe
 export 'extras_actions.dart' show ExtraResult; // ...y ExtraResult
 
 /// Reúne las áreas de acciones del técnico. Ya no tiene métodos propios: cada
-/// pantalla usa directamente el área que necesita (`actions.arrival.arrival.arrive(...)`).
+/// pantalla usa directamente el área que necesita (`actions.arrival.arrive(...)`).
 class VisitActions { // el contenedor que crea el provider
   VisitActions( // constructor
     OutboxRepository outbox, // la cola

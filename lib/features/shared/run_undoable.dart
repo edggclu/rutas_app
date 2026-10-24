@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart'; // widgets básicos
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // WidgetRef: acceso a los providers
-import 'package:telyser_app/providers/actions.provider.dart';
+import 'package:telyser_app/providers/actions_provider.dart';
 
 import '../../application/visit_actions.dart'; // las acciones del técnico
 import '../../core/widgets/undo_bar.dart'; // la barra de "Deshacer"

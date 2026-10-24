@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart'; // widgets básicos
-import 'package:telyser_app/core/map_laucher.dart';
+import 'package:telyser_app/core/map_launcher.dart';
 import 'package:telyser_app/domain/models/models.dart';
 
 import '../../../core/theme/app_colors.dart'; // colores

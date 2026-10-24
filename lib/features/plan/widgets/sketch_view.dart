@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart'; // widgets básicos
+import 'package:telyser_app/core/widgets/app_image.dart';
 
-import '../../../core/theme/app_colors.dart'; // colores
-import '../../../core/widgets/app_card.dart'; // la tarjeta compartida
-import '../../../domain/models/models.dart'; // Sketch y SketchPin
+import '../../../../core/theme/app_colors.dart'; // colores
+import '../../../../core/widgets/app_card.dart'; // la tarjeta compartida
+import '../../../../domain/models/models.dart'; // Sketch y SketchPin
 
 const _pinSize = 30.0; // diámetro de cada pin en pantalla
 
@@ -52,7 +53,7 @@ class _SketchViewState extends State<SketchView> { // el estado del croquis
                 final h = c.maxHeight; // alto de la imagen en pantalla
                 return Stack( // apila la imagen y los pines
                   children: [
-                    Positioned.fill(child: _SketchImage(src: sketch.image)), // la imagen de fondo
+                    Positioned.fill(child: AppImage(src: sketch.image, fit: BoxFit.fill,)), // la imagen de fondo
                     for (final p in sketch.pins) // un pin por cada punto
                       Positioned( // lo coloca en su posición relativa
                         left: p.x.clamp(0.0, 1.0).toDouble() * w - _pinSize / 2, // centra el pin en x
@@ -141,29 +142,3 @@ class _PinDot extends StatelessWidget { // widget sin estado propio
   }
 }
 
-/// La imagen del croquis: un asset (datos de prueba) o una URL (API real).
-class _SketchImage extends StatelessWidget { // widget sin estado propio
-  const _SketchImage({required this.src}); // recibe la ruta
-
-  final String src; // ruta o URL
-
-  @override
-  Widget build(BuildContext context) { // dibuja la imagen
-    final broken = Container( // lo que se ve si la imagen no carga
-      color: AppColors.gris100, // fondo gris claro
-      child: const Center(child: Icon(Icons.broken_image, color: AppColors.gris400)), // ícono de imagen rota
-    );
-    if (src.startsWith('http')) { // si es una URL
-      return Image.network( // la descarga (necesita señal; el paso 8 la guardará en el teléfono)
-        src, // la URL
-        fit: BoxFit.fill, // llena el cuadro
-        errorBuilder: (context, error, stack) => broken, // si falla, el ícono
-      );
-    }
-    return Image.asset( // si no, es un archivo incluido en la app
-      src, // la ruta del asset
-      fit: BoxFit.fill, // llena el cuadro
-      errorBuilder: (context, error, stack) => broken, // si falla, el ícono
-    );
-  }
-}

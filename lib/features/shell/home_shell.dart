@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:telyser_app/features/review/review_list_screen.dart';
 import 'package:telyser_app/providers/session_provider.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -35,7 +36,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       if (user.isEngineer)
         (
           item: const AppTabItem('Por validar'),
-          page: const _ComingSoon('Por validar', 'Paso 5 del orden de construcción.'),
+          page: const ReviewListScreen()
         ),
       (
         item: const AppTabItem('Avisos'),

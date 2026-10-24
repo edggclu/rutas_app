@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart'; // widgets básicos
-import 'package:telyser_app/features/plan/sketch_view.dart';
+import 'package:telyser_app/features/plan/widgets/sketch_view.dart';
 
 import '../../core/theme/app_colors.dart'; // colores
 import '../../core/widgets/app_card.dart'; // la tarjeta compartida

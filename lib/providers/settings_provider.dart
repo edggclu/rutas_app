@@ -4,6 +4,7 @@ import '../domain/models/app_settings.dart'; // AppSettings
 import 'infra_providers.dart'; // repositorio y almacén de parámetros
 import 'session_provider.dart'; // sessionProvider
 
+
 /// Parámetros: se descargan y se guardan; sin señal se usan los últimos guardados.
 final settingsProvider = FutureProvider<AppSettings>((ref) async { // se calcula una vez y se comparte
   ref.watch(sessionProvider); // si cambia la sesión, se vuelve a calcular

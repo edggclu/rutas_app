@@ -3,7 +3,10 @@ import 'package:intl/intl.dart';
 
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:telyser_app/domain/models/app_settings.dart';
+import 'package:telyser_app/domain/models/closing_models.dart';
+import 'package:telyser_app/domain/models/payload.dart';
 import 'package:telyser_app/domain/models/product.dart';
+import 'package:telyser_app/domain/models/review_models.dart';
 
 import '../../domain/models/models.dart';
 import '../repositories.dart';
@@ -75,5 +78,44 @@ class MockProductRepository implements ProductRepository {
         .where((p) => p.name.toLowerCase().contains(q)) 
         .take(5) // máximo 5 sugerencias
         .toList();
+  }
+}
+  /// Trabajos por validar de prueba. Los cambios viven en memoria: al cerrar la app, vuelve todo.
+class MockReviewRepository implements ReviewRepository {
+  List<ReviewJob>? _jobs; // se carga una vez del archivo y luego se modifica
+
+  Future<List<ReviewJob>> _load() async {
+    final cached = _jobs;
+    if (cached != null) return cached;
+    final data = await _loadJson('assets/mock/review.json');
+    final loaded = [for (final m in readMaps(data, 'jobs')) ReviewJob.fromJson(m)];
+    _jobs = loaded;
+    return loaded;
+  }
+
+  @override
+  Future<List<ReviewJob>> fetchPending() async {
+    await Future<void>.delayed(const Duration(milliseconds: 300)); // simula la red
+    return List.of(await _load()); // una copia, para que nadie modifique la lista interna
+  }
+
+  @override
+  Future<void> validate(int jobId) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    (await _load()).removeWhere((j) => j.id == jobId); // validado: sale de la lista
+  }
+
+  @override
+  Future<void> returnJob(int jobId, String note) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    (await _load()).removeWhere((j) => j.id == jobId); // regresado: sale de la lista
+  }
+
+  @override
+  Future<void> submitVerdict(int jobId, WarrantyCause cause) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    final jobs = await _load();
+    final i = jobs.indexWhere((j) => j.id == jobId);
+    if (i >= 0) jobs[i] = jobs[i].withVerdict(cause); // el trabajo sigue en la lista, ya dictaminado
   }
 }

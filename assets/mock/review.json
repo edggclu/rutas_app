@@ -1,0 +1,52 @@
+{
+  "jobs": [
+    {
+      "id": 11, "folio": "TEL-2610-011", "type": "installation", "coverage": "paid",
+      "client": "Hotel Costa Azul", "place": "Hotel Costa Azul — recepción", "technician": "Luis",
+      "closed_at": "2026-10-07T21:40:00Z",
+      "notes": "Quedaron instaladas las 6 cámaras y el grabador. El cliente pidió una cámara extra en la bodega; se instaló con material de la camioneta.",
+      "photos": [
+        { "id": 1, "kind": "progress", "src": "assets/mock/foto_prueba_1.png", "caption": "Cableado por el plafón" },
+        { "id": 2, "kind": "progress", "src": "assets/mock/foto_prueba_2.png", "caption": "Grabador funcionando" },
+        { "id": 3, "kind": "progress", "src": "assets/mock/foto_prueba_1.png", "caption": "Cámara de la bodega" }
+      ],
+      "extras": [
+        { "name": "Cámara IP 4 MP", "quantity": 1, "not_installed": false },
+        { "name": "Conector RJ45", "quantity": 3, "not_installed": false }
+      ],
+      "warranty": null,
+      "plan": { "items": [
+        { "id": 1, "kind": "material", "text": "Cámaras IP", "quantity": 6, "product_id": 301 },
+        { "id": 2, "kind": "material", "text": "Cable UTP (m)", "quantity": 90, "product_id": 302 },
+        { "id": 3, "kind": "material", "text": "Grabador NVR", "quantity": 1, "product_id": 303 },
+        { "id": 4, "kind": "tool", "text": "Escalera de 4 m", "quantity": 1, "product_id": null }
+      ] }
+    },
+    {
+      "id": 17, "folio": "TEL-2610-017", "type": "corrective", "coverage": "warranty",
+      "client": "Restaurante El Faro", "place": "Restaurante El Faro", "technician": "Marco",
+      "closed_at": "2026-10-07T19:10:00Z",
+      "notes": "Se cambió la cámara de la caja y ya graba. No se pudo determinar por qué falló la anterior.",
+      "photos": [
+        { "id": 4, "kind": "warranty", "src": "assets/mock/foto_prueba_1.png", "caption": "Cámara de la caja (falla)" },
+        { "id": 5, "kind": "warranty_serial", "src": "assets/mock/foto_prueba_3.png", "caption": "Etiqueta con número de serie" }
+      ],
+      "extras": [],
+      "warranty": { "cause": "unknown", "serial": "SN-77123" },
+      "plan": null
+    },
+    {
+      "id": 8, "folio": "TEL-2610-008", "type": "preventive", "coverage": "policy",
+      "client": "Condominio Vista Mar", "place": "Condominio Vista Mar — caseta", "technician": "Luis",
+      "closed_at": "2026-10-07T22:30:00Z",
+      "notes": "Se limpiaron los lentes por el salitre. Disco al 62 %. No-break en buen estado.",
+      "photos": [
+        { "id": 6, "kind": "progress", "src": "assets/mock/foto_prueba_2.png", "caption": "Disco y no-break" },
+        { "id": 7, "kind": "progress", "src": "assets/mock/foto_prueba_1.png", "caption": "Lentes limpios" }
+      ],
+      "extras": [ { "name": "Conector RJ45", "quantity": 1, "not_installed": false } ],
+      "warranty": null,
+      "plan": null
+    }
+  ]
+}

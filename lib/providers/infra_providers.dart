@@ -43,3 +43,7 @@ final mediaRepositoryProvider = Provider<MediaRepository>( // fotos y videos
 // ---- Dispositivo ----
 final locationServiceProvider = Provider<LocationService>( // el GPS
     (ref) => DeviceLocationService()); // la versión real; en tests se sustituye
+
+    
+final reviewRepositoryProvider = // trabajos por validar
+    Provider<ReviewRepository>((ref) => MockReviewRepository()); // hoy, el de prueba

@@ -166,3 +166,20 @@ El servidor decide a quién avisar según `reason` (tabla de la sección 11 del 
 
 ### Tipos de archivo (`kind`)
 `progress` · `warranty` (falla) · `warranty_serial` (etiqueta) · `damage` · `request` · `cabling_video` (video, espera Wi-Fi).
+
+## Por validar (ingeniero)
+
+`GET /api/review`: trabajos terminados por validar.
+```json
+{ "jobs": [{
+  "id": 17, "folio": "TEL-2610-017", "type": "corrective", "coverage": "warranty",
+  "client": "Restaurante El Faro", "place": "Restaurante El Faro", "technician": "Marco",
+  "closed_at": "2026-10-07T19:10:00Z", "notes": "…",
+  "photos": [{ "id": 4, "kind": "warranty", "src": "https://…/foto.jpg", "caption": "…" }],
+  "extras": [{ "name": "Conector RJ45", "quantity": 3, "not_installed": false }],
+  "warranty": { "cause": "unknown", "serial": "SN-77123", "verdict": null },
+  "plan": null } ] }
+```
+`POST /api/jobs/{id}/review`: `{ "result": "validated" }`, `{ "result": "returned", "note": "…" }` o
+`{ "result": "verdict", "cause": "humidity_salt" }`. Necesitan señal; no pasan por la cola.
+Al regresar, el servidor genera la solicitud de otra visita para el jefe de ruta.

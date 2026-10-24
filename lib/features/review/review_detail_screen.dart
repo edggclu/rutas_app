@@ -2,7 +2,7 @@ import 'package:flutter/material.dart'; // widgets básicos
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
 import 'package:telyser_app/domain/models/enums.dart';
 import 'package:telyser_app/features/review/veredict_screen.dart';
-import 'package:telyser_app/providers/review_provider.dart';
+import 'package:telyser_app/providers/review_providers.dart';
 
 import '../../core/theme/app_colors.dart'; // colores
 import '../../core/time/time_utils.dart'; // formatClock

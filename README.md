@@ -1,19 +1,46 @@
 # Telyser · App de campo (Flutter)
 
-**Login, Mi día y tarjeta de visita, con datos de prueba.**
+App Android para técnicos e ingenieros de campo de Telyser (cámaras, alarmas, redes). Funciona completa con datos de prueba; la API real (Laravel) está pendiente.
+
+**Qué hace hoy:** login, Mi día, salida con lista de material, llegada, "No me abren", En sitio (fotos, extras, garantía), cierre (Terminé, Sigo otro día, No pude seguir), plan del trabajo con croquis y Por validar del ingeniero. Todo lo del técnico funciona sin señal y se manda en una cola.
+
+## Índice
+1. [Cómo arrancar](#cómo-arrancar)
+2. [Modo demo](#modo-demo)
+3. [Arquitectura](#arquitectura)
+4. [Base de datos local](#base-de-datos-local-drift--sqlite)
+5. [Cómo se mapea `GET /api/my-day`](#cómo-se-mapea-get-apimy-day)
+6. [Cómo funciona una acción del técnico](#cómo-funciona-una-acción-del-técnico)
+7. [Módulos](#módulos)
+8. [Cómo agregar cosas](#cómo-agregar-cosas)
+9. [Pruebas](#pruebas)
+10. [Pendiente](#pendiente)
 
 ## Cómo arrancar
 1. `flutter pub get`
-2. `flutter test` (prueba que `assets/mock/my_day.json` cumple el contrato y demas tests)
+2. `flutter test` (incluye que los archivos de `assets/mock/` cumplen el contrato)
 3. `flutter run`
+
+Después de cambiar una tabla de Drift: `dart run build_runner build --delete-conflicting-outputs`.
 
 Usuarios de prueba:
 - `pedro` / `pedro123`: técnico. Pestañas Mi día y Avisos.
 - `tono` / `tono123`: técnico + ingeniero + coordina rutas. Pestañas Mi día, Rutas, Por validar y Avisos.
 
+El contrato con el servidor está en `docs/contrato_api.md`.
+
+## Modo demo
+
+Con `kDemoMode = true`:
+- La espera de "No me abren" es de 1 minuto (`wait_base_min: 1`, `wait_per_km_min: 0`).
+- El repositorio de prueba pone la fecha de hoy a la ruta.
+- El menú ⋮ de Mi día ofrece **Cerrar sesión** y **Reiniciar datos de demo** (borra la cola y las fotos).
+
+"Reiniciar datos de demo" **no** restaura la lista de Por validar: esa vive en memoria del repositorio de prueba y vuelve a su estado inicial al cerrar la app por completo.
+
 ## Arquitectura
 
-Regla: las dependencias solo van hacia adentro. `test/architecture_test.dart` la vigila.
+No es MVC clásico. Es una arquitectura por capas con estado reactivo (parecida a MVVM con Clean Architecture). Regla: las dependencias solo van hacia adentro. `test/architecture_test.dart` la vigila con 5 reglas.
 
 ```
 features/     pantallas  ──►  providers/  ──►  application/  ──►  domain/
@@ -25,35 +52,37 @@ core/         widgets y utilidades genéricas, sin reglas del negocio
 | Carpeta | Qué contiene | Qué NO puede importar |
 |---|---|---|
 | `domain/` | Modelos, eventos y reglas en Dart puro | Flutter, Drift, `dart:io`, ni ninguna otra capa |
-| `application/` | Qué pasa cuando el técnico hace algo (una clase por área) | Flutter, pantallas, providers |
-| `data/` | Drift, repositorios (de prueba hoy, API mañana) | Pantallas |
+| `application/` | Qué pasa cuando alguien hace algo (una clase por área) | Flutter, pantallas, providers |
+| `data/` | Drift, repositorios (de prueba hoy, API mañana), ubicación | Pantallas |
 | `providers/` | Conecta todo con Riverpod, un archivo por tema | — |
 | `features/` | Pantallas y sus widgets | — |
+| `core/` | Widgets compartidos, formato, tema, lanzadores | Reglas del negocio |
+
+### Ideas que sostienen el diseño
+
+- **El estado de una visita se calcula, no se guarda:** `ruta del servidor + eventos de la cola`. Por eso deshacer es borrar una fila y por eso el estado sobrevive a cerrar la app (es un event sourcing ligero).
+- **Las pantallas nunca cambian el estado directamente.** Solo encolan eventos.
+- **Flujo en un solo sentido:** pantallas → providers → application → domain. `data` implementa los contratos que define el dominio.
+- **Cada evento lleva un UUID** generado en el teléfono, para que reintentar el envío no duplique nada.
+- **Nada configurable va fijo en el código:** los parámetros (segundos para deshacer, radio de llegada, espera, etc.) vienen del servidor (`/api/settings`) y se guardan localmente.
+- **Lectura tolerante:** un tipo de evento que la app no conoce se lee como `UnknownEvent` y no la rompe.
+- **Lo que necesita señal no pasa por la cola.** Validar, regresar y dictaminar (ingeniero) van directo al servidor.
 
 ### Convenciones de pantalla
 
 | Necesito... | Uso |
 |---|---|
-| Guardar una acción con "Deshacer" | `runUndoable(context, ref, action: (a) => a.<área>.<método>(...), message: ..., after: AfterSave.pop)` |
+| Guardar una acción con "Deshacer" | `runUndoable(context, ref, action: (a) => a.<área>.<método>(...), message: ..., after: AfterSave.pop)` (`AfterSave.stay`, `pop` o `popToRoot`) |
 | Un aviso corto | `messenger.toast('...')` (con el `messenger` guardado antes del `await`) |
 | Una caja blanca con borde | `AppCard(child: ...)` |
 | Mostrar un número (cantidad, km) | `formatNumber(valor)` |
 | Abrir mapa, llamar o WhatsApp | `openMap(...)`, `callPhone(...)`, `openWhatsApp(...)` |
+| Mostrar una imagen de asset o URL | `AppImage(src: ...)` |
 | Una pantalla larga | Una pantalla que solo **compone** secciones en `widgets/`; cada sección lee lo que necesita con `ref.watch` |
-
-### Cómo agregar una acción del técnico
-
-1. **Tipo de evento:** una constante en `domain/event_types.dart`.
-2. **Regla** (si hay decisiones): una función pura en `domain/`, con su test.
-3. **Acción:** un método en la clase del área en `application/` (`departure`, `arrival`, `noAnswer`, `extras` o `closing`). Usa `_writer.undoable([...])` para acciones deslizables o con formulario, y `_writer.instant(...)` para botones normales.
-4. **Pantalla:** `runUndoable(context, ref, action: (a) => a.<área>.<método>(...), message: '...', after: AfterSave.pop)`.
-5. **Estado:** si la acción cambia el estado de la visita, agrega su caso en `applyEvents`.
-6. **Contrato:** documenta los datos del evento en `docs/contrato_api.md`.
 
 ## Base de datos local (Drift / SQLite)
 
 Archivo `telyser.sqlite` dentro del teléfono. Definida en `lib/data/local/app_database.dart`.
-Después de cambiar una tabla: `dart run build_runner build --delete-conflicting-outputs`.
 
 ```mermaid
 erDiagram
@@ -94,7 +123,7 @@ erDiagram
     MEDIA_QUEUE {
         string uuid PK
         int visit_id FK
-        string kind "progress | warranty | damage | closing | cabling_video"
+        string kind "progress | warranty | warranty_serial | damage | request | cabling_video"
         string local_path
         bool wifi_only "default false"
         string state "default pending"
@@ -104,17 +133,18 @@ erDiagram
 
 | Tabla | Para qué sirve |
 |---|---|
-| `settings_kv` | Parámetros de `/api/settings` (10 s para deshacer, 150 m, etc.). Sin señal se leen de aquí |
+| `settings_kv` | Parámetros de `/api/settings`. Sin señal se leen de aquí |
 | `cached_visits` | Ruta del día descargada, para verla sin señal |
 | `outbox_events` | Cola de acciones por enviar, en orden (`seq`) y con `uuid` para evitar duplicados |
 | `media_queue` | Fotos y videos pendientes de subir |
 
-**Estados de `outbox_events.state`:** `grace` (10 s para deshacer, no enviable) → `pending` → `sending` → `failed` (se reintenta). Deshacer borra la fila.
+**Estados de `outbox_events.state`:** `grace` (segundos para deshacer, no enviable) → `pending` → `sending` → `failed` (se reintenta). Deshacer borra la fila.
 
-**Nota:** las relaciones por `visit_id` son lógicas. Drift no declara llaves foráneas reales en este esquema, así que la base no impide guardar un `visit_id` que no exista en `cached_visits`.
-
-
-
+**Notas:**
+- Las relaciones por `visit_id` son lógicas. Drift no declara llaves foráneas reales en este esquema, así que la base no impide guardar un `visit_id` que no exista en `cached_visits`.
+- `settings_kv` no se relaciona con las demás tablas.
+- `media_queue` y `outbox_events` no se relacionan entre sí: las fotos y videos se suben por su propio camino (`POST /api/visits/{id}/media`).
+- Las fotos se copian a `<documentos de la app>/media/visit_<id>/<uuid>.jpg`. La carpeta de la cámara es temporal y Android puede borrarla, por eso se copia.
 
 ## Cómo se mapea `GET /api/my-day`
 
@@ -126,13 +156,13 @@ Contrato completo en `docs/contrato_api.md`. Ejemplo real en `assets/mock/my_day
 flowchart LR
     A["Servidor Laravel<br/>GET /api/my-day"] -->|JSON| B["VisitRepository.myDay()"]
     B -->|"fromJson (a mano)"| C["Modelos Dart<br/>DayRoute > Visit"]
+    B -->|"guarda"| E[("cached_visits<br/>json + columnas")]
+    E -->|"sin señal"| B
     C --> D["Pantallas<br/>(Riverpod)"]
-    B -.->|"bloque 4"| E[("cached_visits<br/>json + columnas")]
-    E -.->|"sin señal"| B
-    F[("outbox_events")] -.->|"bloque 4: estado = JSON + cola"| D
+    F[("outbox_events")] -->|"estado = JSON + cola"| D
 ```
 
-Las líneas punteadas están **pendientes** (bloque 4). Hoy el repositorio de prueba lee el JSON de `assets/mock/` y lo convierte directo en modelos.
+Hoy el repositorio de prueba lee el JSON de `assets/mock/` en lugar del servidor. Lo demás (guardar la ruta, leerla sin señal y combinarla con la cola) ya funciona.
 
 ### Estructura del JSON y su modelo Dart
 
@@ -145,17 +175,25 @@ classDiagram
     Visit --> "*" Person : companions
     Place --> Contact
     Job --> Person : engineer
+    Job --> Plan
+    Plan --> "*" PlanItem
+    Plan --> Sketch
+    Sketch --> "*" SketchPin
 
     class DayRoute { date, visits }
     class Visit { id, order, status, result, scheduledAt, dayNumber, responsible, arrivedAt, kmFromPrevious }
     class Client { id, name, overdue }
     class Place { id, name, address, lat, lng, estimatedKmFromOffice, accessNotes }
     class Contact { name, role, phone, authorized }
-    class Job { id, folio, type, priority, coverage, description, planSummary, warrantyGuide }
+    class Job { id, folio, type, priority, coverage, description, planSummary, warrantyGuide, plan }
     class Person { id, name }
+    class Plan { notes, items, sketch }
+    class PlanItem { id, kind, text, quantity, productId }
+    class Sketch { image, aspectRatio, pins }
+    class SketchPin { id, label, x, y, note }
 ```
 
-Todos los modelos están en `lib/domain/models.dart` y se parsean a mano con `fromJson`.
+Los modelos se parsean a mano con `fromJson`, con lectores tolerantes (`readString`, `readInt`, `readMaps`…): un campo faltante o de tipo raro no tumba la app.
 
 ### Campo por campo
 
@@ -176,68 +214,93 @@ Todos los modelos están en `lib/domain/models.dart` y se parsean a mano con `fr
 | `job.type` | `Job.type` (`JobType`) | `installation`, `corrective`, `preventive` |
 | `job.priority` | `Job.priority` (`Priority`) | `normal`, `urgent` |
 | `job.coverage` | `Job.coverage` (`Coverage`) | `paid`, `warranty`, `policy` |
-| `job.engineer` |
+| `job.engineer` | `Job.engineer` (`Person?`) | Para abrir WhatsApp con el ingeniero a cargo |
+| `job.plan_summary`, `warranty_guide` | `planSummary`, `warrantyGuide` | Texto o nulo |
+| `job.plan` | `Job.plan` (`Plan?`) | Notas, material, herramienta y croquis con pines. Nulo si todavía no hay |
 
-## Cómo funciona una acción del técnico (ejemplo: Salida)
+### Qué se ignora todavía
+
+Estos campos del contrato **no** se leen en el modelo actual:
+
+| Campo | Se necesitará en |
+|---|---|
+| `generated_at`, `technician` (raíz) | Informativos |
+| `visits[].left_at` | Visita hecha (C8) |
+| `job.status`, `job.close_mode`, `job.block` | Vista del jefe de ruta (paso 6) |
+
+El JSON completo de cada visita se guarda en `cached_visits.json`, así que agregar un campo después **no requiere migrar la base**: solo se amplía el modelo Dart.
+
+### Cuando cambie el contrato
+
+1. Actualizar `docs/contrato_api.md` y el archivo de `assets/mock/` que corresponda.
+2. Ajustar el modelo en `lib/domain/`.
+3. Correr `flutter test`. Las pruebas de modelos verifican que los mocks cumplen el contrato.
+
+## Cómo funciona una acción del técnico
+
+Ejemplo: Salida.
 
 ```mermaid
 sequenceDiagram
     actor T as Técnico
     participant UI as Pantalla (DepartureScreen)
-    participant A as VisitActions
+    participant A as DepartureActions
     participant O as outbox_events (cola)
     participant S as myDayProvider (applyEvents)
 
     T->>UI: desliza "Llevo todo"
-    UI->>A: confirmDeparture()
+    UI->>A: confirm() vía runUndoable
     A->>O: enqueue(missing_items) y enqueue(departure_confirmed), estado grace
     O-->>S: watchAll() emite la cola
     S-->>UI: visita 1 = En camino
     UI-->>T: barra "quedan 10 s · Deshacer"
-    alt toca Deshacer antes de 10 s
+    alt toca Deshacer antes de tiempo
         T->>A: undo()
         A->>O: borra las filas
         O-->>S: emite otra vez
         S-->>UI: visita 1 vuelve a Por hacer
-    else pasan 10 s
+    else pasan los segundos
         Note over O: sigue en grace. El enviador (paso 8) llama releaseExpired(), las pasa a pending y las manda en orden
     end
 ```
 
-**Regla de oro:** las pantallas nunca cambian el estado de una visita directamente. Solo encolan eventos; el estado se **recalcula** como `ruta del servidor + eventos de la cola`. Por eso deshacer es borrar una fila y por eso el estado sobrevive a cerrar la app.
+**Regla de oro:** las pantallas nunca cambian el estado de una visita directamente. Solo encolan eventos; el estado se **recalcula** como `ruta del servidor + eventos de la cola`.
 
-### Mapa de archivos
-
-| Archivo | Qué hace |
-|---|---|
-| `data/local/app_database.dart` | Define las 4 tablas de SQLite y abre `telyser.sqlite` en el teléfono. |
-| `data/local/outbox_repository.dart` | La cola: `enqueue` (guarda en `grace`), `undo` (borra si sigue en gracia), `releaseExpired` (pasa a `pending`), `nextBatch` (lo enviable, en orden) y `watchAll` (avisa a la UI cuando cambia). |
-| `data/local/settings_store.dart` | Guarda y lee los parámetros (`undo_seconds`, 150 m, etc.) en `settings_kv`. |
-| `data/local/route_store.dart` | Guarda la ruta del día en `cached_visits` (JSON completo más columnas consultables) y la lee sin señal. |
-| `data/visit_actions.dart` | Decide qué eventos se encolan por cada acción del técnico y devuelve un comprobante para deshacer. |
-| `providers/providers.dart` | Conecta todo con Riverpod. `myDayBaseProvider` baja y guarda la ruta, `visitEventsProvider` escucha la cola y `myDayProvider` los combina. |
-| `domain/app_settings.dart` | Modelo de los parámetros del servidor. |
-| `domain/event_types.dart` | Nombres de los tipos de evento (`arrived`, `finished`…). |
-| `domain/visit_state.dart` | `applyEvents`: función pura que calcula el estado real de la ruta. Se prueba sin pantallas. |
-| `core/widgets/undo_bar.dart` | Barra "Deshacer" con cuenta regresiva. |
-| `features/departure/departure_screen.dart` | Pantalla C2: lista de material, faltantes y deslizable de salida. |
+La barra de deshacer calcula el tiempo restante desde una hora límite fija guardada con el evento (nunca desde un contador propio), así no se reinicia ni muestra el mensaje anterior.
 
 ### Reglas de `applyEvents`
+
+`applyEvents` es una función pura con un `switch` sobre los eventos tipados, **sin `default`**: si agregas un evento nuevo, el compilador te obliga a decidir qué hace.
 
 | Evento | Efecto en la ruta |
 |---|---|
 | `departure_confirmed` | La visita pasa de Por hacer a En camino |
 | `arrived` | La visita pasa a En sitio y guarda la hora |
 | `finished`, `continue_tomorrow`, `blocked`, `no_answer_confirmed` | La visita queda Hecha con su resultado y la siguiente por hacer pasa a En camino (salvo que ya haya una En camino o En sitio) |
-| `missing_items`, `no_answer_reported` y demás | No cambian el estado; solo viajan al servidor |
+| Los demás | No cambian el estado; solo viajan al servidor |
 
-### Llegué manual y "¿Ya te abrieron?"
+### Cuándo se puede marcar "Llegué"
+
+`arrivalBlock(visit, visits)` decide si el deslizable está activo:
+
+| Resultado | Cuándo | Qué ve el técnico |
+|---|---|---|
+| `routeNotStarted` | La visita todavía está Por hacer (no confirmó la salida) | Deslizable gris con el motivo |
+| `anotherVisitInProgress` | Hay otra visita En camino o En sitio | Deslizable gris con el motivo |
+| (ninguno) | La visita está En camino y no hay otra en curso | Deslizable activo |
+
+## Módulos
+
+### Salida y lista de material (C2)
+`features/departure/` muestra la lista (sale de `job.plan.items`), los faltantes y el deslizable "Llevo todo". Acciones en `application/` (área `departure`).
+
+### Llegada y "¿Ya te abrieron?"
 
 ```mermaid
 sequenceDiagram
     actor T as Técnico
     participant D as VisitDetailScreen
-    participant A as VisitActions.arrival.arrive()
+    participant A as ArrivalActions.arrive()
     participant L as LocationService (GPS)
     participant O as outbox_events (cola)
     participant S as myDayProvider (applyEvents)
@@ -249,7 +312,7 @@ sequenceDiagram
     A->>O: enqueue(arrived, {mode: manual, lat, lng}) en estado grace
     O-->>S: watchAll() emite la cola
     S-->>D: visita = En sitio, y aparece el panel "¿Ya te abrieron?"
-    alt toca Deshacer antes de 10 s
+    alt toca Deshacer antes de tiempo
         T->>A: undo()
         A->>O: borra la fila
         S-->>D: visita = En camino, vuelve el deslizable
@@ -260,12 +323,9 @@ sequenceDiagram
 
 | Archivo | Qué hace |
 |---|---|
-| `data/location_service.dart` | `LocationService` (contrato) y `DeviceLocationService` (GPS real). Lee la ubicación una sola vez. Si falla, devuelve `null` y Llegué se marca igual. |
-| `data/visit_actions.dart` | `arrive()` encola `arrived` con `{mode, lat, lng}`. |
-| `providers/providers.dart` | `visitByIdProvider`: una visita por id con su estado actual (servidor + cola). |
-| `features/my_day/visit_detail_loader.dart` | Lee la visita actual y se la pasa a la tarjeta para que se redibuje sola. |
-| `features/my_day/arrival_panel.dart` | Panel "¿Ya te abrieron?" con Empezar y No me abren. |
-| `features/site/site_screen.dart` | Pantalla En sitio (provisional hasta el paso 4). |
+| `data/location_service.dart` | `LocationService` (contrato) y `DeviceLocationService` (GPS real). Lee la ubicación una sola vez. Si falla, devuelve `null` y Llegué se marca igual |
+| `features/my_day/visit_detail_loader.dart` | Lee la visita actual y se la pasa a la tarjeta para que se redibuje sola |
+| `features/my_day/arrival_panel.dart` | Panel "¿Ya te abrieron?" con Empezar y No me abren |
 
 ### "No me abren"
 
@@ -281,38 +341,25 @@ flowchart TD
     I --> J["Visita Hecha (no_answer) y la siguiente En camino"]
 ```
 
-La espera es `espera base + minutos por km × km` (parámetros del servidor), redondeada hacia arriba al minuto. Siempre se calcula desde la hora de llegada guardada; el reloj de la pantalla solo la redibuja cada segundo.
+La espera es `wait_base_min + wait_per_km_min × km`, redondeada hacia arriba al minuto. Siempre se calcula desde la hora de llegada guardada; el reloj de la pantalla (`tickProvider`, cada segundo) solo la redibuja.
 
-| Archivo | Qué hace |
-|---|---|
-| `domain/no_answer.dart` | `noAnswerWait`, `waitKm` y `computeNoAnswerStatus`: toda la regla de "No me abren" como funciones puras. |
-| `data/visit_actions.dart` | `reportNoAnswer`, `registerClientContact`, `registerOfficeCall` y `confirmNoAnswer`. |
-| `data/local/outbox_repository.dart` | `exists()`: evita avisar dos veces a la oficina. |
-| `core/contact_launcher.dart` | Abre el marcador y WhatsApp. Devuelve si se pudo abrir. |
-| `features/no_answer/no_answer_screen.dart` | Pantalla C4: cuenta regresiva, requisitos, botones y deslizable. |
-| `providers/providers.dart` | `tickProvider`: reloj de 1 s solo para redibujar. |
-
-| Parámetro | Para qué |
+| Parámetro del servidor | Para qué |
 |---|---|
 | `wait_base_min`, `wait_per_km_min` | Cuánto espera el técnico |
 | `min_client_contacts`, `min_office_calls` | Intentos mínimos antes de poder irse |
 | `office_phone` | Teléfono del botón "Llamar a la oficina" |
 
-### Pantalla En sitio y fotos
+### En sitio y fotos (C5)
 
-Las fotos se copian a `<documentos de la app>/media/visit_<id>/<uuid>.jpg` y se registran en `media_queue` con estado `pending`. La carpeta de la cámara es temporal y Android puede borrarla, por eso se copia.
-
-| Archivo | Qué hace |
-|---|---|
-| `data/local/media_repository.dart` | `addPhoto` (copia el archivo y crea la fila) y `watchForVisit` (fotos de una visita, en vivo). |
-| `data/visit_actions.dart` | `finish()`: encola `finished` con tiempo para deshacer. |
-| `features/site/site_screen.dart` | Pantalla C5: fotos, extras (4b), cierre. Los acompañantes no ven los botones de cierre. |
+`features/site/site_screen.dart` solo **compone** secciones de `features/site/widgets/`: `NoAnswerBanner`, `ArrivalInfo`, `WarrantySection`, `PhotosSection`, `ExtrasSection` y `CloseBar`.
 
 | Regla | Dónde |
 |---|---|
-| Solo el responsable cierra la visita | `visit.responsible` en `SiteScreen` |
-| En garantía no se puede terminar sin el bloque de garantía | `isWarranty` deshabilita el deslizable (4c) |
+| Solo el responsable cierra la visita | `visit.responsible` en `SiteScreen`; los acompañantes no ven los botones de cierre |
+| En garantía no se puede terminar sin el bloque de garantía | `isWarranty` deshabilita el deslizable |
 | Las visitas En sitio abren directo C5 desde Mi día | `my_day_screen.dart` |
+
+Las fotos y videos se guardan con `MediaRepository` (`addPhoto`, `addVideo`, `watchForVisit`, `clearAll`). Devuelve `MediaItem` con un `MediaKind`, para que las pantallas no conozcan Drift. `features/site/capture_photo.dart` abre la cámara.
 
 ### Extras y solicitudes para después
 
@@ -326,16 +373,9 @@ flowchart TD
     G["Botón Solicitud después"] --> H["request_added (origin: cannot_do_now)"]
 ```
 
-| Archivo | Qué hace |
-|---|---|
-| `domain/extras.dart` | `decideExtra` (las reglas), `ExtraDraft`, enums de origen y motivo, `extrasOf` y `requestsOf` (leen la cola). |
-| `domain/product.dart` | Un producto del catálogo. `isEquipment` alimenta la regla del saldo vencido. |
-| `data/visit_actions.dart` | `addExtra` (aplica las reglas y encola) y `addRequest`. |
-| `features/extras/add_extra_screen.dart` | Formulario E1. |
-| `features/extras/add_request_screen.dart` | Formulario E4, con fotos. |
-| `features/site/capture_photo.dart` | Abre la cámara y guarda la foto. |
+`decideExtra` es la regla (pura, en `domain/`). `isEquipment` del producto alimenta la regla del saldo vencido. Pantallas: `features/extras/add_extra_screen.dart` (E1) y `add_request_screen.dart` (E4, con fotos). Solo existen dos unidades: pieza y servicio.
 
-### Cierre de la visita (4c)
+### Cierre de la visita
 
 ```mermaid
 flowchart TD
@@ -353,26 +393,106 @@ flowchart TD
 
 | Archivo | Qué hace |
 |---|---|
-| `domain/closing.dart` | Causas de garantía, motivos de "No pude seguir", y las reglas `canSaveWarranty`, `canContinueTomorrow`, `canSendBlocked`. |
-| `features/site/warranty_*.dart` | Tarjeta y pantalla del bloque de garantía (G1 y G1b). |
-| `features/closing/finish_sheet.dart` | C6: confirmación de extras. |
-| `features/closing/not_finished_sheet.dart` | C7: elegir entre las dos opciones. |
-| `features/closing/continue_screen.dart` | C7a: Sigo otro día. |
-| `features/closing/blocked_screen.dart` | C7b: No pude seguir. |
-| `core/widgets/choice_group.dart` | Grupo de chips compartido. |
+| `features/site/warranty_*.dart` | Tarjeta y pantalla del bloque de garantía (G1 y G1b) |
+| `features/closing/finish_sheet.dart` | C6: confirmación de extras |
+| `features/closing/not_finished_sheet.dart` | C7: elegir entre las dos opciones |
+| `features/closing/continue_screen.dart` | C7a: Sigo otro día |
+| `features/closing/blocked_screen.dart` | C7b: No pude seguir (6 motivos, nota obligatoria, casos especiales de accidente y daño) |
+| `core/widgets/choice_group.dart` | Grupo de chips compartido |
 
-### Cómo agregar un evento nuevo
+Reglas en `domain/`: `canSaveWarranty`, `canContinueTomorrow`, `canSendBlocked`.
 
-1. **Nombre:** una constante en `EventTypes`.
+### Plan del trabajo (D1)
+
+El técnico ve el plan del ingeniero en solo lectura: notas, material, herramienta y un croquis con pines.
+
+| Archivo | Qué hace |
+|---|---|
+| `features/plan/plan_screen.dart` | Pantalla D1 |
+| `features/plan/widgets/sketch_view.dart` | El croquis con pines interactivos. Los pines usan `x` y `y` relativos (0 a 1), así no dependen del tamaño de pantalla |
+| `core/widgets/app_image.dart` | Imagen de asset (pruebas) o de URL (API real). Si no carga, muestra un ícono |
+| `assets/mock/croquis_hotel.png` | Croquis de ejemplo (Hotel Bahía) |
+
+Se llega desde "Ver plan completo" en la tarjeta de la visita y desde "Ver plan del ingeniero" en En sitio. Editar el plan (ingeniero) es el paso 5d, pendiente.
+
+### Por validar (ingeniero)
+
+El ingeniero revisa los trabajos terminados por otros técnicos y los valida, los regresa con nota o dictamina la causa de una garantía.
+
+```mermaid
+flowchart TD
+    A["Lista: GET /api/review"] --> B["Detalle: notas, fotos, extras, plan"]
+    B -->|"Validar"| C{"canValidate"}
+    C -->|"sí"| D["POST review: validated"]
+    C -->|"garantía sin dictaminar"| E["Dictaminar causa"]
+    E -->|"POST review: verdict"| B
+    B -->|"Regresar con nota"| F{"canReturnJob: nota no vacía"}
+    F -->|"sí"| G["POST review: returned<br/>el servidor genera la solicitud para el jefe de ruta"]
+```
+
+**No pasa por la cola:** necesita señal, así que va directo al repositorio. Por eso no hay eventos nuevos ni casos nuevos en `applyEvents`.
+
+| Archivo | Qué hace |
+|---|---|
+| `domain/models/review_models.dart` | `ReviewJob`, `ReviewPhoto`, `ReviewExtra`, `ReviewWarranty` |
+| `domain/review_rules.dart` | `canValidate` (sin dictamen pendiente) y `canReturnJob` (nota obligatoria) |
+| `data/repositories.dart` | Interfaz `ReviewRepository` |
+| `data/mock/mock_repositories.dart` | `MockReviewRepository`: lee `assets/mock/review.json` y guarda los cambios en memoria |
+| `application/review_actions.dart` | `validate`, `returnJob`, `submitVerdict`. Tras cada una, la lista se vuelve a pedir |
+| `providers/review_providers.dart` | `reviewListProvider`, `reviewJobProvider(id)`, `reviewActionsProvider` |
+| `features/review/` | Lista (F1), detalle (F2), nota al regresar (F2b), dictamen (F3) y `widgets/photo_strip.dart` |
+
+## Cómo agregar cosas
+
+### Un evento nuevo del técnico
+
+1. **Nombre:** una constante en `EventTypes` (`domain/event_types.dart`).
 2. **Clase:** una clase `...Event` en `domain/events/event_data.dart`, con sus datos tipados, `toPayload()` y `fromPayload()`; y una línea en `EventData.parse`.
 3. **Estado:** el compilador marcará el `switch` de `applyEvents` hasta que agregues el caso (aunque sea "no cambia el estado").
-4. **Ejemplo:** agrégalo a la lista de `test/events_test.dart` (la prueba "hay un ejemplo por cada tipo" avisa si falta).
-5. **Acción:** un método en la clase del área en `application/`, con `PendingEvent(MiEvento(...), visitId: ...)`.
-6. **Pantalla:** `runUndoable(context, ref, action: (a) => a.<área>.<método>(...), ...)`.
-7. **Contrato:** documenta los datos en `docs/contrato_api.md`.
+4. **Regla** (si hay decisiones): una función pura en `domain/`, con su prueba.
+5. **Ejemplo:** agrégalo a la lista de `test/events_test.dart` (la prueba "hay un ejemplo por cada tipo" avisa si falta).
+6. **Acción:** un método en la clase del área en `application/` (`departure`, `arrival`, `noAnswer`, `extras` o `closing`), con `PendingEvent(MiEvento(...), visitId: ...)`. Usa `_writer.undoable([...])` para acciones deslizables o con formulario, y `_writer.instant(...)` para botones normales.
+7. **Pantalla:** `runUndoable(context, ref, action: (a) => a.<área>.<método>(...), message: '...', after: AfterSave.pop)`.
+8. **Contrato:** documenta los datos en `docs/contrato_api.md`.
 
 Lo que se guarda y viaja al servidor es siempre el mapa de `toPayload()`; la app nunca reescribe lo ya guardado.
 
-## Aviso
-Si `flutter run` o `flutter analyze` marcan errores, probablemente sean detalles menores
-de sintaxis o de versión de paquetes.
+### Una acción que necesita señal (no pasa por la cola)
+
+Como las del ingeniero en Por validar:
+
+1. Un método en la interfaz del repositorio (`data/repositories.dart`) y su versión de prueba.
+2. La regla en `domain/`, y el método en una clase de `application/` que la aplique.
+3. Un provider que avise cuando algo cambió para volver a pedir la lista.
+4. La pantalla guarda `messenger` y `navigator` antes del `await`, bloquea el botón mientras envía y avisa si no hay conexión.
+5. Documenta la ruta en el contrato.
+
+### Una pantalla nueva
+
+Una pantalla que solo **compone** secciones; cada sección lee lo que necesita con `ref.watch`. Usa `AppCard`, `toast`, `formatNumber` y `AppImage` en lugar de repetir código.
+
+## Pruebas
+
+`flutter test` corre, entre otras:
+
+| Prueba | Qué vigila |
+|---|---|
+| `models_test` | Que los mocks cumplen el contrato |
+| `outbox_test` | La cola: `enqueue`, `undo`, `releaseExpired`, `nextBatch` |
+| `settings_store_test`, `route_store_test` | Guardado local de parámetros y de la ruta |
+| `visit_state_test`, `events_test` | `applyEvents` y los eventos tipados (un ejemplo por tipo) |
+| `no_answer_test`, `extras_test`, `closing_test`, `arrival_rules_test` | Las reglas puras de cada área |
+| `visit_actions_test`, `media_repository_test` | Las acciones y las fotos |
+| `review_test` | Por validar: modelos, reglas y acciones |
+| `format_test` | Formato de números |
+| `architecture_test` | Las 5 reglas de dependencias por capa |
+
+## Pendiente
+
+- **5c:** Mis trabajos del técnico (por validar, validado, regresado con la nota del ingeniero).
+- **5d:** Editar el plan (ingeniero).
+- **Paso 6:** Jefe de ruta (Rutas).
+- **Paso 7:** "Llegué" automático por geocerca y notificaciones push (Firebase).
+- **Paso 8:** API real, envío de la cola, subida y compresión de fotos.
+- **Pantallas sueltas:** Avisos, permisos de ubicación, sesión expirada.
+- **Por confirmar con la empresa:** `credit_authorization_wait_min` (¿5 o 15 minutos?).

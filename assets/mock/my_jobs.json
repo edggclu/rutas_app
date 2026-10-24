@@ -2,7 +2,7 @@
   "jobs": [
     {
       "id": 21, "folio": "TEL-2610-021", "type": "installation",
-      "client": "Hotel Bahía", "place": "Hotel Bahía — lobby",
+      "client": "Clínica Santa Fe", "place": "Clínica Santa Fe — recepción",
       "closed_at": "2026-10-08T20:15:00Z",
       "review_status": "returned",
       "engineer": "Tono",
@@ -11,14 +11,14 @@
     },
     {
       "id": 24, "folio": "TEL-2610-024", "type": "corrective",
-      "client": "Restaurante El Faro", "place": "Restaurante El Faro",
+      "client": "Farmacia del Centro", "place": "Farmacia del Centro",
       "closed_at": "2026-10-09T17:30:00Z",
       "review_status": "to_validate",
       "engineer": null, "reviewed_at": null, "engineer_note": null
     },
     {
       "id": 19, "folio": "TEL-2610-019", "type": "preventive",
-      "client": "Condominio Vista Mar", "place": "Condominio Vista Mar — caseta",
+      "client": "Colegio Horizonte", "place": "Colegio Horizonte — dirección",
       "closed_at": "2026-10-07T22:30:00Z",
       "review_status": "validated",
       "engineer": "Tono",

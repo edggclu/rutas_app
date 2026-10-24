@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart'; // widgets básicos
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerWidget
+import 'package:telyser_app/providers/session_provider.dart'; // sessionProvider
 
 import '../../../core/theme/app_colors.dart'; // colores
 import '../../../core/widgets/app_card.dart'; // la tarjeta compartida
@@ -6,14 +8,15 @@ import '../../../domain/models/models.dart'; // Job
 import '../../plan/plan_screen.dart'; // la pantalla del plan
 
 /// "Qué hay que hacer": descripción del trabajo y resumen del plan.
-class TaskCard extends StatelessWidget { // widget sin estado propio
+class TaskCard extends ConsumerWidget { // lee la sesión para saber si es ingeniero
   const TaskCard({super.key, required this.job}); // recibe el trabajo
 
   final Job job; // el trabajo
 
   @override
-  Widget build(BuildContext context) { // dibuja la tarjeta
+  Widget build(BuildContext context, WidgetRef ref) { // dibuja la tarjeta
     final summary = job.planSummary; // resumen del plan (null si no hay)
+    final isEngineer = ref.watch(sessionProvider)?.user.isEngineer ?? false;
     return AppCard( // la caja compartida
       child: Column( // elementos uno debajo de otro
         crossAxisAlignment: CrossAxisAlignment.start, // alineados a la izquierda
@@ -28,7 +31,7 @@ class TaskCard extends StatelessWidget { // widget sin estado propio
             const SizedBox(height: 4), // espacio vertical
             Text(summary), // el resumen
           ],
-          if (job.plan != null) ...[ // si el ingeniero dejó un plan completo
+          if (job.plan != null || isEngineer) ...[ // hay plan, o el ingeniero puede crearlo
             const SizedBox(height: 6), // espacio vertical
             GestureDetector( // enlace tocable
               onTap: () => Navigator.of(context).push( // abre la pantalla del plan
@@ -36,8 +39,8 @@ class TaskCard extends StatelessWidget { // widget sin estado propio
                   builder: (_) => PlanScreen(job: job), // con este trabajo
                 ),
               ),
-              child: const Text( // texto del enlace
-                'Ver plan completo ›', // texto
+              child: Text( // texto del enlace
+                job.plan == null ? 'Crear plan ›' : 'Ver plan completo ›', // texto
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.rojo), // rojo
               ),
             ),

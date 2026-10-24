@@ -45,12 +45,22 @@ class MockAuthRepository implements AuthRepository { // el login de prueba
 }
 
 class MockVisitRepository implements VisitRepository { // la ruta de prueba
+  MockVisitRepository([this._plans]);
+
+  final MockPlanStore? _plans; // planes que el ingeniero editó en la demo
 
   @override
   Future<Map<String, dynamic>> fetchMyDay(DateTime date) async { // devuelve el JSON del día
     await Future<void>.delayed(const Duration(milliseconds: 400)); // simula la espera de la red
     final raw = await _loadJson('assets/mock/my_day.json'); // lee el archivo de prueba
     raw['date'] = DateFormat('yyyy-MM-dd').format(date); // la ruta de prueba siempre es "de hoy"
+    final saved = _plans?.plans ?? const <int, Plan>{};
+    if (saved.isNotEmpty) { // pone en cada trabajo el plan que se editó
+      for (final v in readMaps(raw, 'visits')) {
+        final job = v['job'];
+        if (job is Map && saved.containsKey(job['id'])) job['plan'] = saved[job['id']]!.toJson();
+      }
+    }
     return raw; // el JSON con la fecha cambiada
   }
 }
@@ -129,5 +139,26 @@ class MockMyJobsRepository implements MyJobsRepository {
     await Future<void>.delayed(const Duration(milliseconds: 300)); // simula la red
     final data = await _loadJson('assets/mock/my_jobs.json');
     return [for (final m in readMaps(data, 'jobs')) MyJob.fromJson(m)];
+  }
+}
+
+
+/// Los planes que el ingeniero guardó en la demo. Viven en memoria y los comparten
+/// MockPlanRepository (escribe) y MockVisitRepository (los pone en la ruta).
+class MockPlanStore {
+  final Map<int, Plan> plans = {}; // id del trabajo -> plan guardado
+}
+
+/// Guarda el plan en memoria: al cerrar la app por completo vuelve el plan original.
+class MockPlanRepository implements PlanRepository {
+  MockPlanRepository(this._store);
+
+  final MockPlanStore _store;
+
+  @override
+  Future<Plan> save(int jobId, Plan plan) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300)); // simula la red
+    _store.plans[jobId] = plan;
+    return plan;
   }
 }

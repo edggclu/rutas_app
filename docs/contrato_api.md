@@ -109,7 +109,7 @@ con `contact = { name, role, phone, authorized }`. `authorized` = puede pedir y 
 - `items`: `kind` es `material` o `tool`. **La lista de salida de la visita sale de aquí** (no hay un campo `checklist` aparte).
 - `sketch.image`: URL de la imagen. `aspect_ratio` = ancho / alto, para colocar los pines sin leer la imagen.
 - `x` y `y` van de 0 a 1 sobre la imagen (0,0 = esquina superior izquierda), así no dependen del tamaño de pantalla.
-- `PUT /api/jobs/{id}/plan` lo guarda el ingeniero (paso 5d).
+- `PUT /api/jobs/{id}/plan` lo guarda el ingeniero (ver "Editar el plan").
 
 ## POST /api/events
 Envía la cola de acciones **en orden**. El servidor ignora un `uuid` que ya recibió.
@@ -244,3 +244,21 @@ Trabajos que el técnico ya terminó y lo que el ingeniero decidió de cada uno.
 - `engineer_note`: la nota que escribió el ingeniero al regresar el trabajo (`POST /api/jobs/{id}/review` con `returned`). Es `null` si el trabajo no fue regresado.
 - `engineer` y `reviewed_at` son `null` mientras el trabajo esté `to_validate`.
 - La app ordena la lista: regresados, por validar y validados; dentro de cada grupo, lo más reciente primero. El servidor puede mandarla en cualquier orden y debe limitarla a un periodo razonable (por ejemplo, los últimos 30 días).
+
+## Editar el plan (ingeniero)
+
+### PUT /api/jobs/{id}/plan
+Reemplaza el plan completo del trabajo. Requiere el permiso `engineer` (si no, 403). Necesita señal: **no pasa por la cola**.
+```json
+{ "notes": "El cable entra por el plafón del pasillo…",
+  "items": [{ "id": 1, "kind": "material", "text": "Cámaras IP", "quantity": 8, "product_id": 301 },
+            { "id": 9, "kind": "tool", "text": "Escalera de 6 m", "quantity": 1, "product_id": null }],
+  "sketch": { "image": "https://…/croquis.png", "aspect_ratio": 1.5,
+              "pins": [{ "id": 1, "label": "C1", "x": 0.13, "y": 0.68, "note": "…" }] } }
+```
+- El cuerpo tiene el mismo formato que `job.plan`. `notes` y `sketch` pueden ser `null`.
+- La app manda el plan **completo**: lo que no venga se borra. Los renglones y pines nuevos llevan un `id` temporal (mayor que los existentes); el servidor lo ignora y asigna los suyos.
+- La app no cambia `sketch.image` ni `aspect_ratio`: reenvía los que recibió. La imagen se sube desde la web.
+- Respuesta: el plan tal como quedó, con el mismo formato.
+- 422 si algún renglón o pin trae el texto vacío, o una cantidad menor o igual a cero.
+- Después de guardar, la app vuelve a pedir `GET /api/my-day` para que todos los dispositivos vean el plan nuevo.

@@ -14,7 +14,7 @@ import '../data/repositories.dart'; // los contratos (interfaces)
 final authRepositoryProvider = // inicio de sesión
     Provider<AuthRepository>((ref) => MockAuthRepository()); // hoy, el de prueba
 final visitRepositoryProvider = // ruta del día
-    Provider<VisitRepository>((ref) => MockVisitRepository()); // hoy, el de prueba
+    Provider<VisitRepository>((ref) => MockVisitRepository(ref.watch(mockPlanStoreProvider))); // hoy, el de prueba
 final settingsRepositoryProvider = // parámetros del servidor
     Provider<SettingsRepository>((ref) => MockSettingsRepository()); // hoy, el de prueba
 final productRepositoryProvider = // catálogo de productos
@@ -50,3 +50,8 @@ final reviewRepositoryProvider = // trabajos por validar
 
 final myJobsRepositoryProvider = // mis trabajos terminados
     Provider<MyJobsRepository>((ref) => MockMyJobsRepository()); // hoy, el de prueba
+
+
+final mockPlanStoreProvider = Provider<MockPlanStore>((ref) => MockPlanStore()); // planes editados en la demo (solo prueba)
+final planRepositoryProvider = // guardar el plan del trabajo
+    Provider<PlanRepository>((ref) => MockPlanRepository(ref.watch(mockPlanStoreProvider))); // hoy, el de prueba

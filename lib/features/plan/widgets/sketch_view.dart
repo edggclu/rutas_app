@@ -5,7 +5,7 @@ import '../../../../core/theme/app_colors.dart'; // colores
 import '../../../../core/widgets/app_card.dart'; // la tarjeta compartida
 import '../../../../domain/models/models.dart'; // Sketch y SketchPin
 
-const _pinSize = 30.0; // diámetro de cada pin en pantalla
+const kPinSize = 30.0; // diámetro de cada pin en pantalla
 
 /// El croquis con sus pines. Al tocar un pin (o su chip) se muestra su nota.
 class SketchView extends StatefulWidget { // con estado: recuerda qué pin está elegido
@@ -56,9 +56,9 @@ class _SketchViewState extends State<SketchView> { // el estado del croquis
                     Positioned.fill(child: AppImage(src: sketch.image, fit: BoxFit.fill,)), // la imagen de fondo
                     for (final p in sketch.pins) // un pin por cada punto
                       Positioned( // lo coloca en su posición relativa
-                        left: p.x.clamp(0.0, 1.0).toDouble() * w - _pinSize / 2, // centra el pin en x
-                        top: p.y.clamp(0.0, 1.0).toDouble() * h - _pinSize / 2, // centra el pin en y
-                        child: _PinDot( // el círculo numerado
+                        left: p.x.clamp(0.0, 1.0).toDouble() * w - kPinSize / 2, // centra el pin en x
+                        top: p.y.clamp(0.0, 1.0).toDouble() * h - kPinSize / 2, // centra el pin en y
+                        child: PinDot( // el círculo numerado
                           label: p.label, // texto del pin
                           selected: p.id == _selectedId, // ¿es el elegido?
                           onTap: () => setState(() => _selectedId = p.id), // al tocarlo, lo elige
@@ -107,9 +107,9 @@ class _SketchViewState extends State<SketchView> { // el estado del croquis
   }
 }
 
-/// El círculo numerado de un pin.
-class _PinDot extends StatelessWidget { // widget sin estado propio
-  const _PinDot({required this.label, required this.selected, required this.onTap}); // constructor
+/// El círculo numerado de un pin (lo usan el croquis de lectura y el editor).
+class PinDot extends StatelessWidget { // widget sin estado propio
+  const PinDot({super.key, required this.label, required this.selected, required this.onTap}); // constructor
 
   final String label; // texto
   final bool selected; // ¿está elegido?
@@ -120,8 +120,8 @@ class _PinDot extends StatelessWidget { // widget sin estado propio
     return GestureDetector( // detecta el toque
       onTap: onTap, // al tocar
       child: Container( // el círculo
-        width: _pinSize, // diámetro
-        height: _pinSize, // diámetro
+        width: kPinSize, // diámetro
+        height: kPinSize, // diámetro
         alignment: Alignment.center, // texto al centro
         decoration: BoxDecoration( // estilo
           color: selected ? AppColors.navy900 : AppColors.rojo, // navy si está elegido, rojo si no

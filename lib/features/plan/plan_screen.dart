@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart'; // widgets básicos
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerWidget
+import 'package:telyser_app/providers/plan_providers.dart'; // jobPlanProvider
+import 'package:telyser_app/providers/session_provider.dart'; // sessionProvider
+
+import 'plan_edit_screen.dart'; // editar el plan
 import 'package:telyser_app/features/plan/widgets/sketch_view.dart';
 
 import '../../core/theme/app_colors.dart'; // colores
@@ -6,15 +11,17 @@ import '../../core/widgets/app_card.dart'; // la tarjeta compartida
 import '../../core/widgets/app_header.dart'; // encabezado navy
 import '../../domain/models/models.dart'; // Job y ChecklistItem
 
-/// D1 · Plan del trabajo (solo lectura): notas, material, herramienta y croquis.
-class PlanScreen extends StatelessWidget { // widget sin estado propio
+/// D1 · Plan del trabajo: notas, material, herramienta y croquis. Solo lectura;
+/// el ingeniero tiene además el botón Editar.
+class PlanScreen extends ConsumerWidget { // lee el plan vigente para verlo al día tras editarlo
   const PlanScreen({super.key, required this.job}); // recibe el trabajo
 
   final Job job; // el trabajo
 
   @override
-  Widget build(BuildContext context) { // dibuja la pantalla
-    final plan = job.plan; // el plan (puede ser null)
+  Widget build(BuildContext context, WidgetRef ref) { // dibuja la pantalla
+    final plan = ref.watch(jobPlanProvider(job.id)) ?? job.plan; // el plan vigente (puede ser null)
+    final isEngineer = ref.watch(sessionProvider)?.user.isEngineer ?? false; // solo el ingeniero edita
     return Scaffold( // estructura de la pantalla
       body: Column( // elementos uno debajo de otro
         children: [
@@ -22,6 +29,16 @@ class PlanScreen extends StatelessWidget { // widget sin estado propio
             subtitle: job.folio, // arriba: el folio
             title: 'Plan del trabajo', // título
             onBack: () => Navigator.of(context).pop(), // flecha para regresar
+            trailing: isEngineer // el ingeniero puede editar el plan
+                ? TextButton(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => PlanEditScreen(jobId: job.id, folio: job.folio, plan: plan),
+                      ),
+                    ),
+                    child: const Text('Editar', style: TextStyle(color: Colors.white)),
+                  )
+                : null,
           ),
           Expanded( // ocupa el espacio que queda
             child: plan == null // si el trabajo no tiene plan

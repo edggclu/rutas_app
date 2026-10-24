@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart'; // widgets básicos
+import '../../core/widgets/input_formatters.dart'; // filtros de los campos
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
 import 'package:telyser_app/core/widgets/toast.dart';
 import 'package:telyser_app/domain/models/media_item.dart';
@@ -148,6 +149,7 @@ class _WarrantyScreenState extends ConsumerState<WarrantyScreen> { // el estado 
                 TextField( // número de serie escrito
                   controller: _serialCtrl, // su controlador
                   onChanged: (_) => setState(() {}), // revisa si ya se puede guardar
+                  inputFormatters: shortText(60), // largo máximo
                   decoration: const InputDecoration(labelText: 'Número de serie'), // etiqueta
                 ),
                 const SizedBox(height: 8), // espacio vertical

@@ -165,6 +165,22 @@ class ChecklistItem {
     quantity: j['quantity'] as num?,
     productId: j['product_id'] as int?
   );
+
+  ChecklistItem copyWith({String? text, num? quantity, bool clearQuantity = false}) => ChecklistItem(
+        id: id,
+        kind: kind,
+        text: text ?? this.text,
+        quantity: clearQuantity ? null : (quantity ?? this.quantity),
+        productId: productId,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'kind': kind.name, // 'material' o 'tool'
+        'text': text,
+        'quantity': quantity,
+        'product_id': productId,
+      };
 }
 
 /// Lista de material y herramienta que el técnico revisa antes de salir.
@@ -362,6 +378,16 @@ class SketchPin { // dato de un pin
         y: (j['y'] as num).toDouble(), // posición vertical
         note: j['note'] as String?, // nota
       );
+
+  SketchPin copyWith({String? label, double? x, double? y, String? note}) => SketchPin( // copia con cambios
+        id: id,
+        label: label ?? this.label,
+        x: x ?? this.x,
+        y: y ?? this.y,
+        note: note ?? this.note,
+      );
+
+  Map<String, dynamic> toJson() => {'id': id, 'label': label, 'x': x, 'y': y, 'note': note};
 }
 
 /// El croquis: una imagen con sus pines.
@@ -379,6 +405,14 @@ class Sketch { // dato del croquis
             .map((e) => SketchPin.fromJson(e as Map<String, dynamic>)) // cada pin
             .toList(), // junta todo en una lista
       );
+
+  Sketch withPins(List<SketchPin> newPins) => Sketch(image: image, aspectRatio: aspectRatio, pins: newPins);
+
+  Map<String, dynamic> toJson() => {
+        'image': image,
+        'aspect_ratio': aspectRatio,
+        'pins': [for (final p in pins) p.toJson()],
+      };
 }
 
 /// El plan que define el ingeniero después del levantamiento.
@@ -403,4 +437,10 @@ class Plan { // dato del plan
             ? null // queda vacío
             : Sketch.fromJson(j['sketch'] as Map<String, dynamic>), // si no, lo convierte
       );
+
+  Map<String, dynamic> toJson() => {
+        'notes': notes,
+        'items': [for (final i in items) i.toJson()],
+        'sketch': sketch?.toJson(),
+      };
 }

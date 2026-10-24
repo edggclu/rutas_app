@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
+import '../../core/widgets/input_formatters.dart'; // filtros de los campos
 import 'package:telyser_app/core/widgets/alert_box.dart';
 import 'package:telyser_app/core/widgets/app_header.dart';
 import 'package:telyser_app/core/widgets/toast.dart';
@@ -92,6 +93,7 @@ class _AddRequestScreenState extends ConsumerState<AddRequestScreen> { // el est
                 const SizedBox(height: 12), // espacio vertical
                 TextField( // campo "quién lo pidió"
                   controller: _whoCtrl, // su controlador
+                  inputFormatters: shortText(80), // largo máximo
                   decoration: const InputDecoration(labelText: 'Quién lo pidió (opcional)'), // etiqueta
                 ),
                 const SizedBox(height: 12), // espacio vertical

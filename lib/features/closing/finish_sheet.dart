@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart'; // widgets básicos
+import '../../core/widgets/input_formatters.dart'; // filtros de los campos
 
 import '../../core/theme/app_colors.dart'; // colores
 import '../../domain/rules/extras.dart'; // ExtraEntry
@@ -88,6 +89,7 @@ class _FinishSheetState extends State<_FinishSheet> { // el estado de la hoja
             const SizedBox(height: 12), // espacio vertical
             TextField( // nombre de quien confirma
               controller: _nameCtrl, // su controlador
+              inputFormatters: shortText(80), // largo máximo
               onChanged: (_) => setState(() {}), // revisa si ya se puede confirmar
               decoration: InputDecoration( // etiqueta
                 labelText: 'Confirmó (nombre)', // texto
@@ -97,6 +99,7 @@ class _FinishSheetState extends State<_FinishSheet> { // el estado de la hoja
             const SizedBox(height: 10), // espacio vertical
             TextField( // cargo
               controller: _roleCtrl, // su controlador
+              inputFormatters: shortText(60), // largo máximo
               decoration: const InputDecoration(labelText: 'Cargo (opcional)'), // etiqueta
             ),
             const SizedBox(height: 16), // espacio vertical

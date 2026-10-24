@@ -76,6 +76,7 @@ core/         widgets y utilidades genéricas, sin reglas del negocio
 | Un aviso corto | `messenger.toast('...')` (con el `messenger` guardado antes del `await`) |
 | Una caja blanca con borde | `AppCard(child: ...)` |
 | Mostrar un número (cantidad, km) | `formatNumber(valor)` |
+| Un campo donde se escribe un número o texto corto | `inputFormatters: decimalInput` (cantidades), `integerInput` (minutos, piezas) o `shortText(max)`. `keyboardType` solo cambia el teclado: no impide pegar letras |
 | Abrir mapa, llamar o WhatsApp | `openMap(...)`, `callPhone(...)`, `openWhatsApp(...)` |
 | Mostrar una imagen de asset o URL | `AppImage(src: ...)` |
 | Una pantalla larga | Una pantalla que solo **compone** secciones en `widgets/`; cada sección lee lo que necesita con `ref.watch` |
@@ -404,7 +405,7 @@ Reglas en `domain/`: `canSaveWarranty`, `canContinueTomorrow`, `canSendBlocked`.
 
 ### Plan del trabajo (D1)
 
-El técnico ve el plan del ingeniero en solo lectura: notas, material, herramienta y un croquis con pines.
+El técnico ve el plan del ingeniero en solo lectura (el ingeniero también lo puede editar, ver abajo): notas, material, herramienta y un croquis con pines.
 
 | Archivo | Qué hace |
 |---|---|
@@ -413,7 +414,21 @@ El técnico ve el plan del ingeniero en solo lectura: notas, material, herramien
 | `core/widgets/app_image.dart` | Imagen de asset (pruebas) o de URL (API real). Si no carga, muestra un ícono |
 | `assets/mock/croquis_hotel.png` | Croquis de ejemplo (Hotel Bahía) |
 
-Se llega desde "Ver plan completo" en la tarjeta de la visita y desde "Ver plan del ingeniero" en En sitio. Editar el plan (ingeniero) es el paso 5d, pendiente.
+Se llega desde "Ver plan completo" en la tarjeta de la visita y desde "Ver plan del ingeniero" en En sitio.
+
+#### Editar el plan (ingeniero)
+
+Con el permiso `engineer`, la pantalla del plan muestra **Editar** (y la tarjeta de la visita ofrece **Crear plan** si el trabajo no tiene). El ingeniero cambia las notas, agrega, edita o quita material y herramienta, y en el croquis agrega puntos (tocando un lugar vacío), los mueve (arrastrando) y edita su etiqueta y nota. Guardar necesita señal y **no pasa por la cola**. La imagen del croquis no se cambia desde la app: se sube desde la web.
+
+| Archivo | Qué hace |
+|---|---|
+| `features/plan/plan_edit_screen.dart` | Pantalla D2. Los cambios viven solo en la pantalla hasta tocar "Guardar plan" |
+| `features/plan/widgets/sketch_editor.dart` | El croquis editable (agregar, elegir y arrastrar pines) |
+| `domain/plan_rules.dart` | `canSavePlan` (sin renglones ni pines vacíos, cantidades positivas) y `nextLocalId` |
+| `data/repositories.dart` | Interfaz `PlanRepository` |
+| `data/mock/mock_repositories.dart` | `MockPlanRepository`: guarda en memoria en un `MockPlanStore`, que `MockVisitRepository` aplica a la ruta. Al cerrar la app por completo vuelve el plan original |
+| `application/plan_actions.dart` | `PlanActions.save`. Después de guardar, la ruta se vuelve a pedir |
+| `providers/plan_providers.dart` | `planActionsProvider` y `jobPlanProvider(jobId)` (el plan vigente) |
 
 ### Por validar (ingeniero)
 
@@ -499,12 +514,13 @@ Una pantalla que solo **compone** secciones; cada sección lee lo que necesita c
 | `visit_actions_test`, `media_repository_test` | Las acciones y las fotos |
 | `review_test` | Por validar: modelos, reglas y acciones |
 | `my_jobs_test` | Mis trabajos: el mock, el estado desconocido y el orden |
+| `plan_test` | Editar el plan: reglas, ida y vuelta del JSON y la acción de guardar |
 | `format_test` | Formato de números |
+| `input_formatters_test` | Los filtros de los campos descartan letras y signos, y respetan el largo |
 | `architecture_test` | Las 5 reglas de dependencias por capa |
 
 ## Pendiente
 
-- **5d:** Editar el plan (ingeniero).
 - **Paso 6:** Jefe de ruta (Rutas).
 - **Paso 7:** "Llegué" automático por geocerca y notificaciones push (Firebase).
 - **Paso 8:** API real, envío de la cola, subida y compresión de fotos.

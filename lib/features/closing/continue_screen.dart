@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart'; // widgets básicos
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
+import '../../core/widgets/input_formatters.dart'; // filtros de los campos
 import 'package:telyser_app/domain/format.dart';
 import 'package:telyser_app/domain/models/media_item.dart';
 import 'package:telyser_app/features/shared/run_undoable.dart';
@@ -217,6 +218,7 @@ class _UsedRowState extends State<_UsedRow> { // el estado de la fila
               controller: _ctrl, // su controlador
               textAlign: TextAlign.center, // centrado
               keyboardType: const TextInputType.numberWithOptions(decimal: true), // teclado numérico
+              inputFormatters: decimalInput, // no deja escribir letras
               onChanged: (_) => widget.onChanged(_current), // avisa lo escrito
             ),
           ),

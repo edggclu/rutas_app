@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/providers/infra_providers.dart';
 import '../../core/widgets/choice_group.dart';
+import '../../core/widgets/input_formatters.dart'; // filtros de los campos
 import 'package:intl/intl.dart';
 import 'package:telyser_app/core/theme/app_colors.dart';
 import 'package:telyser_app/core/widgets/alert_box.dart';
@@ -52,12 +53,16 @@ class _AddExtraScreenState extends ConsumerState<AddExtraScreen> { // el estado 
     return v % 1 == 0 ? v.toInt() : v; // 2.0 -> 2
   }
 
+  /// Un producto en piezas no admite cantidades con decimales.
+  bool get _isPiece => _product?.unit == 'piece';
+
   int? get _delayMinutes => int.tryParse(_delayCtrl.text.trim()); // minutos de retraso (null si no es número)
 
   /// El botón Guardar se activa solo cuando todo lo necesario está lleno.
   bool get _canSave => // todas las condiciones juntas
       _nameCtrl.text.trim().isNotEmpty && // escribió qué es
       (_qty ?? 0) > 0 && // la cantidad es mayor que cero
+      (!_isPiece || _qty! % 1 == 0) && // las piezas son enteras
       _source != null && // eligió de dónde salió
       _reason != null && // eligió por qué
       _authorized != null && // eligió quién lo pidió
@@ -159,6 +164,7 @@ class _AddExtraScreenState extends ConsumerState<AddExtraScreen> { // el estado 
                     _onNameChanged(t); // busca en el catálogo
                     setState(() {}); // y revisa si ya se puede guardar
                   },
+                  inputFormatters: shortText(120), // largo máximo
                   decoration: const InputDecoration(labelText: 'Qué (busca en el catálogo o escribe)'), // etiqueta
                 ),
                 if (_suggestions.isNotEmpty && product == null) // si hay sugerencias y aún no eligió
@@ -192,7 +198,8 @@ class _AddExtraScreenState extends ConsumerState<AddExtraScreen> { // el estado 
                 TextField( // campo "Cuánto"
                   controller: _qtyCtrl, // su controlador
                   onChanged: (_) => setState(() {}), // revisa si ya se puede guardar
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true), // teclado numérico
+                  keyboardType: _isPiece ? TextInputType.number : const TextInputType.numberWithOptions(decimal: true), // teclado numérico
+                  inputFormatters: _isPiece ? integerInput : decimalInput, // las piezas son enteras; no deja escribir letras
                   decoration: InputDecoration( // etiqueta y unidad
                     labelText: 'Cuánto', // etiqueta
                     suffixText: product?.unitLabel, // unidad del producto (solo si hay)
@@ -239,6 +246,7 @@ class _AddExtraScreenState extends ConsumerState<AddExtraScreen> { // el estado 
                     controller: _delayCtrl, // su controlador
                     onChanged: (_) => setState(() {}), // revisa si ya se puede guardar
                     keyboardType: TextInputType.number, // teclado numérico
+                    inputFormatters: integerInput, // solo dígitos
                     decoration: const InputDecoration( // etiqueta
                       labelText: '¿Cuánto tiempo tomará? (minutos)', // texto
                       helperText: 'Se avisa al jefe de ruta', // ayuda

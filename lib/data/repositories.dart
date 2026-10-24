@@ -40,3 +40,9 @@ abstract class ReviewRepository {
 abstract class MyJobsRepository {
   Future<List<MyJob>> fetch();
 }
+
+
+/// El plan del trabajo que edita el ingeniero. Necesita señal: no pasa por la cola.
+abstract class PlanRepository {
+  Future<Plan> save(int jobId, Plan plan); // guarda y devuelve el plan tal como quedó en el servidor
+}

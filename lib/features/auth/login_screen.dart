@@ -26,7 +26,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  bool get _canSubmit => _user.text.trim().isNotEmpty && _pass.text.isNotEmpty; // sin usuario o contraseña no se envía
+
   Future<void> _submit() async {
+    if (!_canSubmit) return;
     setState(() {
       _loading = true;
       _error = null;
@@ -131,6 +134,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const _FieldLabel('Usuario o teléfono'),
                   TextField(
                     controller: _user,
+                    onChanged: (_) => setState(() {}), // revisa si ya se puede enviar
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
                     autocorrect: false,
@@ -139,6 +143,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const _FieldLabel('Contraseña'),
                   TextField(
                     controller: _pass,
+                    onChanged: (_) => setState(() {}), // revisa si ya se puede enviar
                     obscureText: _obscure,
                     onSubmitted: (_) => _submit(),
                     decoration: InputDecoration(
@@ -160,7 +165,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ],
                   const SizedBox(height: 18),
                   FilledButton(
-                    onPressed: _loading ? null : _submit,
+                    onPressed: _loading || !_canSubmit ? null : _submit,
                     child: _loading
                         ? const SizedBox(
                             width: 22,

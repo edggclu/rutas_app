@@ -1,5 +1,6 @@
 import 'package:telyser_app/domain/models/app_settings.dart';
 import 'package:telyser_app/domain/models/closing_models.dart';
+import 'package:telyser_app/domain/models/my_job_models.dart';
 import 'package:telyser_app/domain/models/product.dart';
 import 'package:telyser_app/domain/models/review_models.dart';
 
@@ -33,4 +34,9 @@ abstract class ReviewRepository {
   Future<void> validate(int jobId); // lo da por bueno
   Future<void> returnJob(int jobId, String note); // lo regresa con una nota
   Future<void> submitVerdict(int jobId, WarrantyCause cause); // dictamen de la causa de una garantía
+}
+
+/// Los trabajos que el técnico ya terminó y lo que el ingeniero decidió de ellos.
+abstract class MyJobsRepository {
+  Future<List<MyJob>> fetch();
 }

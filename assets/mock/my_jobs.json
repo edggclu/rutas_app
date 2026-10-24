@@ -1,0 +1,29 @@
+{
+  "jobs": [
+    {
+      "id": 21, "folio": "TEL-2610-021", "type": "installation",
+      "client": "Hotel Bahía", "place": "Hotel Bahía — lobby",
+      "closed_at": "2026-10-08T20:15:00Z",
+      "review_status": "returned",
+      "engineer": "Tono",
+      "reviewed_at": "2026-10-08T22:05:00Z",
+      "engineer_note": "Falta la foto del grabador grabando y el cable del pasillo no quedó etiquetado. Se programa otra visita."
+    },
+    {
+      "id": 24, "folio": "TEL-2610-024", "type": "corrective",
+      "client": "Restaurante El Faro", "place": "Restaurante El Faro",
+      "closed_at": "2026-10-09T17:30:00Z",
+      "review_status": "to_validate",
+      "engineer": null, "reviewed_at": null, "engineer_note": null
+    },
+    {
+      "id": 19, "folio": "TEL-2610-019", "type": "preventive",
+      "client": "Condominio Vista Mar", "place": "Condominio Vista Mar — caseta",
+      "closed_at": "2026-10-07T22:30:00Z",
+      "review_status": "validated",
+      "engineer": "Tono",
+      "reviewed_at": "2026-10-08T14:00:00Z",
+      "engineer_note": null
+    }
+  ]
+}

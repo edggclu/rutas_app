@@ -3,7 +3,7 @@
 Todas las rutas son JSON y llevan `Authorization: Bearer <token>` (menos `login`).
 Las horas viajan en **UTC (ISO 8601)**; la app las muestra en America/Mexico_City.
 Los nombres siguen el estilo en inglés del código actual del servidor.
-Los archivos de `assets/mock/` (`my_day.json`, `settings.json`, `review.json`, `products.json`) son ejemplos reales de este contrato.
+Los archivos de `assets/mock/` (`my_day.json`, `settings.json`, `review.json`, `my_jobs.json`, `products.json`) son ejemplos reales de este contrato.
 
 ## Errores generales (propuesta)
 
@@ -141,11 +141,9 @@ El estado que ve el técnico es la ruta del servidor más los eventos que aún n
 ## Otras rutas (de la sección 17 del documento de requisitos)
 `POST /api/visits/{id}/media` · `/extras` · `/requests` · `/authorizations` ·
 `GET /api/authorizations/{id}` · `GET /api/products/search?q=` · `GET /api/notifications` ·
-`PUT /api/jobs/{id}/plan` · `GET /api/review` ·
+`PUT /api/jobs/{id}/plan` · `GET /api/review` · `GET /api/my-jobs` ·
 `GET /api/dispatch/today|unassigned|decisions` · `POST /api/visits` · `PATCH /api/visits/{id}` ·
 `POST /api/devices`.
-
-**Pendiente (bloque 5c, Mis trabajos):** una ruta para que el técnico vea el estado de sus trabajos terminados (por validar, validado, regresado con la nota del ingeniero). Todavía no está definida.
 
 ### Datos (payload) de los eventos de extras
 
@@ -227,3 +225,22 @@ Un solo endpoint, tres formas:
 - `verdict` usa los mismos valores de `cause` que `warranty_documented`. El trabajo sigue en la lista, ya dictaminado.
 - `validated` sobre una garantía sin dictaminar responde 422.
 - Si el trabajo ya no está pendiente (alguien más lo resolvió), responde 409 y la app vuelve a pedir la lista.
+
+
+## Mis trabajos (técnico)
+
+### GET /api/my-jobs
+Trabajos que el técnico ya terminó y lo que el ingeniero decidió de cada uno. Solo lectura; necesita señal y **no pasa por la cola**. Cualquier usuario autenticado lo puede pedir (devuelve solo los suyos).
+```json
+{ "jobs": [{
+  "id": 21, "folio": "TEL-2610-021", "type": "installation",
+  "client": "Hotel Bahía", "place": "Hotel Bahía — lobby",
+  "closed_at": "2026-10-08T20:15:00Z",
+  "review_status": "returned",
+  "engineer": "Tono", "reviewed_at": "2026-10-08T22:05:00Z",
+  "engineer_note": "Falta la foto del grabador grabando…" } ] }
+```
+- `review_status`: `to_validate` · `validated` · `returned`. La app lee un valor desconocido como `to_validate`.
+- `engineer_note`: la nota que escribió el ingeniero al regresar el trabajo (`POST /api/jobs/{id}/review` con `returned`). Es `null` si el trabajo no fue regresado.
+- `engineer` y `reviewed_at` son `null` mientras el trabajo esté `to_validate`.
+- La app ordena la lista: regresados, por validar y validados; dentro de cada grupo, lo más reciente primero. El servidor puede mandarla en cualquier orden y debe limitarla a un periodo razonable (por ejemplo, los últimos 30 días).

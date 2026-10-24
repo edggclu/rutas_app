@@ -2,7 +2,7 @@
 
 App Android para técnicos e ingenieros de campo de Telyser (cámaras, alarmas, redes). Funciona completa con datos de prueba; la API real (Laravel) está pendiente.
 
-**Qué hace hoy:** login, Mi día, salida con lista de material, llegada, "No me abren", En sitio (fotos, extras, garantía), cierre (Terminé, Sigo otro día, No pude seguir), plan del trabajo con croquis y Por validar del ingeniero. Todo lo del técnico funciona sin señal y se manda en una cola.
+**Qué hace hoy:** login, Mi día, salida con lista de material, llegada, "No me abren", En sitio (fotos, extras, garantía), cierre (Terminé, Sigo otro día, No pude seguir), plan del trabajo con croquis, Mis trabajos (estado de lo que terminó) y Por validar del ingeniero. Todo lo del técnico funciona sin señal y se manda en una cola.
 
 ## Índice
 1. [Cómo arrancar](#cómo-arrancar)
@@ -24,8 +24,8 @@ App Android para técnicos e ingenieros de campo de Telyser (cámaras, alarmas, 
 Después de cambiar una tabla de Drift: `dart run build_runner build --delete-conflicting-outputs`.
 
 Usuarios de prueba:
-- `pedro` / `pedro123`: técnico. Pestañas Mi día y Avisos.
-- `tono` / `tono123`: técnico + ingeniero + coordina rutas. Pestañas Mi día, Rutas, Por validar y Avisos.
+- `pedro` / `pedro123`: técnico. Pestañas Mi día, Mis trabajos y Avisos.
+- `tono` / `tono123`: técnico + ingeniero + coordina rutas. Pestañas Mi día, Mis trabajos, Rutas, Por validar y Avisos.
 
 El contrato con el servidor está en `docs/contrato_api.md`.
 
@@ -442,6 +442,20 @@ flowchart TD
 | `providers/review_providers.dart` | `reviewListProvider`, `reviewJobProvider(id)`, `reviewActionsProvider` |
 | `features/review/` | Lista (F1), detalle (F2), nota al regresar (F2b), dictamen (F3) y `widgets/photo_strip.dart` |
 
+### Mis trabajos (técnico)
+
+El técnico ve los trabajos que ya terminó y qué decidió el ingeniero: **Por validar**, **Validado** o **Regresado**. En los regresados, la nota del ingeniero va en un recuadro rojo destacado. Es solo lectura y no pasa por la cola.
+
+| Archivo | Qué hace |
+|---|---|
+| `domain/models/my_job_models.dart` | `MyJob`, `MyJobStatus` (un valor desconocido cae en Por validar) y `sortMyJobs` (regresados, por validar, validados; lo más reciente primero) |
+| `data/repositories.dart` | Interfaz `MyJobsRepository` |
+| `data/mock/mock_repositories.dart` | `MockMyJobsRepository`: lee `assets/mock/my_jobs.json` |
+| `providers/my_jobs_providers.dart` | `myJobsProvider` (ya ordenado; se vuelve a pedir al cambiar de sesión o al jalar para actualizar) |
+| `features/my_jobs/my_jobs_screen.dart` | Lista con etiqueta de estado y la nota destacada |
+
+Los datos de prueba no cambian cuando el ingeniero valida o regresa en Por validar: son listas independientes hasta que exista la API.
+
 ## Cómo agregar cosas
 
 ### Un evento nuevo del técnico
@@ -484,12 +498,12 @@ Una pantalla que solo **compone** secciones; cada sección lee lo que necesita c
 | `no_answer_test`, `extras_test`, `closing_test`, `arrival_rules_test` | Las reglas puras de cada área |
 | `visit_actions_test`, `media_repository_test` | Las acciones y las fotos |
 | `review_test` | Por validar: modelos, reglas y acciones |
+| `my_jobs_test` | Mis trabajos: el mock, el estado desconocido y el orden |
 | `format_test` | Formato de números |
 | `architecture_test` | Las 5 reglas de dependencias por capa |
 
 ## Pendiente
 
-- **5c:** Mis trabajos del técnico (por validar, validado, regresado con la nota del ingeniero).
 - **5d:** Editar el plan (ingeniero).
 - **Paso 6:** Jefe de ruta (Rutas).
 - **Paso 7:** "Llegué" automático por geocerca y notificaciones push (Firebase).

@@ -47,3 +47,6 @@ final locationServiceProvider = Provider<LocationService>( // el GPS
     
 final reviewRepositoryProvider = // trabajos por validar
     Provider<ReviewRepository>((ref) => MockReviewRepository()); // hoy, el de prueba
+
+final myJobsRepositoryProvider = // mis trabajos terminados
+    Provider<MyJobsRepository>((ref) => MockMyJobsRepository()); // hoy, el de prueba

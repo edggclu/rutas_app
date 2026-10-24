@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:telyser_app/domain/models/app_settings.dart';
 import 'package:telyser_app/domain/models/closing_models.dart';
+import 'package:telyser_app/domain/models/my_job_models.dart';
 import 'package:telyser_app/domain/models/payload.dart';
 import 'package:telyser_app/domain/models/product.dart';
 import 'package:telyser_app/domain/models/review_models.dart';
@@ -117,5 +118,16 @@ class MockReviewRepository implements ReviewRepository {
     final jobs = await _load();
     final i = jobs.indexWhere((j) => j.id == jobId);
     if (i >= 0) jobs[i] = jobs[i].withVerdict(cause); // el trabajo sigue en la lista, ya dictaminado
+  }
+}
+
+
+/// Mis trabajos de prueba: lee assets/mock/my_jobs.json.
+class MockMyJobsRepository implements MyJobsRepository {
+  @override
+  Future<List<MyJob>> fetch() async {
+    await Future<void>.delayed(const Duration(milliseconds: 300)); // simula la red
+    final data = await _loadJson('assets/mock/my_jobs.json');
+    return [for (final m in readMaps(data, 'jobs')) MyJob.fromJson(m)];
   }
 }

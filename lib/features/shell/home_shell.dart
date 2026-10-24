@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:telyser_app/features/my_jobs/my_jobs_screen.dart';
 import 'package:telyser_app/features/review/review_list_screen.dart';
 import 'package:telyser_app/providers/session_provider.dart';
 
@@ -9,7 +10,7 @@ import '../my_day/my_day_screen.dart';
 import 'app_tab_bar.dart';
 
 /// Una sola app: las pestañas dependen del rol y los permisos.
-///  - Técnico: Mi día · Avisos
+///  - Técnico: Mi día · Mis trabajos · Avisos
 ///  - + Ingeniero: agrega Por validar
 ///  - + Coordina rutas (jefe de ruta): agrega Rutas
 class HomeShell extends ConsumerStatefulWidget {
@@ -28,6 +29,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
 
     final tabs = <({AppTabItem item, Widget page})>[
       (item: const AppTabItem('Mi día'), page: const MyDayScreen()),
+      (item: const AppTabItem('Mis trabajos'), page: const MyJobsScreen()),
       if (user.isDispatcher)
         (
           item: const AppTabItem('Rutas'),

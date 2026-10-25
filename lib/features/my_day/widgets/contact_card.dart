@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart'; // widgets básicos
+import 'package:flutter/material.dart';
 import 'package:telyser_app/domain/models/models.dart';
 
-import '../../../core/contact_launcher.dart'; // callPhone y openWhatsApp
-import '../../../core/theme/app_colors.dart'; // colores
-import '../../../core/widgets/app_card.dart'; // la tarjeta compartida
-import '../../../core/widgets/toast.dart'; // avisos cortos
+import '../../../core/contact_launcher.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/toast.dart';
 
 /// Contacto del lugar, con botones para llamar y mandar WhatsApp.
 /// (Pendiente: que cada toque quede en la bitácora, como pide el documento.)

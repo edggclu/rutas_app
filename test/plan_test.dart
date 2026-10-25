@@ -1,9 +1,9 @@
-import 'package:flutter_test/flutter_test.dart'; // herramientas de prueba
-import 'package:telyser_app/application/plan_actions.dart'; // lo que se prueba
-import 'package:telyser_app/data/repositories.dart'; // PlanRepository
-import 'package:telyser_app/domain/models/enums.dart'; // ChecklistKind
-import 'package:telyser_app/domain/models/models.dart'; // Plan
-import 'package:telyser_app/domain/plan_rules.dart'; // las reglas
+import 'package:flutter_test/flutter_test.dart';
+import 'package:telyser_app/application/plan_actions.dart';
+import 'package:telyser_app/data/repositories.dart';
+import 'package:telyser_app/domain/models/enums.dart';
+import 'package:telyser_app/domain/models/models.dart';
+import 'package:telyser_app/domain/plan_rules.dart';
 
 /// Repositorio falso: guarda lo último que recibió.
 class _FakeRepo implements PlanRepository {

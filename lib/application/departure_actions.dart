@@ -1,10 +1,10 @@
 import 'package:telyser_app/domain/models/event_models.dart';
 
-import '../domain/models/enums.dart'; // VisitStatus
-import '../domain/events/event_data.dart'; // los eventos
-import '../domain/models/models.dart'; // Visit y ChecklistItem
-import 'action_receipt.dart'; // el comprobante
-import 'outbox_writer.dart'; // el ayudante que escribe en la cola
+import '../domain/models/enums.dart';
+import '../domain/events/event_data.dart';
+import '../domain/models/models.dart';
+import 'action_receipt.dart';
+import 'outbox_writer.dart';
 
 /// Acciones de la Salida (inicio del día).
 class DepartureActions { // una clase por área

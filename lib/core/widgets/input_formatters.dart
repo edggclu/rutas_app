@@ -1,4 +1,4 @@
-import 'package:flutter/services.dart'; // TextInputFormatter
+import 'package:flutter/services.dart';
 
 /// Filtros para los campos de texto. El tipo de teclado solo sugiere qué mostrar:
 /// no impide pegar letras ni escribir con un teclado externo, estos filtros sí.

@@ -1,4 +1,4 @@
-import 'payload.dart'; // lectores y lookup
+import 'payload.dart';
 
 /// De dónde salió el material del extra.
 enum ExtraSource { // opciones del formulario

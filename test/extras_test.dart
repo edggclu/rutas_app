@@ -1,8 +1,8 @@
-import 'package:flutter_test/flutter_test.dart'; // herramientas de prueba
-import 'package:telyser_app/domain/events/event_types.dart'; // nombres de eventos
+import 'package:flutter_test/flutter_test.dart';
+import 'package:telyser_app/domain/events/event_types.dart';
 import 'package:telyser_app/domain/format.dart';
-import 'package:telyser_app/domain/rules/extras.dart'; // lo que se prueba
-import 'package:telyser_app/domain/rules/visit_state.dart'; // VisitEvent
+import 'package:telyser_app/domain/rules/extras.dart';
+import 'package:telyser_app/domain/rules/visit_state.dart';
 
 void main() {
   final t0 = DateTime.utc(2026, 10, 6, 14, 20); // hora fija de prueba

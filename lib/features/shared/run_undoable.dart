@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart'; // widgets básicos
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // WidgetRef: acceso a los providers
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/providers/actions_provider.dart';
 
-import '../../application/visit_actions.dart'; // las acciones del técnico
-import '../../core/widgets/undo_bar.dart'; // la barra de "Deshacer"
+import '../../application/visit_actions.dart';
+import '../../core/widgets/undo_bar.dart';
 
 /// Qué hacer con la pantalla después de guardar.
 enum AfterSave { // las tres opciones que usan las pantallas

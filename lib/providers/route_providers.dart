@@ -1,13 +1,13 @@
-import 'dart:convert'; // jsonDecode: para leer los datos extra de cada acción
+import 'dart:convert';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // los distintos tipos de provider
-import 'package:intl/intl.dart'; // DateFormat: da formato a la fecha
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
-import '../domain/models/models.dart'; // DayRoute y Visit
+import '../domain/models/models.dart';
 import '../domain/models/media_item.dart';
-import '../domain/rules/visit_state.dart'; // VisitEvent y applyEvents
-import 'infra_providers.dart'; // repositorios y almacenes
-import 'session_provider.dart'; // sessionProvider
+import '../domain/rules/visit_state.dart';
+import 'infra_providers.dart';
+import 'session_provider.dart';
 
 /// Ruta tal como la tiene el servidor. Con señal: descarga y guarda en el
 /// teléfono. Sin señal: lee lo último guardado.

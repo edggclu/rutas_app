@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/providers/infra_providers.dart';
 import '../../core/widgets/choice_group.dart';
-import '../../core/widgets/input_formatters.dart'; // filtros de los campos
+import '../../core/widgets/input_formatters.dart';
 import 'package:intl/intl.dart';
 import 'package:telyser_app/core/theme/app_colors.dart';
 import 'package:telyser_app/core/widgets/alert_box.dart';

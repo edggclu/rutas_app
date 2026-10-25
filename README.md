@@ -79,6 +79,7 @@ core/         widgets y utilidades genéricas, sin reglas del negocio
 | Un campo donde se escribe un número o texto corto | `inputFormatters: decimalInput` (cantidades), `integerInput` (minutos, piezas) o `shortText(max)`. `keyboardType` solo cambia el teclado: no impide pegar letras |
 | Abrir mapa, llamar o WhatsApp | `openMap(...)`, `callPhone(...)`, `openWhatsApp(...)` |
 | Mostrar una imagen de asset o URL | `AppImage(src: ...)` |
+| Mostrar las fotos o videos tomados por el técnico, con ver y borrar | `MediaStrip(items: ...)` (en `features/media/`) |
 | Una pantalla larga | Una pantalla que solo **compone** secciones en `widgets/`; cada sección lee lo que necesita con `ref.watch` |
 
 ## Base de datos local (Drift / SQLite)
@@ -362,6 +363,24 @@ La espera es `wait_base_min + wait_per_km_min × km`, redondeada hacia arriba al
 
 Las fotos y videos se guardan con `MediaRepository` (`addPhoto`, `addVideo`, `watchForVisit`, `clearAll`). Devuelve `MediaItem` con un `MediaKind`, para que las pantallas no conozcan Drift. `features/site/capture_photo.dart` abre la cámara.
 
+#### Ver y borrar fotos y videos
+
+Las fotos y videos que el técnico toma se ven como miniaturas en una tira (`MediaStrip`): en En sitio (fotos de avance), en Garantía (falla y etiqueta), en No pude seguir (daño), en Solicitud para después (las de esa solicitud) y en Sigo otro día (video del cableado). Tocar una miniatura abre el visor a pantalla completa: se desliza entre archivos, las fotos se acercan con dos dedos y el video se reproduce (toca para pausar). La X de la esquina o el botón "Borrar" del visor la quitan, previa confirmación.
+
+| Regla | Dónde |
+|---|---|
+| Solo se borra lo que todavía no se subió (reloj ámbar). Lo ya enviado (nube verde) no tiene X ni botón, porque no hay ruta en el servidor para quitarlo | `canDeleteMedia` en `domain/media_rules.dart` y `MediaActions.delete` |
+| Borrar quita la fila de `media_queue` y el archivo. Si el archivo ya no existe, igual quita la fila | `MediaRepository.delete` |
+
+| Archivo | Qué hace |
+|---|---|
+| `features/media/media_strip.dart` | La tira de miniaturas con su X |
+| `features/media/media_viewer_screen.dart` | El visor de fotos y videos (usa `video_player`) |
+| `features/media/confirm_delete.dart` | La pregunta "¿Borrar esta foto?" |
+| `application/media_actions.dart` | `MediaActions.delete`, expuesta como `mediaActionsProvider` |
+
+`capturePhoto` y `captureVideo` devuelven el id del archivo (o null si el técnico canceló).
+
 ### Extras y solicitudes para después
 
 ```mermaid
@@ -546,7 +565,7 @@ Una pantalla que solo **compone** secciones; cada sección lee lo que necesita c
 | `settings_store_test`, `route_store_test` | Guardado local de parámetros y de la ruta |
 | `visit_state_test`, `events_test` | `applyEvents` y los eventos tipados (un ejemplo por tipo) |
 | `no_answer_test`, `extras_test`, `closing_test`, `arrival_rules_test` | Las reglas puras de cada área |
-| `visit_actions_test`, `media_repository_test` | Las acciones y las fotos |
+| `visit_actions_test`, `media_repository_test`, `media_actions_test` | Las acciones, y guardar y borrar fotos y videos |
 | `review_test` | Por validar: modelos, reglas y acciones |
 | `my_jobs_test` | Mis trabajos: el mock, el estado desconocido y el orden |
 | `plan_test` | Editar el plan: reglas, ida y vuelta del JSON y la acción de guardar |

@@ -1,6 +1,6 @@
-import 'dart:io'; // Directory y File: para leer el código fuente
+import 'dart:io';
 
-import 'package:flutter_test/flutter_test.dart'; // herramientas de prueba
+import 'package:flutter_test/flutter_test.dart';
 
 /// Lee cada archivo .dart de una carpeta y devuelve qué importa (archivo -> lista de imports).
 Map<String, List<String>> importsOf(String dir) { // dir = carpeta a revisar

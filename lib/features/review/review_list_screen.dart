@@ -1,15 +1,15 @@
-import 'package:flutter/material.dart'; // widgets básicos
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerWidget
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/providers/review_providers.dart';
 
-import '../../core/theme/app_colors.dart'; // colores
-import '../../core/time/time_utils.dart'; // formatClock
-import '../../core/widgets/app_card.dart'; // la tarjeta compartida
-import '../../core/widgets/app_header.dart'; // encabezado navy
-import '../../core/widgets/tag_chip.dart'; // etiquetas
-import '../../domain/models/review_models.dart'; // ReviewJob
-import '../my_day/visit_tags.dart'; // jobTypeChip
-import 'review_detail_screen.dart'; // el detalle
+import '../../core/theme/app_colors.dart';
+import '../../core/time/time_utils.dart';
+import '../../core/widgets/app_card.dart';
+import '../../core/widgets/app_header.dart';
+import '../../core/widgets/tag_chip.dart';
+import '../../domain/models/review_models.dart';
+import '../my_day/visit_tags.dart';
+import 'review_detail_screen.dart';
 
 /// F1 · Por validar: trabajos terminados que el ingeniero debe revisar.
 class ReviewListScreen extends ConsumerWidget {

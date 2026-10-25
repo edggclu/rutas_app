@@ -1,8 +1,8 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // Notifier y NotifierProvider
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../domain/models/models.dart'; // Session
-import '../domain/session_errors.dart'; // WrongAccountException
-import 'infra_providers.dart'; // authRepositoryProvider
+import '../domain/models/models.dart';
+import '../domain/session_errors.dart';
+import 'infra_providers.dart';
 
 /// Guarda la sesión actual (null = nadie ha iniciado sesión).
 class SessionNotifier extends Notifier<Session?> { // un Notifier guarda un valor que cambia

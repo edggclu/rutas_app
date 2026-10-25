@@ -1,20 +1,21 @@
-import 'package:flutter/material.dart'; // widgets básicos
-import '../../core/widgets/input_formatters.dart'; // filtros de los campos
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
+import 'package:flutter/material.dart';
+import '../../core/widgets/input_formatters.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/core/widgets/toast.dart';
 import 'package:telyser_app/domain/models/media_item.dart';
 import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 import 'package:telyser_app/providers/settings_provider.dart';
 
-import '../../core/contact_launcher.dart'; // callPhone
-import '../../core/theme/app_colors.dart'; // colores
-import '../../core/widgets/alert_box.dart'; // caja de aviso
-import '../../core/widgets/app_header.dart'; // encabezado navy
-import '../../core/widgets/choice_group.dart'; // grupo de chips
-import '../../domain/rules/closing.dart'; // WarrantyCause, canSaveWarranty
-import '../../domain/models/models.dart'; // Visit
-import 'capture_photo.dart'; // capturePhoto
+import '../../core/contact_launcher.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/widgets/alert_box.dart';
+import '../../core/widgets/app_header.dart';
+import '../../core/widgets/choice_group.dart';
+import '../../domain/rules/closing.dart';
+import '../../domain/models/models.dart';
+import 'capture_photo.dart';
+import '../media/media_strip.dart';
 
 /// G1 · Bloque de garantía (provisional: el ingeniero debe definir más campos).
 class WarrantyScreen extends ConsumerStatefulWidget { // widget con estado
@@ -145,6 +146,10 @@ class _WarrantyScreenState extends ConsumerState<WarrantyScreen> { // el estado 
                   icon: const Icon(Icons.photo_camera), // ícono
                   label: Text('Foto de la falla ($failure)'), // texto con contador
                 ),
+                if (failure > 0) ...[ // las fotos de la falla: se pueden abrir y borrar
+                  const SizedBox(height: 8),
+                  MediaStrip(items: [for (final m in media) if (m.kind == MediaKind.warranty) m]),
+                ],
                 const SizedBox(height: 16), // espacio vertical
                 TextField( // número de serie escrito
                   controller: _serialCtrl, // su controlador
@@ -158,6 +163,10 @@ class _WarrantyScreenState extends ConsumerState<WarrantyScreen> { // el estado 
                   icon: const Icon(Icons.qr_code_2), // ícono
                   label: Text('O foto de la etiqueta ($label)'), // texto con contador
                 ),
+                if (label > 0) ...[ // las fotos de la etiqueta
+                  const SizedBox(height: 8),
+                  MediaStrip(items: [for (final m in media) if (m.kind == MediaKind.warrantySerial) m]),
+                ],
               ],
             ),
           ),

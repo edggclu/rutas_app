@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
-import '../../core/widgets/input_formatters.dart'; // filtros de los campos
+import '../../core/widgets/input_formatters.dart';
 import 'package:telyser_app/core/widgets/alert_box.dart';
 import 'package:telyser_app/core/widgets/app_header.dart';
 import 'package:telyser_app/core/widgets/toast.dart';
@@ -8,6 +8,8 @@ import 'package:telyser_app/domain/models/media_item.dart';
 import 'package:telyser_app/domain/models/models.dart';
 import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/features/site/capture_photo.dart';
+import 'package:telyser_app/features/media/media_strip.dart';
+import 'package:telyser_app/providers/route_providers.dart';
 
 /// E4 · Solicitud para después: algo que el cliente pidió y no se puede hacer hoy.
 class AddRequestScreen extends ConsumerStatefulWidget { // widget con estado
@@ -22,7 +24,7 @@ class AddRequestScreen extends ConsumerStatefulWidget { // widget con estado
 class _AddRequestScreenState extends ConsumerState<AddRequestScreen> { // el estado del formulario
   final _descCtrl = TextEditingController(); // controla la descripción
   final _whoCtrl = TextEditingController(); // controla "quién lo pidió"
-  int _photos = 0; // cuántas fotos se tomaron en esta pantalla
+  final List<String> _photoIds = []; // las fotos que se tomaron en esta pantalla (no las de otras solicitudes)
   bool _saving = false; // true mientras se guarda
 
   @override
@@ -35,9 +37,9 @@ class _AddRequestScreenState extends ConsumerState<AddRequestScreen> { // el est
   Future<void> _photo() async { // se ejecuta al tocar "Agregar foto"
     final messenger = ScaffoldMessenger.of(context); // se guarda antes del await
     try { // si algo falla, se avisa
-      final ok = await capturePhoto( // abre la cámara
+      final id = await capturePhoto( // abre la cámara
           ref, visitId: widget.visit.id, kind: MediaKind.request); // la foto queda marcada como de solicitud
-      if (ok && mounted) setState(() => _photos++); // si guardó, suma al contador
+      if (id != null && mounted) setState(() => _photoIds.add(id)); // si guardó, la recuerda
     } catch (_) { // la cámara falló
       messenger.toast('No se pudo guardar la foto.');
     }
@@ -64,6 +66,8 @@ class _AddRequestScreenState extends ConsumerState<AddRequestScreen> { // el est
   @override
   Widget build(BuildContext context) { // dibuja el formulario
     final bottom = MediaQuery.of(context).padding.bottom; // alto de la barra de gestos
+    final media = ref.watch(mediaForVisitProvider(widget.visit.id)).value ?? const <MediaItem>[]; // archivos de la visita
+    final mine = [for (final m in media) if (_photoIds.contains(m.id)) m]; // solo los de esta solicitud
     return Scaffold( // estructura de la pantalla
       body: Column( // elementos uno debajo de otro
         children: [
@@ -100,8 +104,12 @@ class _AddRequestScreenState extends ConsumerState<AddRequestScreen> { // el est
                 OutlinedButton.icon( // botón de foto
                   onPressed: _photo, // abre la cámara
                   icon: const Icon(Icons.photo_camera), // ícono
-                  label: Text(_photos == 0 ? 'Agregar foto' : 'Agregar otra foto ($_photos)'), // texto con contador
+                  label: Text(mine.isEmpty ? 'Agregar foto' : 'Agregar otra foto (${mine.length})'), // texto con contador
                 ),
+                if (mine.isNotEmpty) ...[ // las fotos de esta solicitud: se pueden abrir y borrar
+                  const SizedBox(height: 10),
+                  MediaStrip(items: mine),
+                ],
               ],
             ),
           ),

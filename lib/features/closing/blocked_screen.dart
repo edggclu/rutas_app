@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart'; // widgets básicos
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/core/widgets/toast.dart';
 import 'package:telyser_app/domain/models/media_item.dart';
 import 'package:telyser_app/features/shared/run_undoable.dart';
@@ -7,14 +7,15 @@ import 'package:telyser_app/providers/actions_provider.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 import 'package:telyser_app/providers/settings_provider.dart';
 
-import '../../core/contact_launcher.dart'; // callPhone, openWhatsApp
-import '../../core/theme/app_colors.dart'; // colores
-import '../../core/widgets/alert_box.dart'; // caja de aviso
-import '../../core/widgets/app_header.dart'; // encabezado navy
-import '../../core/widgets/choice_group.dart'; // grupo de chips
-import '../../domain/rules/closing.dart'; // BlockReason, IncidentKind, canSendBlocked
-import '../../domain/models/models.dart'; // Visit
-import '../site/capture_photo.dart'; // capturePhoto
+import '../../core/contact_launcher.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/widgets/alert_box.dart';
+import '../../core/widgets/app_header.dart';
+import '../../core/widgets/choice_group.dart';
+import '../../domain/rules/closing.dart';
+import '../../domain/models/models.dart';
+import '../site/capture_photo.dart';
+import '../media/media_strip.dart';
 
 const _emergencyNumber = '911'; // número de emergencias en México (no es un parámetro de la empresa)
 
@@ -40,14 +41,17 @@ class _BlockedScreenState extends ConsumerState<BlockedScreen> { // el estado de
     super.dispose(); // termina de limpiar
   }
 
+  final List<String> _photoIds = []; // fotos tomadas en esta pantalla (las de daño se muestran siempre)
+
   Future<void> _photo() async { // toma una foto
     final messenger = ScaffoldMessenger.of(context); // se guarda antes del await
     try { // si algo falla, se avisa
-      await capturePhoto( // abre la cámara y guarda
+      final id = await capturePhoto( // abre la cámara y guarda
         ref,
         visitId: widget.visit.id, // visita
         kind: _reason == BlockReason.incident ? MediaKind.damage : MediaKind.progress, // los incidentes se marcan como daño
       );
+      if (id != null && mounted) setState(() => _photoIds.add(id)); // la recuerda para mostrarla aquí
     } catch (_) { // la cámara falló
       messenger.toast('No se pudo guardar la foto');
     }
@@ -101,6 +105,7 @@ class _BlockedScreenState extends ConsumerState<BlockedScreen> { // el estado de
   Widget build(BuildContext context) { // dibuja la pantalla
     final media = ref.watch(mediaForVisitProvider(widget.visit.id)).value ?? const <MediaItem>[]; // archivos de la visita
     final damagePhotos = media.where((m) => m.kind == MediaKind.damage).length; // fotos del daño
+    final shown = [for (final m in media) if (m.kind == MediaKind.damage || _photoIds.contains(m.id)) m]; // las que se muestran en la tira
     final canSend = canSendBlocked( // ¿ya se puede enviar?
       reason: _reason, // motivo
       incidentKind: _kind, // subtipo
@@ -199,6 +204,10 @@ class _BlockedScreenState extends ConsumerState<BlockedScreen> { // el estado de
                       ? 'Agregar foto ($damagePhotos)' // en incidentes se cuenta
                       : 'Agregar foto (opcional)'), // en los demás es opcional
                 ),
+                if (shown.isNotEmpty) ...[ // las fotos de esta pantalla: se pueden abrir y borrar
+                  const SizedBox(height: 10),
+                  MediaStrip(items: shown),
+                ],
               ],
             ),
           ),

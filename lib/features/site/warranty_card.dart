@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart'; // widgets básicos
+import 'package:flutter/material.dart';
 
-import '../../core/theme/app_colors.dart'; // colores
+import '../../core/theme/app_colors.dart';
 
 /// Tarjeta de En sitio que muestra si la garantía ya se documentó.
 class WarrantyCard extends StatelessWidget { // widget sin estado propio

@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart'; // widgets básicos
+import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart'; // colores
-import '../../../core/widgets/app_image.dart'; // la imagen del croquis
-import '../../../domain/models/models.dart'; // Sketch y SketchPin
-import 'sketch_view.dart'; // PinDot y kPinSize
+import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/app_image.dart';
+import '../../../domain/models/models.dart';
+import 'sketch_view.dart';
 
 /// El croquis en modo edición: tocar un lugar vacío agrega un pin, tocar un pin lo elige
 /// y arrastrarlo lo mueve. No guarda nada: avisa con los callbacks.

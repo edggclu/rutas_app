@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart'; // widgets básicos
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/providers/review_providers.dart';
 
-import '../../core/theme/app_colors.dart'; // colores
-import '../../core/widgets/app_header.dart'; // encabezado navy
-import '../../core/widgets/choice_group.dart'; // grupo de chips
-import '../../core/widgets/toast.dart'; // avisos cortos
-import '../../domain/models/closing_models.dart'; // WarrantyCause
-import 'widgets/photo_strip.dart'; // las fotos
+import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_header.dart';
+import '../../core/widgets/choice_group.dart';
+import '../../core/widgets/toast.dart';
+import '../../domain/models/closing_models.dart';
+import 'widgets/photo_strip.dart';
 
 /// F3 · Dictamen de causa: el ingeniero revisa las fotos y fija la causa.
 class VerdictScreen extends ConsumerStatefulWidget {

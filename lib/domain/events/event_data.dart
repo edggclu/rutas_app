@@ -1,9 +1,9 @@
 import 'package:telyser_app/domain/models/event_models.dart';
 
-import 'event_types.dart'; // los nombres de los eventos, escritos en un solo lugar
-import '../models/closing_models.dart'; // WarrantyCause, BlockReason, IncidentKind, MaterialUsed
-import '../models/extra_models.dart'; // ExtraItem, RequestOrigin
-import '../models/payload.dart'; // lectores de datos
+import 'event_types.dart';
+import '../models/closing_models.dart';
+import '../models/extra_models.dart';
+import '../models/payload.dart';
 
 /// Los datos de un evento de la cola. Hay una clase por tipo de evento.
 /// `sealed` = todas las clases están en este archivo, así el compilador sabe

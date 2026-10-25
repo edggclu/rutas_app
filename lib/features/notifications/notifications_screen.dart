@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart'; // widgets básicos
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerWidget
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/app_colors.dart'; // colores
-import '../../core/time/time_utils.dart'; // formatRelativeDay
-import '../../core/widgets/app_card.dart'; // la tarjeta compartida
-import '../../core/widgets/app_header.dart'; // encabezado navy
-import '../../domain/models/notification_models.dart'; // AppNotification
-import '../../providers/notifications_providers.dart'; // notificationsProvider
+import '../../core/theme/app_colors.dart';
+import '../../core/time/time_utils.dart';
+import '../../core/widgets/app_card.dart';
+import '../../core/widgets/app_header.dart';
+import '../../domain/models/notification_models.dart';
+import '../../providers/notifications_providers.dart';
 
 /// Avisos: lo que el servidor le dice al usuario (cambios de ruta, trabajos regresados o
 /// validados, planes nuevos). Tocar un aviso lo marca como leído.

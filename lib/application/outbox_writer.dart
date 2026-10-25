@@ -1,7 +1,7 @@
 import 'package:telyser_app/domain/events/event_data.dart';
 
-import '../data/local/outbox_repository.dart'; // la cola
-import 'action_receipt.dart'; // el comprobante
+import '../data/local/outbox_repository.dart';
+import 'action_receipt.dart';
 
 /// Un evento por guardar: lo que una acción del técnico quiere escribir en la cola.
 class PendingEvent { // solo agrupa los datos de un evento

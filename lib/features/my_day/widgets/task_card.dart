@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart'; // widgets básicos
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerWidget
-import 'package:telyser_app/providers/session_provider.dart'; // sessionProvider
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:telyser_app/providers/session_provider.dart';
 
-import '../../../core/theme/app_colors.dart'; // colores
-import '../../../core/widgets/app_card.dart'; // la tarjeta compartida
-import '../../../domain/models/models.dart'; // Job
-import '../../plan/plan_screen.dart'; // la pantalla del plan
+import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/app_card.dart';
+import '../../../domain/models/models.dart';
+import '../../plan/plan_screen.dart';
 
 /// "Qué hay que hacer": descripción del trabajo y resumen del plan.
 class TaskCard extends ConsumerWidget { // lee la sesión para saber si es ingeniero

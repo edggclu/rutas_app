@@ -1,10 +1,10 @@
 import 'package:telyser_app/domain/format.dart';
 
-import '../domain/events/event_data.dart'; // los eventos
-import '../domain/rules/extras.dart'; // ExtraDraft, ExtraItem, ExtraOutcome, RequestOrigin, decideExtra, quantityText
-import '../domain/models/models.dart'; // Visit
-import 'action_receipt.dart'; // el comprobante
-import 'outbox_writer.dart'; // el ayudante que escribe en la cola
+import '../domain/events/event_data.dart';
+import '../domain/rules/extras.dart';
+import '../domain/models/models.dart';
+import 'action_receipt.dart';
+import 'outbox_writer.dart';
 
 /// Resultado de guardar un extra: qué decidió la app y el comprobante para deshacer.
 class ExtraResult { // lo que devuelve addExtra

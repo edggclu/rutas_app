@@ -1,4 +1,4 @@
-import 'models/models.dart'; // Plan
+import 'models/models.dart';
 
 /// Un plan se puede guardar si ningún renglón ni pin está vacío y todo renglón trae una cantidad positiva.
 bool canSavePlan(Plan plan) {

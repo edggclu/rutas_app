@@ -1,16 +1,16 @@
-import 'package:flutter/material.dart'; // widgets básicos
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerWidget
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/domain/models/enums.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 
-import '../../core/widgets/alert_box.dart'; // caja de aviso
-import '../../core/widgets/app_header.dart'; // encabezado navy
-import '../my_day/visit_tags.dart'; // etiquetas (tipo, urgente, estado)
-import 'widgets/close_bar.dart'; // barra de cierre
-import 'widgets/extras_section.dart'; // extras y solicitudes
-import 'widgets/photos_section.dart'; // fotos
-import 'widgets/site_info.dart'; // aviso de "No me abren" y hora de llegada
-import 'widgets/warranty_section.dart'; // tarjeta de garantía
+import '../../core/widgets/alert_box.dart';
+import '../../core/widgets/app_header.dart';
+import '../my_day/visit_tags.dart';
+import 'widgets/close_bar.dart';
+import 'widgets/extras_section.dart';
+import 'widgets/photos_section.dart';
+import 'widgets/site_info.dart';
+import 'widgets/warranty_section.dart';
 
 /// C5 · En sitio: pantalla de trabajo durante la visita.
 /// Solo compone las secciones; cada una lee lo que necesita y se redibuja sola.

@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart'; // widgets básicos
-import '../../core/widgets/input_formatters.dart'; // filtros de los campos
+import 'package:flutter/material.dart';
+import '../../core/widgets/input_formatters.dart';
 
-import '../../core/theme/app_colors.dart'; // colores
-import '../../domain/rules/extras.dart'; // ExtraEntry
+import '../../core/theme/app_colors.dart';
+import '../../domain/rules/extras.dart';
 
 /// Quién confirmó los extras.
 class FinishConfirmation { // datos de la confirmación

@@ -1,13 +1,13 @@
-import 'dart:convert'; // json.decode para leer el JSON de prueba
-import 'dart:io'; // File para leer el archivo de prueba
+import 'dart:convert';
+import 'dart:io';
 
-import 'package:flutter_test/flutter_test.dart'; // herramientas de prueba
-import 'package:telyser_app/application/review_actions.dart'; // lo que se prueba
-import 'package:telyser_app/data/repositories.dart'; // ReviewRepository
-import 'package:telyser_app/domain/models/closing_models.dart'; // WarrantyCause
-import 'package:telyser_app/domain/models/payload.dart'; // readMaps
-import 'package:telyser_app/domain/models/review_models.dart'; // ReviewJob
-import 'package:telyser_app/domain/review_rules.dart'; // las reglas
+import 'package:flutter_test/flutter_test.dart';
+import 'package:telyser_app/application/review_actions.dart';
+import 'package:telyser_app/data/repositories.dart';
+import 'package:telyser_app/domain/models/closing_models.dart';
+import 'package:telyser_app/domain/models/payload.dart';
+import 'package:telyser_app/domain/models/review_models.dart';
+import 'package:telyser_app/domain/review_rules.dart';
 
 /// Repositorio falso: solo anota qué se le pidió.
 class _FakeRepo implements ReviewRepository {

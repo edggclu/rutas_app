@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart'; // widgets básicos
+import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart'; // colores
+import '../theme/app_colors.dart';
 
 /// Un grupo de opciones tipo chip: una sola elegida a la vez.
 class ChoiceGroup<T> extends StatelessWidget { // T = tipo del valor (enum o bool)

@@ -1,9 +1,9 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // los distintos tipos de provider
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../application/review_actions.dart'; // las acciones del ingeniero
-import '../domain/models/review_models.dart'; // ReviewJob
-import 'infra_providers.dart'; // reviewRepositoryProvider
-import 'session_provider.dart'; // sessionProvider
+import '../application/review_actions.dart';
+import '../domain/models/review_models.dart';
+import 'infra_providers.dart';
+import 'session_provider.dart';
 
 
 /// Trabajos por validar. Se vuelve a pedir al cambiar de sesión o tras una acción.

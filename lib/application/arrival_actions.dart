@@ -1,9 +1,9 @@
 import 'package:telyser_app/domain/models/event_models.dart';
 
-import '../data/location_service.dart'; // para leer la ubicación
-import '../domain/events/event_data.dart'; // ArrivedEvent
-import 'action_receipt.dart'; // el comprobante
-import 'outbox_writer.dart'; // el ayudante que escribe en la cola
+import '../data/location_service.dart';
+import '../domain/events/event_data.dart';
+import 'action_receipt.dart';
+import 'outbox_writer.dart';
 
 /// Acciones de la llegada.
 class ArrivalActions { // una clase por área

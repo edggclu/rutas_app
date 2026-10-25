@@ -1,6 +1,6 @@
-import 'package:flutter/services.dart'; // TextEditingValue
-import 'package:flutter_test/flutter_test.dart'; // herramientas de prueba
-import 'package:telyser_app/core/widgets/input_formatters.dart'; // lo que se prueba
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:telyser_app/core/widgets/input_formatters.dart';
 
 /// Lo que queda en el campo después de pegar [text] en un campo vacío.
 String _paste(List<TextInputFormatter> formatters, String text) {

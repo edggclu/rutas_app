@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart'; // widgets básicos
+import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart'; // colores
+import '../theme/app_colors.dart';
 
 /// La caja blanca con borde y esquinas redondeadas que usan casi todas las pantallas.
 class AppCard extends StatelessWidget { // widget sin estado propio

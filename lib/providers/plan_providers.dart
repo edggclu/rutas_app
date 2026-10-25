@@ -1,9 +1,9 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // Provider
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../application/plan_actions.dart'; // las acciones del ingeniero
-import '../domain/models/models.dart'; // Plan
-import 'infra_providers.dart'; // planRepositoryProvider
-import 'route_providers.dart'; // myDayBaseProvider, myDayProvider
+import '../application/plan_actions.dart';
+import '../domain/models/models.dart';
+import 'infra_providers.dart';
+import 'route_providers.dart';
 
 /// Acciones sobre el plan. Tras guardar, la ruta se vuelve a pedir.
 final planActionsProvider = Provider<PlanActions>((ref) => PlanActions(

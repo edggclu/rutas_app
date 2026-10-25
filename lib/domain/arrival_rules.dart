@@ -1,5 +1,5 @@
-import 'models/enums.dart'; // VisitStatus
-import 'models/models.dart'; // Visit
+import 'models/enums.dart';
+import 'models/models.dart';
 
 /// Por qué NO se puede marcar Llegué en una visita.
 enum ArrivalBlock { // los dos motivos

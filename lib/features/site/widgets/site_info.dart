@@ -1,14 +1,14 @@
-import 'package:flutter/material.dart'; // widgets básicos
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerWidget
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/domain/models/models.dart';
 import 'package:telyser_app/domain/rules/visit_state.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 
-import '../../../core/theme/app_colors.dart'; // colores
-import '../../../core/time/time_utils.dart'; // formatClock
-import '../../../core/widgets/alert_box.dart'; // caja de aviso
-import '../../../domain/events/event_data.dart'; // NoAnswerReportedEvent
-import '../../no_answer/no_answer_screen.dart'; // pantalla "No me abren"
+import '../../../core/theme/app_colors.dart';
+import '../../../core/time/time_utils.dart';
+import '../../../core/widgets/alert_box.dart';
+import '../../../domain/events/event_data.dart';
+import '../../no_answer/no_answer_screen.dart';
 
 /// Aviso de que se reportó "No me abren", con un enlace para volver a la espera.
 /// No ocupa lugar si nunca se reportó.

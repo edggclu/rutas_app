@@ -1,7 +1,7 @@
-import '../domain/rules/closing.dart'; // WarrantyCause, BlockReason, IncidentKind, MaterialUsed
-import '../domain/events/event_data.dart'; // los eventos
-import 'action_receipt.dart'; // el comprobante
-import 'outbox_writer.dart'; // el ayudante que escribe en la cola
+import '../domain/rules/closing.dart';
+import '../domain/events/event_data.dart';
+import 'action_receipt.dart';
+import 'outbox_writer.dart';
 
 /// Acciones de cierre: terminar, garantía, "sigo otro día" y "no pude seguir".
 class ClosingActions { // una clase por área

@@ -64,4 +64,33 @@ void main() {
     expect(row.localPath.endsWith('.mp4'), isTrue); // conserva su extensión
     expect(File(row.localPath).readAsBytesSync(), [9, 9]); // el contenido se copió
   });
+
+  test('borrar quita la fila y el archivo, y deja las demás fotos', () async { // por si se tomó una incorrecta
+    final a = await repo.addPhoto(visitId: 101, sourcePath: source.path); // foto que se queda
+    final b = await repo.addPhoto(visitId: 101, sourcePath: source.path); // foto incorrecta
+    final path = (await repo.watchForVisit(101).first).firstWhere((m) => m.id == b).localPath; // dónde quedó
+    await repo.delete(b); // la borra
+    final left = await repo.watchForVisit(101).first; // lo que queda
+    expect(left.map((m) => m.id), [a]); // solo la buena
+    expect(File(path).existsSync(), isFalse); // el archivo también se borró
+  });
+
+  test('borrar un video funciona igual', () async {
+    final clip = File('${tmp.path}/clip.mp4')..writeAsBytesSync([9, 9]);
+    final id = await repo.addVideo(visitId: 101, sourcePath: clip.path);
+    await repo.delete(id);
+    expect(await repo.watchForVisit(101).first, isEmpty);
+  });
+
+  test('borrar algo que ya no existe no falla', () async {
+    await repo.delete('no-existe'); // no lanza
+  });
+
+  test('si el archivo ya no está, igual se quita la fila', () async {
+    final id = await repo.addPhoto(visitId: 101, sourcePath: source.path);
+    final row = (await db.select(db.mediaQueue).get()).single;
+    File(row.localPath).deleteSync(); // Android lo borró por su cuenta
+    await repo.delete(id);
+    expect(await db.select(db.mediaQueue).get(), isEmpty);
+  });
 }

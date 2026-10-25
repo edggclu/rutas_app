@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart'; // widgets básicos
+import 'package:flutter/material.dart';
 
-import '../../core/theme/app_colors.dart'; // colores
+import '../../core/theme/app_colors.dart';
 
 /// Lo que el técnico elige en "No lo terminé".
 enum NotFinishedChoice { continueTomorrow, blocked } // "Sigo otro día" o "No pude seguir"

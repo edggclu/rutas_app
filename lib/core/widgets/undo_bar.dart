@@ -1,8 +1,8 @@
-import 'dart:async'; // Timer: para redibujar la cuenta cada instante
+import 'dart:async';
 
-import 'package:flutter/material.dart'; // widgets básicos
+import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart'; // colores
+import '../theme/app_colors.dart';
 
 /// Muestra "mensaje · quedan N s" con el botón Deshacer.
 ///

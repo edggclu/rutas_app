@@ -1,4 +1,4 @@
-import 'package:url_launcher/url_launcher.dart'; // abre otras apps
+import 'package:url_launcher/url_launcher.dart';
 
 /// Abre el mapa (Maps, Waze...) en un lugar. Prefiere las coordenadas; si faltan, usa la dirección.
 /// Devuelve true si se pudo abrir.

@@ -1,11 +1,11 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // WidgetRef: acceso a los providers
-import 'package:image_picker/image_picker.dart'; // abre la cámara
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:telyser_app/providers/infra_providers.dart';
 
-import '../../domain/models/media_item.dart'; // MediaKind
+import '../../domain/models/media_item.dart';
 
-/// Abre la cámara y guarda la foto en el teléfono. Devuelve false si el técnico canceló.
-Future<bool> capturePhoto( // toma y guarda una foto
+/// Abre la cámara y guarda la foto en el teléfono. Devuelve el id de la foto, o null si el técnico canceló.
+Future<String?> capturePhoto( // toma y guarda una foto
   WidgetRef ref, { // para leer el repositorio
   required int visitId, // visita a la que pertenece
   MediaKind kind = MediaKind.progress, // tipo de foto
@@ -15,14 +15,13 @@ Future<bool> capturePhoto( // toma y guarda una foto
     maxWidth: 1600, // reduce el ancho máximo para que pese poco
     imageQuality: 70, // calidad JPEG
   );
-  if (shot == null) return false; // el técnico canceló: no se guarda nada
-  await ref.read(mediaRepositoryProvider).addPhoto( // copia la foto y la deja pendiente de subir
+  if (shot == null) return null; // el técnico canceló: no se guarda nada
+  return ref.read(mediaRepositoryProvider).addPhoto( // copia la foto y la deja pendiente de subir
       visitId: visitId, sourcePath: shot.path, kind: kind); // con su visita y su tipo
-  return true; // se guardó
 }
 
-/// Abre la cámara de video y guarda el clip. [maxSeconds] sale de los parámetros (`video_max_s`).
-Future<bool> captureVideo( // graba y guarda un video
+/// Abre la cámara de video y guarda el clip. Devuelve su id, o null si se canceló. [maxSeconds] sale de los parámetros (`video_max_s`).
+Future<String?> captureVideo( // graba y guarda un video
   WidgetRef ref, { // para leer el repositorio
   required int visitId, // visita a la que pertenece
   required int maxSeconds, // duración máxima permitida
@@ -32,8 +31,7 @@ Future<bool> captureVideo( // graba y guarda un video
     source: ImageSource.camera, // usar la cámara
     maxDuration: Duration(seconds: maxSeconds), // la grabación se corta al llegar al máximo
   );
-  if (clip == null) return false; // el técnico canceló
-  await ref.read(mediaRepositoryProvider).addVideo( // copia el video y lo deja pendiente de subir
+  if (clip == null) return null; // el técnico canceló
+  return ref.read(mediaRepositoryProvider).addVideo( // copia el video y lo deja pendiente de subir
       visitId: visitId, sourcePath: clip.path, kind: kind); // con su visita y su tipo
-  return true; // se guardó
 }

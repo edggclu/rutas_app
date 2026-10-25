@@ -101,6 +101,17 @@ class MediaRepository { // aquí vive todo lo relacionado con fotos y videos gua
         return items; // la lista convertida
   });
   
+  /// Borra una foto o video: la fila y el archivo. Si el archivo ya no existe, igual quita la fila.
+  Future<void> delete(String id) async {
+    final row = await (_db.select(_db.mediaQueue)..where((m) => m.uuid.equals(id))).getSingleOrNull();
+    if (row == null) return; // ya no existe
+    await (_db.delete(_db.mediaQueue)..where((m) => m.uuid.equals(id))).go(); // primero la fila: la lista se actualiza
+    try {
+      final f = File(row.localPath);
+      if (await f.exists()) await f.delete();
+    } catch (_) {} // si el archivo no se puede borrar, la fila ya no lo apunta
+  }
+
     /// Borra todas las fotos y videos guardados (filas y archivos). Solo para reiniciar la demo.
   Future<void> clearAll() async { // no devuelve nada
     final rows = await _db.select(_db.mediaQueue).get(); // primero se leen, para saber qué archivos borrar

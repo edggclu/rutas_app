@@ -1,8 +1,8 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // FutureProvider
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../domain/models/app_settings.dart'; // AppSettings
-import 'infra_providers.dart'; // repositorio y almacén de parámetros
-import 'session_provider.dart'; // sessionProvider
+import '../domain/models/app_settings.dart';
+import 'infra_providers.dart';
+import 'session_provider.dart';
 
 
 /// Parámetros: se descargan y se guardan; sin señal se usan los últimos guardados.

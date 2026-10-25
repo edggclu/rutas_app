@@ -1,15 +1,15 @@
-import '../data/local/outbox_repository.dart'; // la cola
-import '../data/location_service.dart'; // la ubicación
-import 'action_receipt.dart'; // el comprobante
-import 'arrival_actions.dart'; // área: llegada
-import 'closing_actions.dart'; // área: cierre
-import 'departure_actions.dart'; // área: salida
-import 'extras_actions.dart'; // área: extras
-import 'no_answer_actions.dart'; // área: "No me abren"
-import 'outbox_writer.dart'; // el ayudante que escribe en la cola
+import '../data/local/outbox_repository.dart';
+import '../data/location_service.dart';
+import 'action_receipt.dart';
+import 'arrival_actions.dart';
+import 'closing_actions.dart';
+import 'departure_actions.dart';
+import 'extras_actions.dart';
+import 'no_answer_actions.dart';
+import 'outbox_writer.dart';
 
-export 'action_receipt.dart'; // quien importe este archivo también ve ActionReceipt
-export 'extras_actions.dart' show ExtraResult; // ...y ExtraResult
+export 'action_receipt.dart';
+export 'extras_actions.dart' show ExtraResult;
 
 /// Reúne las áreas de acciones del técnico. Ya no tiene métodos propios: cada
 /// pantalla usa directamente el área que necesita (`actions.arrival.arrive(...)`).

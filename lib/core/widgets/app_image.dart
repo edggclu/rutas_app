@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart'; // widgets básicos
+import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart'; // colores
+import '../theme/app_colors.dart';
 
 /// Una imagen que puede ser un asset (datos de prueba) o una URL (API real).
 /// Si no carga, muestra un ícono de imagen rota.

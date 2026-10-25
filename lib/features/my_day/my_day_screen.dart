@@ -13,7 +13,7 @@ import '../../domain/models/enums.dart';
 import '../../domain/models/models.dart';
 import '../../domain/rules/technician_state.dart';
 import 'visit_card.dart';
-import 'widgets/location_banner.dart'; // aviso de permiso de ubicación
+import 'widgets/location_banner.dart';
 import '../departure/departure_screen.dart';
 import 'visit_detail_loader.dart';
 

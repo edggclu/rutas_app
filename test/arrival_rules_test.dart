@@ -1,8 +1,8 @@
-import 'dart:convert'; // json.decode para leer el JSON de prueba
-import 'dart:io'; // File para leer el archivo de prueba
+import 'dart:convert';
+import 'dart:io';
 
-import 'package:flutter_test/flutter_test.dart'; // herramientas de prueba
-import 'package:telyser_app/domain/arrival_rules.dart'; // lo que se prueba
+import 'package:flutter_test/flutter_test.dart';
+import 'package:telyser_app/domain/arrival_rules.dart';
 import 'package:telyser_app/domain/events/event_types.dart';
 import 'package:telyser_app/domain/models/models.dart';
 import 'package:telyser_app/domain/rules/visit_state.dart';

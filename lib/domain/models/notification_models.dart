@@ -1,4 +1,4 @@
-import 'payload.dart'; // lectores tolerantes
+import 'payload.dart';
 
 /// Qué tipo de aviso es. Un tipo que la app no conoce se lee como [other]: se muestra igual.
 enum NoticeType {

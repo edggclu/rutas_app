@@ -1,24 +1,24 @@
-import 'package:flutter/material.dart'; // widgets básicos
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerWidget
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/domain/arrival_rules.dart';
 import 'package:telyser_app/domain/models/enums.dart';
 import 'package:telyser_app/domain/models/models.dart';
 import 'package:telyser_app/providers/actions_provider.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 
-import '../../core/theme/app_colors.dart'; // colores
-import '../../core/widgets/alert_box.dart'; // caja de aviso
-import '../../core/widgets/app_header.dart'; // encabezado navy
-import '../../core/widgets/slide_to_confirm.dart'; // botón deslizable
-import '../../core/widgets/toast.dart'; // avisos cortos
-import '../no_answer/no_answer_screen.dart'; // pantalla "No me abren"
-import '../shared/run_undoable.dart'; // runUndoable
-import '../site/site_screen.dart'; // pantalla En sitio
-import 'arrival_panel.dart'; // el panel "¿Ya te abrieron?"
-import 'visit_tags.dart'; // etiquetas (tipo, urgente, estado)
-import 'widgets/address_card.dart'; // dirección y mapa
-import 'widgets/contact_card.dart'; // contacto
-import 'widgets/task_card.dart'; // qué hay que hacer
+import '../../core/theme/app_colors.dart';
+import '../../core/widgets/alert_box.dart';
+import '../../core/widgets/app_header.dart';
+import '../../core/widgets/slide_to_confirm.dart';
+import '../../core/widgets/toast.dart';
+import '../no_answer/no_answer_screen.dart';
+import '../shared/run_undoable.dart';
+import '../site/site_screen.dart';
+import 'arrival_panel.dart';
+import 'visit_tags.dart';
+import 'widgets/address_card.dart';
+import 'widgets/contact_card.dart';
+import 'widgets/task_card.dart';
 
 /// C3 · Tarjeta de visita: todo lo necesario para llegar y saber qué hacer.
 /// Abajo muestra el deslizable "Llegué" o, si ya llegó, el panel "¿Ya te abrieron?".

@@ -1,5 +1,5 @@
-import 'enums.dart'; // JobType
-import 'payload.dart'; // lectores tolerantes
+import 'enums.dart';
+import 'payload.dart';
 
 /// En qué punto de la revisión del ingeniero está un trabajo que el técnico terminó.
 enum MyJobStatus {

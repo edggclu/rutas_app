@@ -1,6 +1,6 @@
 import 'package:telyser_app/domain/models/payload.dart';
 
-import 'enums.dart'; // ChecklistKind
+import 'enums.dart';
 
 /// Cómo se marcó la llegada.
 enum ArrivalMode { // dos formas

@@ -1,4 +1,4 @@
-import 'models/review_models.dart'; // ReviewJob
+import 'models/review_models.dart';
 
 /// Un trabajo se puede validar si no tiene un dictamen pendiente.
 bool canValidate(ReviewJob job) => !job.needsVerdict;

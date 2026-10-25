@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart'; // widgets básicos
+import 'package:flutter/material.dart';
 
-import '../../core/theme/app_colors.dart'; // colores
-import '../../domain/review_rules.dart'; // canReturnJob
+import '../../core/theme/app_colors.dart';
+import '../../domain/review_rules.dart';
 
 /// Hoja inferior que pide la nota para regresar un trabajo.
 /// Devuelve la nota escrita, o null si el ingeniero cancela.

@@ -1,16 +1,16 @@
-import 'package:flutter/material.dart'; // widgets básicos
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
-import '../../core/widgets/input_formatters.dart'; // filtros de los campos
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/widgets/input_formatters.dart';
 
-import '../../core/theme/app_colors.dart'; // colores
-import '../../core/widgets/app_card.dart'; // la tarjeta compartida
-import '../../core/widgets/app_header.dart'; // encabezado navy
-import '../../core/widgets/toast.dart'; // messenger.toast
-import '../../domain/models/enums.dart'; // ChecklistKind
-import '../../domain/models/models.dart'; // Plan, ChecklistItem, SketchPin
-import '../../domain/plan_rules.dart'; // canSavePlan y nextLocalId
-import '../../providers/plan_providers.dart'; // planActionsProvider
-import 'widgets/sketch_editor.dart'; // el croquis editable
+import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_card.dart';
+import '../../core/widgets/app_header.dart';
+import '../../core/widgets/toast.dart';
+import '../../domain/models/enums.dart';
+import '../../domain/models/models.dart';
+import '../../domain/plan_rules.dart';
+import '../../providers/plan_providers.dart';
+import 'widgets/sketch_editor.dart';
 
 /// D2 · Editar el plan del trabajo (ingeniero): notas, material, herramienta y pines del croquis.
 /// Guarda todo junto con el botón de abajo; mientras tanto los cambios viven solo en esta pantalla.

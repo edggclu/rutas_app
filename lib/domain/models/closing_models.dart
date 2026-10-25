@@ -1,4 +1,4 @@
-import 'payload.dart'; // lectores y lookup
+import 'payload.dart';
 
 /// Causa de la falla en una visita de garantía.
 enum WarrantyCause { // opciones del bloque de garantía

@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart'; // widgets básicos
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerWidget
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/domain/models/models.dart';
 import 'package:telyser_app/domain/rules/closing.dart';
 import 'package:telyser_app/domain/rules/visit_state.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 
-import '../warranty_card.dart'; // la tarjeta
-import '../warranty_screen.dart'; // la pantalla de garantía
+import '../warranty_card.dart';
+import '../warranty_screen.dart';
 
 /// Tarjeta de garantía de En sitio: muestra si ya se documentó y abre la pantalla.
 class WarrantySection extends ConsumerWidget { // widget que puede leer providers

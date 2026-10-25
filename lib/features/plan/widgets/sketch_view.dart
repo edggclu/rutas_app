@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart'; // widgets básicos
+import 'package:flutter/material.dart';
 import 'package:telyser_app/core/widgets/app_image.dart';
 
-import '../../../../core/theme/app_colors.dart'; // colores
-import '../../../../core/widgets/app_card.dart'; // la tarjeta compartida
-import '../../../../domain/models/models.dart'; // Sketch y SketchPin
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_card.dart';
+import '../../../../domain/models/models.dart';
 
 const kPinSize = 30.0; // diámetro de cada pin en pantalla
 

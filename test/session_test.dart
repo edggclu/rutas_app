@@ -1,10 +1,10 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // ProviderContainer
-import 'package:flutter_test/flutter_test.dart'; // herramientas de prueba
-import 'package:telyser_app/data/repositories.dart'; // AuthRepository
-import 'package:telyser_app/domain/models/models.dart'; // Session
-import 'package:telyser_app/domain/session_errors.dart'; // WrongAccountException
-import 'package:telyser_app/providers/infra_providers.dart'; // authRepositoryProvider
-import 'package:telyser_app/providers/session_provider.dart'; // lo que se prueba
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:telyser_app/data/repositories.dart';
+import 'package:telyser_app/domain/models/models.dart';
+import 'package:telyser_app/domain/session_errors.dart';
+import 'package:telyser_app/providers/infra_providers.dart';
+import 'package:telyser_app/providers/session_provider.dart';
 
 /// Login falso: el usuario "pedro" es el 7 y cualquier otro es el 2.
 class _FakeAuth implements AuthRepository {

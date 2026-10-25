@@ -1,4 +1,4 @@
-import 'payload.dart'; // lookup: busca un valor de enum por su código
+import 'payload.dart';
 
 /// Tipo de foto o video.
 enum MediaKind { // los tipos que existen
@@ -12,6 +12,7 @@ enum MediaKind { // los tipos que existen
   const MediaKind(this.code); // constructor de cada opción
   final String code; // texto que se guarda en la base y viaja al servidor
   static MediaKind? tryFromCode(String? c) => lookup(values, c, (v) => v.code); // null si no existe
+  bool get isVideo => this == MediaKind.cablingVideo; // los demás tipos son fotos
 }
 
 /// Una foto o video de una visita, tal como lo necesitan las pantallas.

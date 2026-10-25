@@ -1,8 +1,8 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // FutureProvider
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../domain/models/notification_models.dart'; // AppNotification
-import 'infra_providers.dart'; // notificationsRepositoryProvider
-import 'session_provider.dart'; // sessionProvider
+import '../domain/models/notification_models.dart';
+import 'infra_providers.dart';
+import 'session_provider.dart';
 
 /// Los avisos del usuario, lo más reciente primero. Se vuelve a pedir al cambiar de sesión
 /// o al jalar para actualizar.

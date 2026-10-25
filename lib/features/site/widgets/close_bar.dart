@@ -1,18 +1,18 @@
-import 'package:flutter/material.dart'; // widgets básicos
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/domain/models/enums.dart';
 import 'package:telyser_app/domain/rules/closing.dart';
 import 'package:telyser_app/domain/rules/extras.dart';
 import 'package:telyser_app/domain/rules/visit_state.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 
-import '../../../core/theme/app_colors.dart'; // colores
-import '../../../core/widgets/slide_to_confirm.dart'; // botón deslizable
-import '../../closing/blocked_screen.dart'; // C7b
-import '../../closing/continue_screen.dart'; // C7a
-import '../../closing/finish_sheet.dart'; // C6
-import '../../closing/not_finished_sheet.dart'; // C7
-import '../../shared/run_undoable.dart'; // runUndoable y AfterSave
+import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/slide_to_confirm.dart';
+import '../../closing/blocked_screen.dart';
+import '../../closing/continue_screen.dart';
+import '../../closing/finish_sheet.dart';
+import '../../closing/not_finished_sheet.dart';
+import '../../shared/run_undoable.dart';
 
 /// Barra de abajo de En sitio: "Terminé el trabajo" y "No lo terminé".
 /// Decide sola si el técnico puede terminar (en garantía, solo si ya la documentó).

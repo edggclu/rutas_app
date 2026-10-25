@@ -1,21 +1,21 @@
-import 'package:flutter/material.dart'; // widgets básicos
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/domain/models/enums.dart';
 import 'package:telyser_app/features/review/verdict_screen.dart';
 import 'package:telyser_app/providers/review_providers.dart';
 
-import '../../core/theme/app_colors.dart'; // colores
-import '../../core/time/time_utils.dart'; // formatClock
-import '../../core/widgets/app_card.dart'; // la tarjeta compartida
-import '../../core/widgets/app_header.dart'; // encabezado navy
-import '../../core/widgets/tag_chip.dart'; // etiquetas
-import '../../core/widgets/toast.dart'; // avisos cortos
-import '../../domain/format.dart'; // formatNumber
-import '../../domain/models/review_models.dart'; // ReviewJob
-import '../../domain/review_rules.dart'; // canValidate
-import '../my_day/visit_tags.dart'; // jobTypeChip
-import 'return_sheet.dart'; // la nota al regresar
-import 'widgets/photo_strip.dart'; // las fotos
+import '../../core/theme/app_colors.dart';
+import '../../core/time/time_utils.dart';
+import '../../core/widgets/app_card.dart';
+import '../../core/widgets/app_header.dart';
+import '../../core/widgets/tag_chip.dart';
+import '../../core/widgets/toast.dart';
+import '../../domain/format.dart';
+import '../../domain/models/review_models.dart';
+import '../../domain/review_rules.dart';
+import '../my_day/visit_tags.dart';
+import 'return_sheet.dart';
+import 'widgets/photo_strip.dart';
 
 /// F2 · Detalle de validación: todo lo que el técnico dejó, y las dos salidas.
 class ReviewDetailScreen extends ConsumerStatefulWidget {

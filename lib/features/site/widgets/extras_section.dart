@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart'; // widgets básicos
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerWidget
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/domain/models/models.dart';
 import 'package:telyser_app/domain/rules/extras.dart';
 import 'package:telyser_app/domain/rules/visit_state.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 
-import '../../../core/theme/app_colors.dart'; // colores
-import '../../extras/add_extra_screen.dart'; // el formulario de extras
-import '../../extras/add_request_screen.dart'; // el formulario de solicitudes
+import '../../../core/theme/app_colors.dart';
+import '../../extras/add_extra_screen.dart';
+import '../../extras/add_request_screen.dart';
 
 /// Botones "+ Extra" y "Solicitud después", con la lista de lo ya guardado.
 class ExtrasSection extends ConsumerWidget { // widget que puede leer providers

@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart'; // widgets básicos
+import 'package:flutter/material.dart';
 import 'package:telyser_app/core/map_launcher.dart';
 import 'package:telyser_app/domain/models/models.dart';
 
-import '../../../core/theme/app_colors.dart'; // colores
-import '../../../core/widgets/app_card.dart'; // la tarjeta compartida
-import '../../../core/widgets/toast.dart'; // avisos cortos
+import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/toast.dart';
 
 /// Dirección del lugar, con el botón para abrirla en Maps o Waze.
 class AddressCard extends StatelessWidget { // widget sin estado propio

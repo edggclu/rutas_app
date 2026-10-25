@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/providers/session_provider.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../domain/session_errors.dart'; // WrongAccountException
+import '../../domain/session_errors.dart';
 
 /// A1 · Login (tema oscuro navy).
 class LoginScreen extends ConsumerStatefulWidget {

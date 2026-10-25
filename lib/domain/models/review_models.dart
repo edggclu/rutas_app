@@ -1,9 +1,9 @@
 import 'package:telyser_app/domain/models/enums.dart';
 import 'package:telyser_app/domain/models/models.dart';
 
-import 'closing_models.dart'; // WarrantyCause
-import 'media_item.dart'; // MediaKind
-import 'payload.dart'; // lectores tolerantes
+import 'closing_models.dart';
+import 'media_item.dart';
+import 'payload.dart';
 
 /// Una foto de un trabajo terminado, tal como la ve el ingeniero.
 class ReviewPhoto {

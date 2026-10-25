@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart'; // widgets básicos
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart'; // colores
-import '../../../domain/models/location_access.dart'; // LocationAccess
-import '../../../providers/infra_providers.dart'; // locationServiceProvider
-import '../../../providers/location_providers.dart'; // locationAccessProvider
+import '../../../core/theme/app_colors.dart';
+import '../../../domain/models/location_access.dart';
+import '../../../providers/infra_providers.dart';
+import '../../../providers/location_providers.dart';
 
 /// Aviso en Mi día cuando la app no puede leer la ubicación. Explica para qué se usa antes de
 /// pedir el permiso. "Llegué" funciona igual sin ubicación; solo se guarda sin coordenadas.

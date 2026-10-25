@@ -1,6 +1,6 @@
-import '../data/repositories.dart'; // PlanRepository
-import '../domain/models/models.dart'; // Plan
-import '../domain/plan_rules.dart'; // canSavePlan
+import '../data/repositories.dart';
+import '../domain/models/models.dart';
+import '../domain/plan_rules.dart';
 
 /// Acciones del ingeniero sobre el plan de un trabajo. Necesitan señal: van directo
 /// al servidor, no por la cola. Después de guardar avisa con [onChanged] para que

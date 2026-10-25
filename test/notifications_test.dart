@@ -1,12 +1,12 @@
-import 'dart:convert'; // json.decode para leer el JSON de prueba
-import 'dart:io'; // File para leer el archivo de prueba
+import 'dart:convert';
+import 'dart:io';
 
-import 'package:flutter_test/flutter_test.dart'; // herramientas de prueba
-import 'package:telyser_app/core/time/time_utils.dart'; // formatRelativeDay
-import 'package:telyser_app/domain/models/notification_models.dart'; // lo que se prueba
-import 'package:telyser_app/domain/models/payload.dart'; // readMaps
-import 'package:intl/date_symbol_data_local.dart'; // initializeDateFormatting
-import 'package:timezone/data/latest.dart' as tzdata; // zonas horarias
+import 'package:flutter_test/flutter_test.dart';
+import 'package:telyser_app/core/time/time_utils.dart';
+import 'package:telyser_app/domain/models/notification_models.dart';
+import 'package:telyser_app/domain/models/payload.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:timezone/data/latest.dart' as tzdata;
 
 void main() {
   late List<AppNotification> list;

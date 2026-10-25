@@ -1,19 +1,20 @@
-import 'package:flutter/material.dart'; // widgets básicos
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerStatefulWidget
-import '../../core/widgets/input_formatters.dart'; // filtros de los campos
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/widgets/input_formatters.dart';
 import 'package:telyser_app/domain/format.dart';
 import 'package:telyser_app/domain/models/media_item.dart';
 import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 import 'package:telyser_app/providers/settings_provider.dart';
 
-import '../../core/theme/app_colors.dart'; // colores
-import '../../core/widgets/alert_box.dart'; // caja de aviso
-import '../../core/widgets/app_header.dart'; // encabezado navy
-import '../../core/widgets/slide_to_confirm.dart'; // botón deslizable
-import '../../domain/rules/closing.dart'; // MaterialUsed, canContinueTomorrow
-import '../../domain/models/models.dart'; // Visit, ChecklistItem
-import '../site/capture_photo.dart'; // captureVideo
+import '../../core/theme/app_colors.dart';
+import '../../core/widgets/alert_box.dart';
+import '../../core/widgets/app_header.dart';
+import '../../core/widgets/slide_to_confirm.dart';
+import '../../domain/rules/closing.dart';
+import '../../domain/models/models.dart';
+import '../site/capture_photo.dart';
+import '../media/media_strip.dart';
 
 /// C7a · Sigo otro día: lo que se usó, lo que queda en el sitio y lo que falta.
 class ContinueScreen extends ConsumerStatefulWidget { // widget con estado
@@ -151,6 +152,10 @@ class _ContinueScreenState extends ConsumerState<ContinueScreen> { // el estado 
                     icon: const Icon(Icons.videocam), // ícono
                     label: Text('Grabar video ($videos)'), // texto con contador
                   ),
+                  if (videos > 0) ...[ // los videos grabados: se pueden ver y borrar
+                    const SizedBox(height: 10),
+                    MediaStrip(items: [for (final m in media) if (m.kind == MediaKind.cablingVideo) m]),
+                  ],
                 ],
               ],
             ),

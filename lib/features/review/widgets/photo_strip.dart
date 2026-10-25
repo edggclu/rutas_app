@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart'; // widgets básicos
+import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart'; // colores
-import '../../../core/widgets/app_image.dart'; // imagen de asset o URL
-import '../../../domain/models/review_models.dart'; // ReviewPhoto
+import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/app_image.dart';
+import '../../../domain/models/review_models.dart';
 
 /// Tira horizontal de fotos. Al tocar una se abre ampliada, con zoom.
 class PhotoStrip extends StatelessWidget {

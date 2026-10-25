@@ -1,9 +1,9 @@
-import 'dart:convert'; // json.decode para leer el JSON de prueba
-import 'dart:io'; // File para leer el archivo de prueba
+import 'dart:convert';
+import 'dart:io';
 
-import 'package:flutter_test/flutter_test.dart'; // herramientas de prueba
-import 'package:telyser_app/domain/models/my_job_models.dart'; // lo que se prueba
-import 'package:telyser_app/domain/models/payload.dart'; // readMaps
+import 'package:flutter_test/flutter_test.dart';
+import 'package:telyser_app/domain/models/my_job_models.dart';
+import 'package:telyser_app/domain/models/payload.dart';
 
 void main() {
   late List<MyJob> jobs;

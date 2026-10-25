@@ -1,8 +1,8 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // FutureProvider
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../domain/models/my_job_models.dart'; // MyJob y sortMyJobs
-import 'infra_providers.dart'; // myJobsRepositoryProvider
-import 'session_provider.dart'; // sessionProvider
+import '../domain/models/my_job_models.dart';
+import 'infra_providers.dart';
+import 'session_provider.dart';
 
 /// Los trabajos terminados del técnico, ya ordenados. Se vuelve a pedir al cambiar de sesión
 /// o al jalar para actualizar.

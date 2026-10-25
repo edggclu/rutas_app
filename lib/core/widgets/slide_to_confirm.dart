@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart'; // widgets básicos
+import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart'; // colores
+import '../theme/app_colors.dart';
 
 /// Botón que se confirma deslizando (evita toques accidentales con el teléfono
 /// en la bolsa). La parte ya deslizada se pone blanca con borde del color del botón.

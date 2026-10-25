@@ -1,14 +1,14 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // Provider: el mecanismo para compartir objetos
-import 'package:path_provider/path_provider.dart'; // getApplicationDocumentsDirectory: carpeta privada de la app
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 
-import '../data/local/app_database.dart'; // la base de datos local
-import '../data/local/media/media_repository.dart'; // fotos y videos
-import '../data/local/outbox_repository.dart'; // la cola de acciones
-import '../data/local/route_store.dart'; // la ruta del día guardada
-import '../data/local/settings_store.dart'; // los parámetros guardados
-import '../data/location_service.dart'; // el GPS
-import '../data/mock/mock_repositories.dart'; // los repositorios de prueba
-import '../data/repositories.dart'; // los contratos (interfaces)
+import '../data/local/app_database.dart';
+import '../data/local/media/media_repository.dart';
+import '../data/local/outbox_repository.dart';
+import '../data/local/route_store.dart';
+import '../data/local/settings_store.dart';
+import '../data/location_service.dart';
+import '../data/mock/mock_repositories.dart';
+import '../data/repositories.dart';
 
 // ---- Repositorios remotos. Para la API real: cambiar estas cuatro líneas. ----
 final authRepositoryProvider = // inicio de sesión

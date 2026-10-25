@@ -1,10 +1,10 @@
 import 'package:telyser_app/domain/format.dart';
 
-import '../events/event_data.dart'; // ExtraAddedEvent y RequestAddedEvent
-import '../models/extra_models.dart'; // ExtraOutcome, RequestOrigin...
-import 'visit_state.dart'; // VisitEvent
+import '../events/event_data.dart';
+import '../models/extra_models.dart';
+import 'visit_state.dart';
 
-export '../models/extra_models.dart'; // quien importe extras.dart sigue viendo los tipos de extras
+export '../models/extra_models.dart';
 
 /// Aplica las reglas del documento. El orden importa: si lo pide otra persona,
 /// no se mira nada más.

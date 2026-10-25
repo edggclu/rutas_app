@@ -1,6 +1,6 @@
-import 'package:geolocator/geolocator.dart'; // la librería que habla con el GPS del teléfono
+import 'package:geolocator/geolocator.dart';
 
-import '../domain/models/location_access.dart'; // LocationAccess
+import '../domain/models/location_access.dart';
 
 /// Un punto en el mapa: latitud y longitud.
 class GeoPoint {

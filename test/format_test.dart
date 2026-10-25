@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart'; // herramientas de prueba
-import 'package:telyser_app/domain/format.dart'; // lo que se prueba
+import 'package:flutter_test/flutter_test.dart';
+import 'package:telyser_app/domain/format.dart';
 
 void main() {
   test('los enteros no llevan decimales', () { // 5.0 -> "5"

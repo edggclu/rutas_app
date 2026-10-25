@@ -1,7 +1,7 @@
-import '../data/repositories.dart'; // ReviewRepository
-import '../domain/models/closing_models.dart'; // WarrantyCause
-import '../domain/models/review_models.dart'; // ReviewJob
-import '../domain/review_rules.dart'; // canValidate y canReturnJob
+import '../data/repositories.dart';
+import '../domain/models/closing_models.dart';
+import '../domain/models/review_models.dart';
+import '../domain/review_rules.dart';
 
 /// Acciones del ingeniero sobre trabajos terminados. Necesitan señal: van
 /// directo al servidor, no por la cola. Después de cada una avisa con

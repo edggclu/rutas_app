@@ -1,15 +1,15 @@
-import 'package:flutter/material.dart'; // widgets básicos
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // ConsumerWidget
-import 'package:telyser_app/providers/plan_providers.dart'; // jobPlanProvider
-import 'package:telyser_app/providers/session_provider.dart'; // sessionProvider
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:telyser_app/providers/plan_providers.dart';
+import 'package:telyser_app/providers/session_provider.dart';
 
-import 'plan_edit_screen.dart'; // editar el plan
+import 'plan_edit_screen.dart';
 import 'package:telyser_app/features/plan/widgets/sketch_view.dart';
 
-import '../../core/theme/app_colors.dart'; // colores
-import '../../core/widgets/app_card.dart'; // la tarjeta compartida
-import '../../core/widgets/app_header.dart'; // encabezado navy
-import '../../domain/models/models.dart'; // Job y ChecklistItem
+import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_card.dart';
+import '../../core/widgets/app_header.dart';
+import '../../domain/models/models.dart';
 
 /// D1 · Plan del trabajo: notas, material, herramienta y croquis. Solo lectura;
 /// el ingeniero tiene además el botón Editar.

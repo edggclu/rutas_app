@@ -55,3 +55,7 @@ final myJobsRepositoryProvider = // mis trabajos terminados
 final mockPlanStoreProvider = Provider<MockPlanStore>((ref) => MockPlanStore()); // planes editados en la demo (solo prueba)
 final planRepositoryProvider = // guardar el plan del trabajo
     Provider<PlanRepository>((ref) => MockPlanRepository(ref.watch(mockPlanStoreProvider))); // hoy, el de prueba
+
+
+final notificationsRepositoryProvider = // avisos
+    Provider<NotificationsRepository>((ref) => MockNotificationsRepository()); // hoy, el de prueba

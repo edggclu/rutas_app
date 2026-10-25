@@ -13,6 +13,7 @@ import '../../domain/models/enums.dart';
 import '../../domain/models/models.dart';
 import '../../domain/rules/technician_state.dart';
 import 'visit_card.dart';
+import 'widgets/location_banner.dart'; // aviso de permiso de ubicación
 import '../departure/departure_screen.dart';
 import 'visit_detail_loader.dart';
 
@@ -88,6 +89,7 @@ class _Content extends StatelessWidget {
             child: _StateChip(state),
           ),
         ),
+        const LocationBanner(), // solo se ve si falta el permiso o el GPS está apagado
         Expanded(
           child: visits.isEmpty
               ? const _EmptyDay()

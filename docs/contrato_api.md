@@ -3,7 +3,7 @@
 Todas las rutas son JSON y llevan `Authorization: Bearer <token>` (menos `login`).
 Las horas viajan en **UTC (ISO 8601)**; la app las muestra en America/Mexico_City.
 Los nombres siguen el estilo en inglés del código actual del servidor.
-Los archivos de `assets/mock/` (`my_day.json`, `settings.json`, `review.json`, `my_jobs.json`, `products.json`) son ejemplos reales de este contrato.
+Los archivos de `assets/mock/` (`my_day.json`, `settings.json`, `review.json`, `my_jobs.json`, `notifications.json`, `products.json`) son ejemplos reales de este contrato.
 
 ## Errores generales (propuesta)
 
@@ -140,7 +140,7 @@ El estado que ve el técnico es la ruta del servidor más los eventos que aún n
 
 ## Otras rutas (de la sección 17 del documento de requisitos)
 `POST /api/visits/{id}/media` · `/extras` · `/requests` · `/authorizations` ·
-`GET /api/authorizations/{id}` · `GET /api/products/search?q=` · `GET /api/notifications` ·
+`GET /api/authorizations/{id}` · `GET /api/products/search?q=` · `GET /api/notifications` · `POST /api/notifications/read` ·
 `PUT /api/jobs/{id}/plan` · `GET /api/review` · `GET /api/my-jobs` ·
 `GET /api/dispatch/today|unassigned|decisions` · `POST /api/visits` · `PATCH /api/visits/{id}` ·
 `POST /api/devices`.
@@ -262,3 +262,26 @@ Reemplaza el plan completo del trabajo. Requiere el permiso `engineer` (si no, 4
 - Respuesta: el plan tal como quedó, con el mismo formato.
 - 422 si algún renglón o pin trae el texto vacío, o una cantidad menor o igual a cero.
 - Después de guardar, la app vuelve a pedir `GET /api/my-day` para que todos los dispositivos vean el plan nuevo.
+
+## Avisos
+
+### GET /api/notifications
+Los avisos del usuario, de los más nuevos a los más viejos (la app los reordena de todos modos). Necesita señal: **no pasa por la cola**. Las notificaciones push (paso 7) avisan que hay uno nuevo, y esta lista es la fuente.
+```json
+{ "notifications": [{
+  "id": 5, "type": "job_returned",
+  "title": "Regresaron un trabajo",
+  "body": "TEL-2610-021 (Clínica Santa Fe): falta la foto del grabador grabando.",
+  "created_at": "2026-10-24T14:05:00Z",
+  "read": false, "visit_id": null } ] }
+```
+- `type`: `route_changed` · `job_returned` · `job_validated` · `plan_updated`. Cualquier otro valor la app lo muestra igual, con un ícono genérico.
+- `title` y `body` ya vienen escritos por el servidor, listos para mostrar.
+- `visit_id` es la visita a la que se refiere el aviso, o `null`.
+- Se recomienda limitar la lista a un periodo razonable (por ejemplo, los últimos 30 días).
+
+### POST /api/notifications/read
+Marca avisos como leídos. Entrada: `{ "ids": [5, 4] }`. Respuesta: `{ "updated": 2 }`. Un id que no existe o que ya estaba leído se ignora.
+
+## Sesión expirada
+Cualquier ruta que responda 401 hace que la app salga a la pantalla de login con el aviso "Tu sesión expiró". La cola de acciones no se borra: se manda cuando **el mismo usuario** vuelva a entrar (`user.id` igual al de la sesión que expiró). Si entra otra cuenta, la app rechaza esa sesión.

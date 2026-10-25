@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/providers/session_provider.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../domain/session_errors.dart'; // WrongAccountException
 
 /// A1 · Login (tema oscuro navy).
 class LoginScreen extends ConsumerStatefulWidget {
@@ -36,6 +37,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
     try {
       await ref.read(sessionProvider.notifier).login(_user.text, _pass.text);
+    } on WrongAccountException catch (e) { // la sesión expiró y entró otra persona
+      if (mounted) setState(() => _error = 'Entra con la cuenta de ${e.expectedName}: tiene acciones sin enviar.');
     } catch (_) {
       if (mounted) setState(() => _error = 'Usuario o contraseña incorrectos');
     } finally {
@@ -82,6 +85,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final expiredUser = ref.watch(expiredUserProvider); // no es null si la sesión expiró
     return Scaffold(
       backgroundColor: AppColors.navy900,
       body: SafeArea(
@@ -130,6 +134,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     textAlign: TextAlign.center,
                     style: TextStyle(color: AppColors.gris400, fontSize: 14),
                   ),
+                  if (expiredUser != null) ...[ // A3 · la sesión expiró: se avisa y se explica qué pasa con lo guardado
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.alertaSuave,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Tu sesión expiró',
+                              style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.alerta)),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${expiredUser.name}, vuelve a entrar para continuar. '
+                            'Lo que guardaste sin enviar no se pierde.',
+                            style: const TextStyle(color: AppColors.gris900, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 32),
                   const _FieldLabel('Usuario o teléfono'),
                   TextField(
@@ -166,6 +193,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 18),
                   FilledButton(
                     onPressed: _loading || !_canSubmit ? null : _submit,
+                    style: FilledButton.styleFrom( // el estado desactivado debe verse sobre el fondo navy
+                      disabledBackgroundColor: AppColors.rojo.withValues(alpha: 0.35),
+                      disabledForegroundColor: Colors.white70,
+                    ),
                     child: _loading
                         ? const SizedBox(
                             width: 22,

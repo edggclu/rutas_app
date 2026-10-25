@@ -34,7 +34,7 @@ El contrato con el servidor está en `docs/contrato_api.md`.
 Con `kDemoMode = true`:
 - La espera de "No me abren" es de 1 minuto (`wait_base_min: 1`, `wait_per_km_min: 0`).
 - El repositorio de prueba pone la fecha de hoy a la ruta.
-- El menú ⋮ de Mi día ofrece **Cerrar sesión** y **Reiniciar datos de demo** (borra la cola y las fotos).
+- El menú ⋮ de Mi día ofrece **Cerrar sesión**, **Reiniciar datos de demo** (borra la cola y las fotos) y **Simular sesión expirada**.
 
 "Reiniciar datos de demo" **no** restaura la lista de Por validar: esa vive en memoria del repositorio de prueba y vuelve a su estado inicial al cerrar la app por completo.
 
@@ -471,6 +471,41 @@ El técnico ve los trabajos que ya terminó y qué decidió el ingeniero: **Por 
 
 Los datos de prueba no cambian cuando el ingeniero valida o regresa en Por validar: son listas independientes hasta que exista la API.
 
+### Sesión expirada
+
+Cuando el servidor responde 401, el cliente HTTP llama `ref.read(sessionProvider.notifier).expire()`. La app vuelve al login con un aviso ("Tu sesión expiró") y **no borra la cola local**. Al volver a entrar solo se acepta la misma cuenta: si entra otra persona, `login` lanza `WrongAccountException` y se cierra esa sesión, porque las acciones sin enviar son de la anterior. Salir con "Cerrar sesión" no cuenta como expirar.
+
+| Archivo | Qué hace |
+|---|---|
+| `domain/session_errors.dart` | `SessionExpiredException` y `WrongAccountException` |
+| `providers/session_provider.dart` | `SessionNotifier.expire()` y `expiredUserProvider` (quién tenía la sesión) |
+| `features/auth/login_screen.dart` | Muestra el aviso cuando `expiredUserProvider` no es nulo |
+
+Todavía no hay cliente HTTP (paso 8), así que nada llama `expire()` por sí solo. En la demo, el menú ⋮ de Mi día tiene **Simular sesión expirada**.
+
+### Permiso de ubicación
+
+La ubicación solo sirve para guardar las coordenadas al marcar "Llegué"; esa acción funciona igual sin ella. En Mi día, `LocationBanner` explica para qué se usa y pide el permiso. Tiene tres casos: pedir el permiso, abrir los ajustes si lo negó para siempre y abrir los del GPS si está apagado. Se vuelve a revisar solo cuando la app regresa de los ajustes. Desaparece cuando todo está en orden.
+
+| Archivo | Qué hace |
+|---|---|
+| `domain/models/location_access.dart` | `LocationAccess`: concedido, negado, negado para siempre, GPS apagado |
+| `data/location_service.dart` | `access()`, `request()` y `openSettings()` además de `currentPosition()` |
+| `providers/location_providers.dart` | `locationAccessProvider` |
+| `features/my_day/widgets/location_banner.dart` | El aviso |
+
+### Avisos
+
+Lista de lo que el servidor le dice al usuario: cambios de ruta, trabajos regresados o validados, planes nuevos. Los no leídos llevan el título en negritas y un punto rojo, y la pestaña muestra un punto si hay alguno. Tocar un aviso lo marca como leído; "Marcar todo" marca todos. No pasa por la cola. Un tipo de aviso que la app no conoce se muestra igual, con un ícono genérico. Las notificaciones push (paso 7) usarán esta misma lista.
+
+| Archivo | Qué hace |
+|---|---|
+| `domain/models/notification_models.dart` | `AppNotification`, `NoticeType` (un tipo desconocido cae en `other`), `unreadCount` y `sortNotifications` |
+| `data/repositories.dart` | Interfaz `NotificationsRepository` |
+| `data/mock/mock_repositories.dart` | `MockNotificationsRepository`: lee `assets/mock/notifications.json` y recuerda en memoria qué se leyó |
+| `providers/notifications_providers.dart` | `notificationsProvider`, `unreadNoticesProvider` y `markNoticesReadProvider` |
+| `features/notifications/notifications_screen.dart` | La pantalla |
+
 ## Cómo agregar cosas
 
 ### Un evento nuevo del técnico
@@ -517,12 +552,13 @@ Una pantalla que solo **compone** secciones; cada sección lee lo que necesita c
 | `plan_test` | Editar el plan: reglas, ida y vuelta del JSON y la acción de guardar |
 | `format_test` | Formato de números |
 | `input_formatters_test` | Los filtros de los campos descartan letras y signos, y respetan el largo |
+| `session_test` | Sesión expirada: salir sin tocar la cola y exigir la misma cuenta |
+| `notifications_test` | Avisos: el mock, tipos desconocidos, conteo, orden y la hora relativa |
 | `architecture_test` | Las 5 reglas de dependencias por capa |
 
 ## Pendiente
 
 - **Paso 6:** Jefe de ruta (Rutas).
-- **Paso 7:** "Llegué" automático por geocerca y notificaciones push (Firebase).
+- **Paso 7:** "Llegué" automático por geocerca y notificaciones push (Firebase). La lista de Avisos ya existe; falta que las push la alimenten.
 - **Paso 8:** API real, envío de la cola, subida y compresión de fotos.
-- **Pantallas sueltas:** Avisos, permisos de ubicación, sesión expirada.
 - **Por confirmar con la empresa:** `credit_authorization_wait_min` (¿5 o 15 minutos?).

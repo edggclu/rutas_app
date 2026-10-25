@@ -5,7 +5,7 @@ import 'package:telyser_app/providers/session_provider.dart';
 
 import '../../../core/theme/app_colors.dart'; // colores
 
-enum _MenuAction { logout, resetDemo } // las dos opciones del menú
+enum _MenuAction { logout, resetDemo, expireSession } // las opciones del menú
 
 /// Menú de tres puntos del encabezado de Mi día: cerrar sesión y reiniciar la demo.
 class AccountMenu extends ConsumerWidget { // widget que puede leer providers
@@ -46,11 +46,14 @@ class AccountMenu extends ConsumerWidget { // widget que puede leer providers
             ref.read(sessionProvider.notifier).logout(); // borra la sesión: la app vuelve al login
           case _MenuAction.resetDemo: // reiniciar la demo
             _resetDemo(context, ref); // confirma y borra
+          case _MenuAction.expireSession: // simula un 401 del servidor
+            ref.read(sessionProvider.notifier).expire(); // vuelve al login con el aviso de sesión expirada
         }
       },
       itemBuilder: (_) => const [ // las opciones
         PopupMenuItem(value: _MenuAction.logout, child: Text('Cerrar sesión')), // opción 1
         PopupMenuItem(value: _MenuAction.resetDemo, child: Text('Reiniciar datos de demo')), // opción 2
+        PopupMenuItem(value: _MenuAction.expireSession, child: Text('Simular sesión expirada')), // opción 3 (demo)
       ],
     );
   }

@@ -1,0 +1,34 @@
+{
+  "notifications": [
+    {
+      "id": 5, "type": "job_returned",
+      "title": "Regresaron un trabajo",
+      "body": "TEL-2610-021 (Clínica Santa Fe): falta la foto del grabador grabando. El jefe de ruta programará otra visita.",
+      "created_at": "2026-10-24T14:05:00Z", "read": false, "visit_id": null
+    },
+    {
+      "id": 4, "type": "route_changed",
+      "title": "Cambió tu ruta de hoy",
+      "body": "Se agregó una visita: Condominio Las Palmas, a las 16:00.",
+      "created_at": "2026-10-24T13:40:00Z", "read": false, "visit_id": 103
+    },
+    {
+      "id": 3, "type": "job_validated",
+      "title": "Validaron tu trabajo",
+      "body": "TEL-2610-019 (Colegio Horizonte) quedó validado.",
+      "created_at": "2026-10-23T20:10:00Z", "read": true, "visit_id": null
+    },
+    {
+      "id": 2, "type": "plan_updated",
+      "title": "El ingeniero actualizó un plan",
+      "body": "TEL-2610-014 (Hotel Bahía): cambió el material y el croquis.",
+      "created_at": "2026-10-23T15:30:00Z", "read": true, "visit_id": 101
+    },
+    {
+      "id": 1, "type": "announcement",
+      "title": "Recordatorio",
+      "body": "Toma tus fotos de avance antes de cerrar la visita.",
+      "created_at": "2026-10-20T13:00:00Z", "read": true, "visit_id": null
+    }
+  ]
+}

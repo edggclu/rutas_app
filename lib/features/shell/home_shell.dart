@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/features/my_jobs/my_jobs_screen.dart';
+import 'package:telyser_app/features/notifications/notifications_screen.dart';
 import 'package:telyser_app/features/review/review_list_screen.dart';
+import 'package:telyser_app/providers/notifications_providers.dart';
 import 'package:telyser_app/providers/session_provider.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -26,6 +28,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(sessionProvider)!.user;
+    final unread = ref.watch(unreadNoticesProvider);
 
     final tabs = <({AppTabItem item, Widget page})>[
       (item: const AppTabItem('Mi día'), page: const MyDayScreen()),
@@ -41,8 +44,8 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           page: const ReviewListScreen()
         ),
       (
-        item: const AppTabItem('Avisos'),
-        page: const _ComingSoon('Avisos', 'Llega con las notificaciones (paso 7).'),
+        item: AppTabItem('Avisos', badge: unread > 0), // punto rojo si hay avisos sin leer
+        page: const NotificationsScreen(),
       ),
     ];
 

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:telyser_app/domain/models/app_settings.dart';
 import 'package:telyser_app/domain/models/closing_models.dart';
 import 'package:telyser_app/domain/models/my_job_models.dart';
+import 'package:telyser_app/domain/models/notification_models.dart';
 import 'package:telyser_app/domain/models/payload.dart';
 import 'package:telyser_app/domain/models/product.dart';
 import 'package:telyser_app/domain/models/review_models.dart';
@@ -160,5 +161,29 @@ class MockPlanRepository implements PlanRepository {
     await Future<void>.delayed(const Duration(milliseconds: 300)); // simula la red
     _store.plans[jobId] = plan;
     return plan;
+  }
+}
+
+
+/// Avisos de prueba: lee assets/mock/notifications.json y recuerda en memoria cuáles se leyeron.
+class MockNotificationsRepository implements NotificationsRepository {
+  List<AppNotification>? _list;
+
+  Future<List<AppNotification>> _load() async =>
+      _list ??= [for (final m in readMaps(await _loadJson('assets/mock/notifications.json'), 'notifications')) AppNotification.fromJson(m)];
+
+  @override
+  Future<List<AppNotification>> fetch() async {
+    await Future<void>.delayed(const Duration(milliseconds: 300)); // simula la red
+    return List.of(await _load());
+  }
+
+  @override
+  Future<void> markRead(List<int> ids) async {
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    final list = await _load();
+    for (var i = 0; i < list.length; i++) {
+      if (ids.contains(list[i].id)) list[i] = list[i].asRead();
+    }
   }
 }

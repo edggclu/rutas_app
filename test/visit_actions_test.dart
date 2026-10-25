@@ -11,7 +11,8 @@ import 'package:telyser_app/domain/rules/closing.dart';
 import 'package:telyser_app/domain/events/event_types.dart';
 import 'package:telyser_app/domain/rules/extras.dart'; 
 import 'package:telyser_app/domain/models/event_models.dart';
-import 'package:telyser_app/domain/models/models.dart'; 
+import 'package:telyser_app/domain/models/models.dart';
+import 'package:telyser_app/domain/models/location_access.dart';
 
 /// Ubicación falsa: devuelve siempre el punto que se le indique (o null).
 class _FakeLocation implements LocationService { 
@@ -19,6 +20,12 @@ class _FakeLocation implements LocationService {
   final GeoPoint? point; 
   @override
   Future<GeoPoint?> currentPosition() async => point; // devuelve el punto sin tocar el GPS
+  @override
+  Future<LocationAccess> access() async => LocationAccess.granted;
+  @override
+  Future<LocationAccess> request() async => LocationAccess.granted;
+  @override
+  Future<void> openSettings() async {}
 }
 
 void main() {

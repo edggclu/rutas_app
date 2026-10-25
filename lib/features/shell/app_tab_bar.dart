@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 
 class AppTabItem {
-  const AppTabItem(this.label);
+  const AppTabItem(this.label, {this.badge = false});
   final String label;
+  final bool badge; // true = punto rojo (hay algo sin leer)
 }
 
 /// Barra inferior navy; la pestaña activa va en rojo.
@@ -36,16 +37,35 @@ class AppTabBar extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      width: 22,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        color: i == index ? AppColors.rojo : Colors.transparent,
-                        border: i == index
-                            ? null
-                            : Border.all(color: AppColors.gris400, width: 2),
-                        borderRadius: BorderRadius.circular(7),
-                      ),
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 22,
+                          height: 22,
+                          decoration: BoxDecoration(
+                            color: i == index ? AppColors.rojo : Colors.transparent,
+                            border: i == index
+                                ? null
+                                : Border.all(color: AppColors.gris400, width: 2),
+                            borderRadius: BorderRadius.circular(7),
+                          ),
+                        ),
+                        if (items[i].badge && i != index) // el punto no se muestra en la pestaña abierta
+                          Positioned(
+                            right: -3,
+                            top: -3,
+                            child: Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color: AppColors.rojo,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: AppColors.navy900, width: 2),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(

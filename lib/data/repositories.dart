@@ -1,6 +1,7 @@
 import 'package:telyser_app/domain/models/app_settings.dart';
 import 'package:telyser_app/domain/models/closing_models.dart';
 import 'package:telyser_app/domain/models/my_job_models.dart';
+import 'package:telyser_app/domain/models/notification_models.dart';
 import 'package:telyser_app/domain/models/product.dart';
 import 'package:telyser_app/domain/models/review_models.dart';
 
@@ -45,4 +46,11 @@ abstract class MyJobsRepository {
 /// El plan del trabajo que edita el ingeniero. Necesita señal: no pasa por la cola.
 abstract class PlanRepository {
   Future<Plan> save(int jobId, Plan plan); // guarda y devuelve el plan tal como quedó en el servidor
+}
+
+
+/// Avisos del usuario. Necesita señal: no pasa por la cola.
+abstract class NotificationsRepository {
+  Future<List<AppNotification>> fetch();
+  Future<void> markRead(List<int> ids); // los marca como leídos en el servidor
 }

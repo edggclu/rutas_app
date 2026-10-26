@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\Users\\edgar\\OneDrive\\Documents\\Projects\\flutter\\telyser_app\\.archify\\architecture-telyser-20261025-120000\\candidate.json",
+    "sha256": "ec43521a4a30c094122034503d6a299e452e1b6d3dfad8f4d1495e35da4cda92",
+    "bytes": 5903
+  },
+  "artifact": {
+    "path": "C:\\Users\\edgar\\OneDrive\\Documents\\Projects\\flutter\\telyser_app\\.archify\\architecture-telyser-20261025-120000\\telyser-architecture.html",
+    "sha256": "a6d5189042e40de283865069d25d242e473b8cb27b3d27c163072ad7d068e7ea",
+    "bytes": 864363
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Users\\edgar\\OneDrive\\Documents\\Projects\\flutter\\telyser_app\\.archify\\architecture-telyser-20261025-120000\\telyser-architecture.finalize.json",
+    "summaryReceipt": "C:\\Users\\edgar\\OneDrive\\Documents\\Projects\\flutter\\telyser_app\\.archify\\architecture-telyser-20261025-120000\\telyser-architecture.finalize-summary.json",
+    "browserCheckReceipt": "C:\\Users\\edgar\\OneDrive\\Documents\\Projects\\flutter\\telyser_app\\.archify\\architecture-telyser-20261025-120000\\telyser-architecture.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-26T01:13:53.464Z",
+    "source": "network",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 3638,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  },
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "resolvedCrossovers": 1,
+      "routesOverSuggestedBends": 3
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [
+        {
+          "left": {
+            "id": "actions-gps",
+            "from": "actions",
+            "to": "gps",
+            "label": "posición",
+            "collectionIndex": 9,
+            "artifactIndex": 10
+          },
+          "right": {
+            "id": "ui-media",
+            "from": "ui",
+            "to": "media",
+            "label": "foto/video",
+            "collectionIndex": 10,
+            "artifactIndex": 11
+          },
+          "point": [
+            514,
+            284
+          ]
+        }
+      ],
+      "detours": [
+        {
+          "relationship": {
+            "id": "providers-outbox",
+            "from": "providers",
+            "to": "outbox",
+            "label": "watchAll",
+            "collectionIndex": 7,
+            "artifactIndex": 8
+          },
+          "bends": 3,
+          "stretch": 1.122,
+          "directCorridorBlockers": [
+            {
+              "id": "actions",
+              "label": "Acciones (application)",
+              "box": [
+                590,
+                200,
+                190,
+                60
+              ]
+            }
+          ]
+        },
+        {
+          "relationship": {
+            "id": "actions-gps",
+            "from": "actions",
+            "to": "gps",
+            "label": "posición",
+            "collectionIndex": 9,
+            "artifactIndex": 10
+          },
+          "bends": 3,
+          "stretch": 1.096,
+          "directCorridorBlockers": [
+            {
+              "id": "domain",
+              "label": "Dominio",
+              "box": [
+                290,
+                200,
+                200,
+                60
+              ]
+            }
+          ]
+        },
+        {
+          "relationship": {
+            "id": "ui-media",
+            "from": "ui",
+            "to": "media",
+            "label": "foto/video",
+            "collectionIndex": 10,
+            "artifactIndex": 11
+          },
+          "bends": 3,
+          "stretch": 1.13,
+          "directCorridorBlockers": [
+            {
+              "id": "domain",
+              "label": "Dominio",
+              "box": [
+                290,
+                200,
+                200,
+                60
+              ]
+            }
+          ]
+        }
+      ],
+      "truncated": false
+    },
+    "hints": [
+      "actions → gps crosses ui → media: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor."
+    ],
+    "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
+  }
+}

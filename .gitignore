@@ -50,3 +50,4 @@ app.*.map.json
 # extras
 /screenshots/
 /docs/documentacion_proyecto_telyser.docx
+/docs/Requisitos.txt

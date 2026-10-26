@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "40320ccf-8af0-4f40-9e3c-859607af7379",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "C:\\Users\\edgar\\OneDrive\\Documents\\Projects\\flutter\\telyser_app\\.archify\\architecture-telyser-20261025-120000\\candidate.json",
+  "output": "C:\\Users\\edgar\\OneDrive\\Documents\\Projects\\flutter\\telyser_app\\.archify\\architecture-telyser-20261025-120000\\telyser-architecture.html",
+  "specification": {
+    "sha256": "ec43521a4a30c094122034503d6a299e452e1b6d3dfad8f4d1495e35da4cda92",
+    "bytes": 5903
+  },
+  "artifact": {
+    "sha256": "a6d5189042e40de283865069d25d242e473b8cb27b3d27c163072ad7d068e7ea",
+    "bytes": 864363
+  }
+}

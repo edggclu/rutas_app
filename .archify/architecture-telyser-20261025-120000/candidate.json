@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Telyser App: arquitectura Flutter",
+    "output": ".archify/architecture-telyser-20261025-120000/telyser-architecture.html",
+    "quality_profile": "showcase",
+    "locale": "es",
+    "repository": {
+      "url": "https://github.com/edggclu/rutas_app.git",
+      "revision": "62200935118dd4a37bb1422d7f048c0021cf6b8f"
+    }
+  },
+  "components": [
+    { "id": "tech", "type": "external", "label": "Técnico / Ingeniero", "sublabel": "rol según permisos", "pos": [40, 40], "size": [150, 60] },
+    { "id": "ui", "type": "frontend", "label": "Pantallas (features)", "sublabel": "Mi día · Mis trabajos · Por validar · Avisos", "pos": [290, 40], "size": [200, 60],
+      "sources": [{ "path": "lib/features/shell/home_shell.dart", "line": 14, "end_line": 61 }, { "path": "lib/app.dart", "line": 23, "end_line": 31 }] },
+    { "id": "providers", "type": "backend", "label": "Providers Riverpod", "sublabel": "sesión, ruta, ajustes, eventos", "pos": [590, 40], "size": [190, 60],
+      "sources": [{ "path": "lib/providers/session_provider.dart", "line": 8, "end_line": 41 }, { "path": "lib/providers/route_providers.dart", "line": 14, "end_line": 47 }] },
+    { "id": "actions", "type": "backend", "label": "Acciones (application)", "sublabel": "VisitActions + OutboxWriter", "pos": [590, 200], "size": [190, 60],
+      "sources": [{ "path": "lib/application/visit_actions.dart", "line": 16, "end_line": 36 }, { "path": "lib/application/outbox_writer.dart", "line": 18, "end_line": 59 }] },
+    { "id": "domain", "type": "backend", "label": "Dominio", "sublabel": "modelos, reglas, applyEvents", "pos": [290, 200], "size": [200, 60],
+      "sources": [{ "path": "lib/providers/route_providers.dart", "line": 43, "end_line": 47 }, { "path": "lib/data/repositories.dart", "line": 14, "end_line": 56 }] },
+    { "id": "repos", "type": "backend", "label": "Repositorios remotos", "sublabel": "interfaces; hoy Mock", "pos": [890, 40], "size": [190, 60], "tag": "API Laravel pendiente",
+      "sources": [{ "path": "lib/data/repositories.dart", "line": 10, "end_line": 16 }, { "path": "lib/providers/infra_providers.dart", "line": 13, "end_line": 21 }] },
+    { "id": "mock", "type": "external", "label": "Datos mock", "sublabel": "assets/mock/*.json", "pos": [890, 200], "size": [190, 60],
+      "sources": [{ "path": "lib/data/mock/mock_repositories.dart", "line": 16, "end_line": 22 }] },
+    { "id": "outbox", "type": "backend", "label": "OutboxRepository", "sublabel": "grace → pending → sending → failed", "pos": [590, 360], "size": [190, 60],
+      "sources": [{ "path": "lib/data/local/outbox_repository.dart", "line": 8, "end_line": 44 }] },
+    { "id": "stores", "type": "backend", "label": "Route/Settings stores", "sublabel": "caché sin señal", "pos": [890, 360], "size": [190, 60],
+      "sources": [{ "path": "lib/data/local/route_store.dart", "line": 7, "end_line": 38 }, { "path": "lib/data/local/settings_store.dart", "line": 8, "end_line": 24 }] },
+    { "id": "media", "type": "backend", "label": "MediaRepository", "sublabel": "fotos y videos", "pos": [290, 360], "size": [200, 60],
+      "sources": [{ "path": "lib/data/local/media/media_repository.dart", "line": 9, "end_line": 38 }] },
+    { "id": "db", "type": "database", "label": "SQLite (Drift)", "sublabel": "SettingsKv · CachedVisits · OutboxEvents · MediaQueue", "pos": [590, 520], "size": [230, 64],
+      "sources": [{ "path": "lib/data/local/app_database.dart", "line": 10, "end_line": 66 }] },
+    { "id": "files", "type": "database", "label": "Carpeta privada", "sublabel": "archivos de foto/video", "pos": [290, 520], "size": [200, 60],
+      "sources": [{ "path": "lib/providers/infra_providers.dart", "line": 37, "end_line": 41 }] },
+    { "id": "gps", "type": "external", "label": "GPS del teléfono", "sublabel": "geolocator", "pos": [40, 200], "size": [150, 60],
+      "sources": [{ "path": "lib/data/location_service.dart", "line": 21, "end_line": 70 }] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Almacenamiento local del teléfono", "wraps": ["db", "files"] }
+  ],
+  "connections": [
+    { "id": "tech-ui", "from": "tech", "to": "ui", "label": "usa", "variant": "emphasis" },
+    { "id": "ui-providers", "from": "ui", "to": "providers", "label": "watch" },
+    { "id": "ui-domain", "from": "ui", "to": "domain", "label": "reglas", "fromSide": "bottom", "toSide": "top" },
+    { "id": "ui-actions", "from": "ui", "to": "actions", "label": "acciones" },
+    { "id": "providers-repos", "from": "providers", "to": "repos", "label": "fetch" },
+    { "id": "repos-mock", "from": "repos", "to": "mock", "label": "hoy", "variant": "dashed" },
+    { "id": "providers-stores", "from": "providers", "to": "stores", "label": "guarda / lee" },
+    { "id": "providers-outbox", "from": "providers", "to": "outbox", "label": "watchAll" },
+    { "id": "actions-outbox", "from": "actions", "to": "outbox", "label": "enqueue", "variant": "emphasis" },
+    { "id": "actions-gps", "from": "actions", "to": "gps", "label": "posición", "variant": "dashed" },
+    { "id": "ui-media", "from": "ui", "to": "media", "label": "foto/video" },
+    { "id": "outbox-db", "from": "outbox", "to": "db", "label": "OutboxEvents" },
+    { "id": "stores-db", "from": "stores", "to": "db", "label": "caché" },
+    { "id": "media-db", "from": "media", "to": "db", "label": "MediaQueue" },
+    { "id": "media-files", "from": "media", "to": "files", "label": "archivo" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Offline-first", "items": ["La app no envía al servidor: encola en OutboxEvents", "Con señal se descarga la ruta; sin señal se lee la caché"] },
+    { "dot": "amber", "title": "Pendiente", "items": ["El enviador de la cola aún no existe en lib/", "Repositorios HTTP reemplazarán a los Mock en infra_providers"] }
+  ]
+}

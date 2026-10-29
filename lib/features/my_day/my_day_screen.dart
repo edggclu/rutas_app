@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/features/my_day/widgets/account_menu.dart';
-import 'package:telyser_app/features/site/site_screen.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 import 'package:telyser_app/providers/session_provider.dart';
 
@@ -14,10 +13,9 @@ import '../../domain/models/models.dart';
 import '../../domain/rules/technician_state.dart';
 import 'visit_card.dart';
 import 'widgets/location_banner.dart';
+import 'open_visit.dart';
 import 'widgets/next_stop_bar.dart';
-import '../visit_summary/visit_summary_screen.dart';
 import '../route/route_map_screen.dart';
-import 'visit_detail_loader.dart';
 
 /// C1 · Mi día: la ruta del día en orden y el estado del técnico.
 class MyDayScreen extends ConsumerWidget {
@@ -121,15 +119,7 @@ class _Content extends StatelessWidget {
                       VisitCard(
                         number: i + 1,
                         visit: v,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => v.status == VisitStatus.done // si la visita ya se cerró: su resumen
-                              ? VisitSummaryScreen(visitId: v.id)
-                              : v.status == VisitStatus.onSite // si la visita ya está En sitio
-                              ? SiteScreen(visitId: v.id) // abre la pantalla de trabajo
-                              : VisitDetailLoader(visitId: v.id), // si no, abre la tarjeta de visita
-                          ),
-                        ),
+                        onTap: () => openVisit(context, v), // el resumen, el trabajo o la tarjeta, según su estado
                       ),
                       const SizedBox(height: 12),
                     ],

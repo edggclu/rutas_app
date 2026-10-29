@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/time/time_utils.dart';
 import '../../../domain/format.dart';
+import '../../../domain/models/enums.dart';
 import '../../../domain/models/models.dart';
 import '../../../domain/models/route_path.dart';
 import '../../../domain/rules/route_planner.dart';
@@ -65,34 +66,48 @@ class _Content extends StatelessWidget {
   final StopPanel panel;
   final Visit stop;
 
+  String _label(RoutePlan plan, bool isActive, int index) {
+    if (isActive) return stop.status == VisitStatus.onSite ? 'EN SITIO' : 'EN CAMINO';
+    if (index == 0) return plan.isCustom ? 'SIGUIENTE PARADA · TU ELECCIÓN' : 'SIGUIENTE PARADA';
+    return 'PARADA ${index + 1}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final plan = panel.plan;
+    final isActive = plan.active.any((v) => v.id == stop.id); // la visita en curso también se puede mirar
     final index = plan.ordered.indexWhere((v) => v.id == stop.id);
-    final isNext = index == 0;
     final km = index >= 0 ? plan.legKm(index, panel.path) : null; // por calles si ya se tiene
     final scheduled = stop.scheduledAt;
+    final canNavigate = isActive ? stop.status == VisitStatus.enRoute : index == 0; // En sitio ya no navega
+    final canStartHere = !isActive && index > 0;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          isNext ? (plan.isCustom ? 'SIGUIENTE PARADA · TU ELECCIÓN' : 'SIGUIENTE PARADA') : 'PARADA ${index + 1}',
+          _label(plan, isActive, index),
           style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.6, color: AppColors.gris600),
         ),
-        if (plan.ordered.length > 1) ...[
+        if (plan.stops.length > 1) ...[
           const SizedBox(height: 8),
           SizedBox(
             height: 34,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: plan.ordered.length,
+              itemCount: plan.stops.length,
               separatorBuilder: (context, i) => const SizedBox(width: 8),
-              itemBuilder: (context, i) => GestureDetector(
-                onTap: () => panel.onSelect(plan.ordered[i]),
-                child: StopNumber(number: i + 1, next: i == 0, selected: plan.ordered[i].id == stop.id && i != 0),
-              ),
+              itemBuilder: (context, i) {
+                final v = plan.stops[i];
+                final n = plan.ordered.indexWhere((o) => o.id == v.id);
+                return GestureDetector(
+                  onTap: () => panel.onSelect(v),
+                  child: n < 0
+                      ? ActiveStop(selected: v.id == stop.id)
+                      : StopNumber(number: n + 1, next: n == 0, selected: v.id == stop.id && n != 0),
+                );
+              },
             ),
           ),
         ],
@@ -132,17 +147,23 @@ class _Content extends StatelessWidget {
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(
-              child: FilledButton(
-                onPressed: isNext ? panel.onNavigate : panel.onStartHere,
-                child: Text(isNext ? 'Iniciar navegación' : 'Empezar por esta'),
+            if (canNavigate || canStartHere) ...[
+              Expanded(
+                child: FilledButton(
+                  onPressed: canNavigate ? panel.onNavigate : panel.onStartHere,
+                  child: Text(canNavigate ? 'Iniciar navegación' : 'Empezar por esta'),
+                ),
               ),
+              const SizedBox(width: 12),
+            ],
+            Expanded(
+              child: canNavigate || canStartHere
+                  ? OutlinedButton(onPressed: panel.onDetail, child: const Text('Detalle de visita'))
+                  : FilledButton(onPressed: panel.onDetail, child: const Text('Detalle de visita')), // En sitio: es la única acción
             ),
-            const SizedBox(width: 12),
-            Expanded(child: OutlinedButton(onPressed: panel.onDetail, child: const Text('Detalle de visita'))),
           ],
         ),
-        if (plan.isCustom)
+        if (!isActive && plan.isCustom)
           Align(
             alignment: Alignment.center,
             child: TextButton(onPressed: panel.onResetRoute, child: const Text('Volver a la ruta sugerida')),

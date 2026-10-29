@@ -6,9 +6,10 @@ import '../../core/widgets/app_header.dart';
 import '../../core/widgets/toast.dart';
 import '../../domain/models/models.dart';
 import '../../domain/models/route_path.dart';
+import '../../domain/rules/route_planner.dart';
 import '../../providers/route_providers.dart';
 import '../../providers/routing_providers.dart';
-import '../my_day/visit_detail_loader.dart';
+import '../my_day/open_visit.dart';
 import 'widgets/route_map.dart';
 import 'widgets/stop_panel.dart';
 
@@ -37,22 +38,27 @@ class _RouteMapScreenState extends ConsumerState<RouteMapScreen> {
     if (!ok) messenger.toast('No se pudo abrir el mapa.');
   }
 
-  void _detail(Visit v) =>
-      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => VisitDetailLoader(visitId: v.id)));
+  void _detail(Visit v) => openVisit(context, v);
+
+  /// "2 por hacer", "1 en curso" o las dos cosas.
+  String _subtitle(RoutePlan plan) => [
+        if (plan.ordered.isNotEmpty) '${plan.ordered.length} por hacer',
+        if (plan.active.isNotEmpty) '${plan.active.length} en curso',
+      ].join(' · ');
 
   @override
   Widget build(BuildContext context) {
     final plan = ref.watch(routePlanProvider);
     if (plan == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     final path = ref.watch(routePathProvider(RouteStops(plan.stopPoints))).value; // por calles; null mientras llega
-    final stop = plan.ordered.where((v) => v.id == _selectedId).firstOrNull ?? plan.ordered.firstOrNull;
+    final stop = plan.stops.where((v) => v.id == _selectedId).firstOrNull ?? plan.stops.firstOrNull; // la en curso también cuenta
 
     return Scaffold(
       body: Column(
         children: [
           AppHeader(
             title: 'Mapa de ruta',
-            subtitle: plan.ordered.isEmpty ? 'No quedan visitas por hacer' : '${plan.ordered.length} por hacer',
+            subtitle: plan.stops.isEmpty ? 'No quedan visitas por hacer' : _subtitle(plan),
             onBack: () => Navigator.of(context).pop(),
           ),
           Expanded(

@@ -49,6 +49,10 @@ class RoutePlan {
   /// ¿La primera visita es distinta de la que sugiere el algoritmo (el técnico la eligió)?
   bool get isCustom => ordered.isNotEmpty && ordered.first.id != suggestedFirstId;
 
+  /// Las visitas que se pueden mirar en el mapa: la que va En camino o En sitio y las que faltan.
+  /// Sin la activa, la última visita en camino dejaría el mapa diciendo que ya no queda ninguna.
+  List<Visit> get stops => [...active, ...ordered];
+
   /// Los puntos por los que pasa la ruta: de donde sale (si se sabe) y cada visita por hacer que
   /// tiene ubicación, en orden.
   List<GeoPoint> get stopPoints => [

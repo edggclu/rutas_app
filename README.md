@@ -534,6 +534,7 @@ El orden de la ruta **ya no viene del servidor** (`order` solo sirve de respaldo
 
 - **Elegir con cuál empezar:** al mirar otra parada, el botón principal pasa a **Empezar por esta**. La ruta se rehace desde esa, con las demás por cercanía. "Volver a la ruta sugerida" deshace la elección.
 - **Por calles:** la línea del mapa sigue las calles y los km de cada tramo son por calles, no en línea recta. La app se los pide a un servidor de rutas compatible con OSRM (`routing_base_url` en los parámetros del servidor). Mientras llega, sin señal o si la empresa no configuró uno, dibuja la línea recta punteada y usa la distancia recta. El **orden** de la ruta siempre se calcula con la distancia recta: es solo para comparar qué queda más cerca y no necesita internet. El servidor público de demostración de OSRM no es para producción: conviene uno propio.
+- **La visita en curso también se puede mirar:** si ya vas en camino o estás en sitio, el mapa la muestra en verde y su tarjeta dice EN CAMINO o EN SITIO (en camino conserva Iniciar navegación; en sitio solo el detalle). Así, con la última visita en curso el mapa no dice que ya cerraste todo.
 - **Las cerradas no cuentan:** la ruta se calcula solo con las visitas por hacer, y sale desde donde cerró la última (o desde la visita en curso).
 - **La siguiente ya no arranca sola:** al cerrar una visita, el técnico queda Libre y Mi día muestra "Sigue X" con **Ir a X** y **Cambiar** (abre el mapa). Por la mañana la barra dice "Empiezas en X" y abre la Salida con la lista de material. Salir a una visita encola `departure_confirmed` de esa visita.
 - **La elección vive solo mientras decide** (`routeStartProvider`): al salir, el estado queda guardado en la cola.
@@ -546,6 +547,7 @@ El orden de la ruta **ya no viene del servidor** (`order` solo sirve de respaldo
 | `providers/routing_providers.dart` | `routingRepositoryProvider` y `routePathProvider` (solo vuelve a pedir si cambian los puntos, `RouteStops`) |
 | `providers/route_providers.dart` | `appliedRouteProvider` (servidor + cola), `routeStartProvider`, `routePlanProvider` y `myDayProvider` (ya en el orden de la ruta) |
 | `features/route/route_map_screen.dart` | La pantalla, con `widgets/route_map.dart` (el mapa y los pines), `stop_panel.dart` (la tarjeta de abajo) y `tier_chip.dart` |
+| `features/my_day/open_visit.dart` | `openVisit`: abre el resumen, el trabajo o la tarjeta según el estado de la visita (lo usan Mi día y el mapa) |
 | `features/my_day/widgets/next_stop_bar.dart` | La barra de abajo de Mi día: Salida o "Ir a la siguiente" |
 
 ### Visita cerrada: estado y resumen
@@ -649,6 +651,7 @@ Una pantalla que solo **compone** secciones; cada sección lee lo que necesita c
 | `session_test` | Sesión expirada: salir sin tocar la cola y exigir la misma cuenta |
 | `notifications_test` | Avisos: el mock, tipos desconocidos, conteo, orden y la hora relativa |
 | `routing_test` | La ruta por calles: lector de OSRM, cliente HTTP, tramos por calles y el provider |
+| `stop_panel_test` | La tarjeta del mapa: la visita en curso (en camino o en sitio), la siguiente parada y cuando ya no queda nada |
 | `route_planner_test`, `route_providers_test` | La ruta: distancia, vecino más cercano, elegir la primera, cerradas fuera y el cableado con la oficina y la cola |
 | `visit_labels_test`, `visit_summary_test` | Hecha / Sin terminar / Detenida / Sin atender y el resumen de una visita con sus notas |
 | `account_test` | Cambiar y recuperar la contraseña: reglas, acciones y repositorio de prueba |

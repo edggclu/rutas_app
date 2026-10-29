@@ -11,20 +11,19 @@ LatLng _ll(GeoPoint p) => LatLng(p.lat, p.lng);
 
 /// El mapa de la ruta. Las visitas que faltan van numeradas en el orden de la ruta: la siguiente
 /// parada, rellena en rojo, y las demás en blanco con borde rojo. La visita en curso va en verde y
-/// las cerradas en gris. Los mosaicos necesitan internet: sin señal el mapa queda en blanco, pero
-/// los puntos siguen ahí.
+/// las cerradas en gris. Se pueden tocar la visita en curso y las que faltan. Los mosaicos necesitan
+/// internet: sin señal el mapa queda en blanco, pero los puntos siguen ahí.
 class RouteMap extends StatelessWidget {
   const RouteMap({super.key, required this.plan, required this.path, required this.selectedId, required this.onSelect});
 
   final RoutePlan plan;
   final RoutePath? path; // la ruta por calles; null = todavía no llega o no hay servicio
-  final int? selectedId; // la parada que se está mirando (null = la siguiente)
+  final int? selectedId; // la parada que se está mirando
   final ValueChanged<int> onSelect;
 
   @override
   Widget build(BuildContext context) {
     final start = plan.start;
-    final others = [...plan.active, ...plan.done]; // la visita en curso y las cerradas
     final line = <LatLng>[
       if (start != null) _ll(start),
       for (final v in plan.ordered)
@@ -32,7 +31,7 @@ class RouteMap extends StatelessWidget {
     ];
     final all = <LatLng>[
       ...line,
-      for (final v in others)
+      for (final v in [...plan.active, ...plan.done])
         if (pointOf(v) != null) _ll(pointOf(v)!),
     ];
 
@@ -69,17 +68,21 @@ class RouteMap extends StatelessWidget {
                 height: 28,
                 child: const _Dot(fill: AppColors.navy900, ring: Colors.white, child: Icon(Icons.flag, size: 14, color: Colors.white)),
               ),
-            for (final v in others)
+            for (final v in plan.done) // las cerradas: grises, solo para ubicarse
               if (pointOf(v) != null)
                 Marker(
                   point: _ll(pointOf(v)!),
                   width: 28,
                   height: 28,
-                  child: _Dot(
-                    fill: plan.active.contains(v) ? AppColors.ok : AppColors.gris400,
-                    ring: Colors.white,
-                    child: Icon(plan.active.contains(v) ? Icons.my_location : Icons.check, size: 14, color: Colors.white),
-                  ),
+                  child: const _Dot(fill: AppColors.gris400, ring: Colors.white, child: Icon(Icons.check, size: 14, color: Colors.white)),
+                ),
+            for (final v in plan.active) // la que va En camino o En sitio
+              if (pointOf(v) != null)
+                Marker(
+                  point: _ll(pointOf(v)!),
+                  width: 38,
+                  height: 38,
+                  child: GestureDetector(onTap: () => onSelect(v.id), child: ActiveStop(selected: v.id == selectedId)),
                 ),
             for (var i = 0; i < plan.ordered.length; i++)
               if (pointOf(plan.ordered[i]) != null)
@@ -127,6 +130,23 @@ class StopNumber extends StatelessWidget {
       ),
     );
   }
+}
+
+/// La visita en curso (En camino o En sitio): un círculo verde con el símbolo de ubicación.
+class ActiveStop extends StatelessWidget {
+  const ActiveStop({super.key, this.selected = false, this.size = 34});
+
+  final bool selected;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => _Dot(
+        size: size,
+        fill: AppColors.ok,
+        ring: selected ? AppColors.navy900 : Colors.white,
+        ringWidth: selected ? 3 : 2,
+        child: Icon(Icons.my_location, size: size * 0.5, color: Colors.white),
+      );
 }
 
 class _Dot extends StatelessWidget {

@@ -100,4 +100,22 @@ void main() {
       expect(plan.isCustom, isFalse);
     });
   });
+
+  group('las paradas que se pueden mirar', () {
+    test('la visita en curso cuenta como parada, antes de las que faltan', () {
+      final plan = planRoute([_visit(1, km: 5, status: 'en_route'), _visit(2, km: 2), _visit(3, km: 9)], office: _at(0));
+      expect(_ids(plan.stops), [1, 2, 3]);
+    });
+
+    test('con una sola visita y yendo en camino a ella, todavía hay una parada', () {
+      final plan = planRoute([_visit(1, km: 5, status: 'done'), _visit(2, km: 2, status: 'en_route')], office: _at(0));
+      expect(plan.ordered, isEmpty); // ya no queda ninguna por hacer…
+      expect(_ids(plan.stops), [2]); // …pero la que va en camino se puede ver en el mapa
+    });
+
+    test('sin visitas abiertas no hay paradas', () {
+      final plan = planRoute([_visit(1, km: 5, status: 'done')], office: _at(0));
+      expect(plan.stops, isEmpty);
+    });
+  });
 }

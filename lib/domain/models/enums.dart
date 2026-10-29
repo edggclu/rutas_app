@@ -112,3 +112,20 @@ enum ChecklistKind {
   static ChecklistKind parse(String? s) => 
     s == 'tool' ?  ChecklistKind.tool : ChecklistKind.material;
 }
+/// Tipo de cliente (A, B o C). El técnico lo usa, junto con la ruta sugerida, para decidir por
+/// dónde empezar. Un valor que la app no conoce se lee como "sin tipo".
+enum ClientTier {
+  a('A'),
+  b('B'),
+  c('C');
+
+  const ClientTier(this.code);
+  final String code;
+
+  static ClientTier? tryParse(String? s) {
+    for (final t in values) {
+      if (t.code == s) return t;
+    }
+    return null;
+  }
+}

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:telyser_app/features/account/change_password_screen.dart';
 import 'package:telyser_app/providers/actions_provider.dart';
 import 'package:telyser_app/providers/session_provider.dart';
 
 import '../../../core/theme/app_colors.dart';
 
-enum _MenuAction { logout, resetDemo, expireSession } // las opciones del menú
+enum _MenuAction { changePassword, logout, resetDemo, expireSession } // las opciones del menú
 
 /// Menú de tres puntos del encabezado de Mi día: cerrar sesión y reiniciar la demo.
 class AccountMenu extends ConsumerWidget { // widget que puede leer providers
@@ -42,6 +43,8 @@ class AccountMenu extends ConsumerWidget { // widget que puede leer providers
       icon: const Icon(Icons.more_vert, color: AppColors.gris200), // tres puntos
       onSelected: (action) { // al elegir una opción
         switch (action) { // según cuál
+          case _MenuAction.changePassword: // cambiar la contraseña
+            Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ChangePasswordScreen()));
           case _MenuAction.logout: // cerrar sesión
             ref.read(sessionProvider.notifier).logout(); // borra la sesión: la app vuelve al login
           case _MenuAction.resetDemo: // reiniciar la demo
@@ -51,6 +54,7 @@ class AccountMenu extends ConsumerWidget { // widget que puede leer providers
         }
       },
       itemBuilder: (_) => const [ // las opciones
+        PopupMenuItem(value: _MenuAction.changePassword, child: Text('Cambiar contraseña')),
         PopupMenuItem(value: _MenuAction.logout, child: Text('Cerrar sesión')), // opción 1
         PopupMenuItem(value: _MenuAction.resetDemo, child: Text('Reiniciar datos de demo')), // opción 2
         PopupMenuItem(value: _MenuAction.expireSession, child: Text('Simular sesión expirada')), // opción 3 (demo)

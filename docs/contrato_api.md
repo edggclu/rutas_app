@@ -3,7 +3,7 @@
 Todas las rutas son JSON y llevan `Authorization: Bearer <token>` (menos `login`).
 Las horas viajan en **UTC (ISO 8601)**; la app las muestra en America/Mexico_City.
 Los nombres siguen el estilo en inglés del código actual del servidor.
-Los archivos de `assets/mock/` (`my_day.json`, `settings.json`, `review.json`, `my_jobs.json`, `notifications.json`, `products.json`) son ejemplos reales de este contrato.
+Los archivos de `assets/mock/` (`my_day.json`, `settings.json`, `review.json`, `my_jobs.json`, `notifications.json`, `dispatch.json`, `products.json`) son ejemplos reales de este contrato.
 
 ## Errores generales (propuesta)
 
@@ -40,7 +40,10 @@ descarga al iniciar el día y **nunca** los escribe fijos en el código.
   "min_client_contacts": 1, "min_office_calls": 1,
   "undo_seconds": 10, "credit_authorization_wait_min": 5,
   "photo_target_kb": 300, "video_max_s": 60,
-  "office_phone": "3220000000"
+  "office_phone": "3220000000",
+  "password_min_length": 8,
+  "office_lat": 20.6420, "office_lng": -105.2190,
+  "routing_base_url": "https://router.project-osrm.org"
 }
 ```
 - `credit_authorization_wait_min`: el documento de requisitos dice 15 min en la
@@ -48,6 +51,9 @@ descarga al iniciar el día y **nunca** los escribe fijos en el código.
 - Las familias de material que absorbe Telyser **no** se mandan a la app: el
   servidor marca el material absorbido y el técnico no ve ninguna etiqueta.
 - `office_phone`: teléfono de la oficina. La app lo usa para el botón "Llamar a la oficina".
+- `password_min_length`: largo mínimo de una contraseña nueva (la app lo revisa antes de enviarla; el servidor vuelve a validar).
+- `office_lat`, `office_lng`: ubicación de la oficina (pueden faltar). La primera ruta del día sale de ahí.
+- `routing_base_url`: dirección de un servidor de rutas por calles compatible con OSRM (la app pide `GET {url}/route/v1/driving/{lng},{lat};{lng},{lat}?overview=full&geometries=geojson`). Puede faltar: entonces el mapa dibuja líneas rectas. El servidor público de demostración de OSRM (`router.project-osrm.org`) no es para producción; conviene uno propio o un servicio de pago.
 
 ## GET /api/my-day?date=YYYY-MM-DD
 Ruta del día del usuario, con todo lo necesario para trabajar sin señal.
@@ -64,7 +70,7 @@ Ruta del día del usuario, con todo lo necesario para trabajar sin señal.
 | Campo | Tipo | Notas |
 |---|---|---|
 | `id` | int | |
-| `order` | int | Orden en la ruta (lo pone el jefe) |
+| `order` | int | Orden sugerido. **La app ya no lo usa para ordenar la ruta**: la calcula ella con la visita más cercana, y el técnico elige con cuál empezar. Solo sirve de respaldo si falta una ubicación |
 | `status` | `pending` · `en_route` · `on_site` · `done` | |
 | `result` | `finished` · `continue` · `blocked` · `no_answer` · null | Solo si `status = done` |
 | `scheduled_at` | UTC · null | Hora de cita, si existe |
@@ -73,7 +79,7 @@ Ruta del día del usuario, con todo lo necesario para trabajar sin señal.
 | `companions` | `[{id, name}]` | |
 | `arrived_at`, `left_at` | UTC · null | |
 | `km_from_previous` | number · null | Desde la visita anterior; la primera del día, desde la oficina. Alimenta la espera de "No me abren" |
-| `client` | `{id, name, overdue}` | `overdue` = saldo vencido (sí o no, **sin montos**) |
+| `client` | `{id, name, overdue, tier}` | `overdue` = saldo vencido (sí o no, **sin montos**). `tier` = tipo de cliente `A`, `B` o `C` (puede faltar); el técnico lo ve en el mapa para decidir con cuál empezar |
 | `place` | ver abajo | |
 | `job` | ver abajo | |
 
@@ -126,11 +132,11 @@ Tipos de evento que manda la app:
 
 | Área | Tipos |
 |---|---|
-| Salida | `departure_confirmed`, `missing_items` |
+| Salida | `departure_confirmed`, `missing_items`. `departure_confirmed` también se manda al salir hacia la siguiente visita: lleva el `visit_id` de la visita elegida |
 | Llegada | `arrived` (automático o manual) |
 | No me abren | `no_answer_reported`, `client_contacted`, `office_called`, `no_answer_confirmed` |
 | En sitio y extras | `photo_added`, `extra_added`, `request_added`, `authorization_requested`, `route_delay_reported` |
-| Cierre | `warranty_documented`, `finished`, `continue_tomorrow`, `blocked`, `left_site`, `help_requested` |
+| Cierre | `warranty_documented`, `finished`, `continue_tomorrow`, `blocked`, `left_site`, `help_requested`, `note_added` |
 
 `photo_added`, `extra_added`, `request_added`, `authorization_requested`, `route_delay_reported` y `warranty_documented` **se agregan**: el documento de requisitos no los lista.
 
@@ -142,7 +148,7 @@ El estado que ve el técnico es la ruta del servidor más los eventos que aún n
 `POST /api/visits/{id}/media` · `/extras` · `/requests` · `/authorizations` ·
 `GET /api/authorizations/{id}` · `GET /api/products/search?q=` · `GET /api/notifications` · `POST /api/notifications/read` ·
 `PUT /api/jobs/{id}/plan` · `GET /api/review` · `GET /api/my-jobs` ·
-`GET /api/dispatch/today|unassigned|decisions` · `POST /api/visits` · `PATCH /api/visits/{id}` ·
+`GET /api/dispatch/today|unassigned|decisions` · `POST /api/password` · `POST /api/password/forgot` · `POST /api/password/reset` · `POST /api/visits` · `PATCH /api/visits/{id}` ·
 `POST /api/devices`.
 
 ### Datos (payload) de los eventos de extras
@@ -189,6 +195,8 @@ El servidor decide si propone una jornada el siguiente día hábil con el mismo 
 - El servidor decide a quién avisar según `reason` (tabla de la sección 11 del documento de requisitos).
 
 `help_requested`: `{}` (el técnico abrió WhatsApp con el ingeniero a cargo).
+
+`note_added`: `{ "text": "Olvidé anotar el cable sobrante" }`. Nota que el técnico agrega a una visita ya cerrada. Solo se agrega: lo ya enviado no se edita. El servidor la liga a la visita (`visit_id`).
 
 ### Tipos de archivo (`kind`)
 `progress` · `warranty` (falla) · `warranty_serial` (etiqueta) · `damage` · `request` · `cabling_video` (video, espera Wi-Fi).
@@ -285,3 +293,70 @@ Marca avisos como leídos. Entrada: `{ "ids": [5, 4] }`. Respuesta: `{ "updated"
 
 ## Sesión expirada
 Cualquier ruta que responda 401 hace que la app salga a la pantalla de login con el aviso "Tu sesión expiró". La cola de acciones no se borra: se manda cuando **el mismo usuario** vuelva a entrar (`user.id` igual al de la sesión que expiró). Si entra otra cuenta, la app rechaza esa sesión.
+
+## Cambiar la contraseña
+
+### POST /api/password
+Cambia la contraseña del usuario con sesión. Necesita señal: **no pasa por la cola**. No lo hace administración.
+```json
+{ "current_password": "…", "new_password": "…" }
+```
+- Respuesta: 204 (sin cuerpo).
+- 422 con `code: "wrong_password"` si la actual no es correcta. La app lo muestra como "La contraseña actual no es correcta".
+- 422 con `code: "weak_password"` si la nueva no cumple las reglas (largo mínimo `password_min_length` de `/api/settings`, y distinta de la actual). La app ya revisa esto antes de enviar, pero el servidor es quien decide.
+- Después de cambiarla, la sesión actual sigue valiendo; las demás sesiones del usuario pueden invalidarse (responderán 401).
+
+## Rutas (jefe de ruta)
+
+Requieren el permiso `dispatch` (si no, 403). Necesitan señal: **no pasan por la cola**. La app arma el tablero con cuatro lecturas. Por ahora solo se leen; crear, mover y reordenar visitas (`POST /api/visits`, `PATCH /api/visits/{id}`) es el paso siguiente.
+
+### GET /api/dispatch/decisions
+Lo que requiere la decisión del jefe. El servidor escribe el título y el detalle.
+```json
+{ "decisions": [{
+  "id": 2, "kind": "blocked", "job_folio": "TEL-2610-017",
+  "title": "Detenido: Restaurante El Faro",
+  "detail": "Falta el grabador. Se espera a Axel. Lleva 2 días.",
+  "created_at": "2026-10-28T16:00:00Z" }] }
+```
+- `kind`: `urgent` · `blocked` · `continue_proposed` · `returned` · `route_delay` · `out_of_order`. La app lee un valor desconocido como "otro" y lo muestra igual. Las urgencias van arriba; el resto, de lo más nuevo a lo más viejo.
+
+### GET /api/dispatch/today?date=YYYY-MM-DD
+Las rutas de todos los técnicos en un día (sin `date`, hoy; "Mañana" usa el día siguiente).
+```json
+{ "technicians": [{
+  "id": 7, "name": "Pedro",
+  "visits": [{ "id": 101, "status": "done", "result": "continue", "day_number": 1,
+               "client": "Hotel Bahía", "place": "Hotel Bahía — torre 2",
+               "scheduled_at": "2026-10-29T14:00:00Z" }] }] }
+```
+- `visits` va en el orden que decidió el técnico. `status` y `result` son los de `my-day`. La app calcula el estado del técnico ("En sitio en…", "En camino a…", "Libre") con sus visitas.
+
+### GET /api/dispatch/unassigned
+Trabajos aprobados sin visita, con el semáforo.
+```json
+{ "unassigned": [{
+  "id": 42, "folio": "TEL-2610-042", "type": "installation", "priority": "normal",
+  "client": "Colegio Horizonte", "place": "Colegio Horizonte — dirección",
+  "lights": { "client_confirmed": "ok", "deposit_paid": "blocked", "balance": "ok",
+              "material_ready": "ok", "access": "warning" },
+  "can_schedule": false }] }
+```
+- `lights`: cinco luces con valor `ok` · `warning` · `blocked`. Una luz que falta o un valor desconocido se lee como `warning`.
+- `can_schedule`: si el trabajo ya se puede programar (por ejemplo, un anticipo en `blocked` no deja). Si no viene, la app solo lo bloquea cuando alguna luz está en `blocked`.
+
+### Recuperar la contraseña (sin sesión)
+
+No llevan `Authorization`. Tampoco pasan por la cola.
+
+**POST /api/password/forgot** — `{ "login": "pedro" }` (usuario o teléfono). El servidor manda un código al teléfono registrado. **Siempre responde igual**, exista o no el usuario, para no revelar quién tiene cuenta.
+```json
+{ "code_length": 6, "password_min_length": 8 }
+```
+- La app usa estos dos números para validar lo que se escribe (no los escribe fijos). El código vence a los pocos minutos y hay que limitar los intentos por usuario y por teléfono.
+- "Reenviar código" vuelve a llamar esta ruta.
+
+**POST /api/password/reset** — `{ "login": "pedro", "code": "123456", "new_password": "…" }`
+- 204 si todo está bien. El servidor invalida el código y las sesiones abiertas del usuario.
+- 422 con `code: "invalid_reset_code"` si el código no es correcto, ya venció o el usuario no existe (la misma respuesta en los tres casos). La app dice "El código no es correcto o ya venció" y deja pedir otro.
+- 422 con `code: "weak_password"` si la contraseña nueva no cumple las reglas.

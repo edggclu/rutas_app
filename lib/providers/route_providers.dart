@@ -3,11 +3,15 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../domain/models/geo_point.dart';
 import '../domain/models/models.dart';
 import '../domain/models/media_item.dart';
+import '../domain/rules/route_planner.dart';
 import '../domain/rules/visit_state.dart';
+import '../domain/rules/visit_summary.dart';
 import 'infra_providers.dart';
 import 'session_provider.dart';
+import 'settings_provider.dart';
 
 /// Ruta tal como la tiene el servidor. Con señal: descarga y guarda en el
 /// teléfono. Sin señal: lee lo último guardado.
@@ -39,11 +43,44 @@ final visitEventsProvider = StreamProvider<List<VisitEvent>>((ref) { // se actua
       ]);
 });
 
-/// Lo que ven las pantallas: ruta del servidor + acciones de la cola.
-final myDayProvider = Provider<AsyncValue<DayRoute>>((ref) { // combina dos fuentes
-  final base = ref.watch(myDayBaseProvider); // la ruta del servidor
-  final events = ref.watch(visitEventsProvider).value ?? const <VisitEvent>[]; // la cola
-  return base.whenData((route) => applyEvents(route, events)); // la ruta con el estado calculado
+/// La ruta del servidor con el estado de cada visita calculado con la cola, todavía sin ordenar.
+final appliedRouteProvider = Provider<AsyncValue<DayRoute>>((ref) {
+  final base = ref.watch(myDayBaseProvider);
+  final events = ref.watch(visitEventsProvider).value ?? const <VisitEvent>[];
+  return base.whenData((route) => applyEvents(route, events));
+});
+
+/// Con cuál visita eligió empezar el técnico (null = la que sugiere el algoritmo). Solo vive
+/// mientras decide: al salir hacia esa visita, el estado ya queda guardado en la cola.
+class RouteStartNotifier extends Notifier<int?> {
+  @override
+  int? build() => null;
+
+  void choose(int visitId) => state = visitId;
+  void clear() => state = null;
+}
+
+final routeStartProvider = NotifierProvider<RouteStartNotifier, int?>(RouteStartNotifier.new);
+
+/// El orden de la ruta: vecino más cercano desde donde está el técnico, o desde la visita
+/// que eligió. Las visitas cerradas no cuentan.
+final routePlanProvider = Provider<RoutePlan?>((ref) {
+  final route = ref.watch(appliedRouteProvider).value;
+  if (route == null) return null;
+  final settings = ref.watch(settingsProvider).value; // la oficina es de donde sale la primera ruta
+  final lat = settings?.officeLat;
+  final lng = settings?.officeLng;
+  return planRoute(
+    route.visits,
+    office: lat == null || lng == null ? null : GeoPoint(lat, lng),
+    firstId: ref.watch(routeStartProvider),
+  );
+});
+
+/// Lo que ven las pantallas: la ruta con su estado y en el orden de [routePlanProvider].
+final myDayProvider = Provider<AsyncValue<DayRoute>>((ref) {
+  final plan = ref.watch(routePlanProvider);
+  return ref.watch(appliedRouteProvider).whenData((route) => DayRoute(date: route.date, visits: plan?.all ?? route.visits));
 });
 
 /// Una visita por su id, siempre con el estado actual (servidor + cola).
@@ -69,3 +106,7 @@ final mediaForVisitProvider = StreamProvider.autoDispose // autoDispose: se apag
     .family<List<MediaItem>, int>( // family: uno por cada id de visita (ahora de MediaItem)
         (ref, visitId) => // recibe el id de la visita
             ref.watch(mediaRepositoryProvider).watchForVisit(visitId)); // escucha los archivos de esa visita
+
+/// Todo lo que se hizo en una visita (extras, solicitudes, cierre, notas), de la cola.
+final visitSummaryProvider = Provider.family<VisitSummary, int>(
+    (ref, visitId) => summarizeVisit(ref.watch(visitEventsProvider).value ?? const <VisitEvent>[], visitId));

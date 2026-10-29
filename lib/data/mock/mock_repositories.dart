@@ -3,12 +3,15 @@ import 'package:intl/intl.dart';
 
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:telyser_app/domain/models/app_settings.dart';
+import 'package:telyser_app/domain/models/dispatch_models.dart';
 import 'package:telyser_app/domain/models/closing_models.dart';
 import 'package:telyser_app/domain/models/my_job_models.dart';
+import 'package:telyser_app/domain/models/password_reset.dart';
 import 'package:telyser_app/domain/models/notification_models.dart';
 import 'package:telyser_app/domain/models/payload.dart';
 import 'package:telyser_app/domain/models/product.dart';
 import 'package:telyser_app/domain/models/review_models.dart';
+import 'package:telyser_app/domain/session_errors.dart';
 
 import '../../domain/models/models.dart';
 import '../repositories.dart';
@@ -29,20 +32,56 @@ const _mockUsers = <String, ({String password, String session})>{ // los usuario
 };
 
 /// Solo entran los usuarios de arriba y con su contraseña exacta.
+/// Una contraseña cambiada vive en memoria: al cerrar la app por completo vuelve la original.
 class MockAuthRepository implements AuthRepository { // el login de prueba
+  final _changed = <String, String>{}; // archivo de sesión -> contraseña nueva
+  String? _current; // archivo de sesión del usuario que tiene la sesión abierta
+
   @override
   Future<Session> login(String username, String password) async { // devuelve la sesión o lanza error
     await Future<void>.delayed(const Duration(milliseconds: 400)); // simula la espera de la red
     final user = _mockUsers[username.trim().toLowerCase()]; // busca el usuario (sin importar mayúsculas)
-    if (user == null || user.password != password) { // no existe o la contraseña no coincide
+    if (user == null || (_changed[user.session] ?? user.password) != password) { // no existe o la contraseña no coincide
       throw Exception('credenciales incorrectas'); // la pantalla muestra "Usuario o contraseña incorrectos"
     }
+    _current = user.session;
     final data = await _loadJson(user.session); // lee la sesión de ese usuario
     return Session.fromJson(data); // la convierte en modelo
   }
 
   @override
   Future<void> logout() async {} // en la versión de prueba no hay nada que avisar al servidor
+
+  @override
+  Future<void> changePassword(String current, String next) async {
+    await Future<void>.delayed(const Duration(milliseconds: 400)); // simula la espera de la red
+    final session = _current;
+    final entry = _mockUsers.values.where((u) => u.session == session).firstOrNull;
+    if (session == null || entry == null) throw const SessionExpiredException(); // no hay sesión abierta
+    if ((_changed[session] ?? entry.password) != current) throw const WrongPasswordException();
+    _changed[session] = next;
+  }
+
+  /// El código de la demo: en la API real llega por mensaje al teléfono registrado.
+  static const demoResetCode = '123456';
+
+  @override
+  Future<PasswordResetInfo> requestPasswordReset(String login) async {
+    await Future<void>.delayed(const Duration(milliseconds: 400)); // simula la espera de la red
+    final settings = await _loadJson('assets/mock/settings.json'); // el largo mínimo es el mismo parámetro
+    return PasswordResetInfo(
+      codeLength: demoResetCode.length,
+      minLength: (settings['password_min_length'] as num).toInt(),
+    );
+  }
+
+  @override
+  Future<void> resetPassword({required String login, required String code, required String newPassword}) async {
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    final user = _mockUsers[login.trim().toLowerCase()];
+    if (user == null || code != demoResetCode) throw const InvalidResetCodeException(); // no dice cuál de las dos falló
+    _changed[user.session] = newPassword;
+  }
 }
 
 class MockVisitRepository implements VisitRepository { // la ruta de prueba
@@ -185,5 +224,15 @@ class MockNotificationsRepository implements NotificationsRepository {
     for (var i = 0; i < list.length; i++) {
       if (ids.contains(list[i].id)) list[i] = list[i].asRead();
     }
+  }
+}
+
+
+/// El tablero del jefe de prueba: lee assets/mock/dispatch.json.
+class MockDispatchRepository implements DispatchRepository {
+  @override
+  Future<DispatchBoard> fetch() async {
+    await Future<void>.delayed(const Duration(milliseconds: 300)); // simula la red
+    return DispatchBoard.fromJson(await _loadJson('assets/mock/dispatch.json'));
   }
 }

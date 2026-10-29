@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:telyser_app/core/widgets/unsaved_guard.dart';
 import 'package:flutter/material.dart';
 import '../../core/widgets/input_formatters.dart';
 import 'package:telyser_app/core/widgets/alert_box.dart';
@@ -9,6 +10,7 @@ import 'package:telyser_app/domain/models/models.dart';
 import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/features/site/capture_photo.dart';
 import 'package:telyser_app/features/media/media_strip.dart';
+import 'package:telyser_app/providers/actions_provider.dart';
 import 'package:telyser_app/providers/route_providers.dart';
 
 /// E4 · Solicitud para después: algo que el cliente pidió y no se puede hacer hoy.
@@ -63,8 +65,25 @@ class _AddRequestScreenState extends ConsumerState<AddRequestScreen> { // el est
     );
   }
   
-  @override
-  Widget build(BuildContext context) { // dibuja el formulario
+
+  bool get _dirty => _descCtrl.text.trim().isNotEmpty || _whoCtrl.text.trim().isNotEmpty || _photoIds.isNotEmpty;
+
+  /// Si se descarta la solicitud, las fotos que se tomaron para ella también se borran.
+  Future<void> _discardPhotos() async {
+    final actions = ref.read(mediaActionsProvider);
+    final media = ref.read(mediaForVisitProvider(widget.visit.id)).value ?? const <MediaItem>[];
+    for (final m in media) {
+      if (_photoIds.contains(m.id)) await actions.delete(m);
+    }
+  }
+@override
+  Widget build(BuildContext context) => UnsavedGuard(
+        dirty: _dirty && !_saving,
+        onDiscard: _discardPhotos,
+        child: _form(context),
+      );
+
+  Widget _form(BuildContext context) { // dibuja el formulario
     final bottom = MediaQuery.of(context).padding.bottom; // alto de la barra de gestos
     final media = ref.watch(mediaForVisitProvider(widget.visit.id)).value ?? const <MediaItem>[]; // archivos de la visita
     final mine = [for (final m in media) if (_photoIds.contains(m.id)) m]; // solo los de esta solicitud
@@ -74,7 +93,7 @@ class _AddRequestScreenState extends ConsumerState<AddRequestScreen> { // el est
           AppHeader( // encabezado navy
             subtitle: widget.visit.job.folio, // arriba: el folio
             title: 'Solicitud para después', // título
-            onBack: () => Navigator.of(context).pop(), // flecha para regresar
+            onBack: () => Navigator.of(context).maybePop(), // flecha para regresar (pregunta si hay cambios)
           ),
           Expanded( // ocupa el espacio que queda
             child: ListView( // contenido que se puede desplazar
@@ -97,6 +116,7 @@ class _AddRequestScreenState extends ConsumerState<AddRequestScreen> { // el est
                 const SizedBox(height: 12), // espacio vertical
                 TextField( // campo "quién lo pidió"
                   controller: _whoCtrl, // su controlador
+                  onChanged: (_) => setState(() {}), // actualiza si hay cambios sin guardar
                   inputFormatters: shortText(80), // largo máximo
                   decoration: const InputDecoration(labelText: 'Quién lo pidió (opcional)'), // etiqueta
                 ),

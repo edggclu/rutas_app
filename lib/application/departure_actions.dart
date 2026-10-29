@@ -12,6 +12,11 @@ class DepartureActions { // una clase por área
 
   final OutboxWriter _writer; // escribe en la cola
 
+  /// Salir hacia la siguiente visita después de cerrar una. Es el mismo evento de salida: la
+  /// visita elegida pasa a En camino. No hay lista de material: eso es solo al empezar el día.
+  Future<ActionReceipt> goTo(Visit visit) =>
+      _writer.undoable([PendingEvent(const DepartureConfirmedEvent(), visitId: visit.id)]);
+
   /// "Llevo todo" / salir con faltantes. Encola, en este orden:
   ///  1. un `MissingItemsEvent` por cada visita con renglones faltantes;
   ///  2. un `DepartureConfirmedEvent` de la primera visita por hacer.

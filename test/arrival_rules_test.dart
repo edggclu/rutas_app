@@ -46,13 +46,17 @@ void main() {
     expect(blockOf(r, 101), isNull); // la actual ya no aplica
   });
 
-  test('al cerrar una visita, la siguiente queda habilitada', () { // se libera
-    final r = applyEvents(route, [ // salida, llegada y cierre
+  test('al cerrar una visita, hay que salir a la siguiente antes de marcar Llegué', () { // ya no avanza sola
+    final closed = [ // salida, llegada y cierre
       ev(EventTypes.departureConfirmed, 101),
       ev(EventTypes.arrived, 101),
       ev(EventTypes.finished, 101),
-    ]);
-    expect(blockOf(r, 102), isNull); // ahora va a la 102: sí
-    expect(blockOf(r, 103), ArrivalBlock.anotherVisitInProgress); // la 103 espera
+    ];
+    final r = applyEvents(route, closed);
+    expect(blockOf(r, 102), ArrivalBlock.routeNotStarted); // todavía no sale a ninguna
+    expect(blockOf(r, 103), ArrivalBlock.routeNotStarted); // tampoco a la 103
+    final next = applyEvents(route, [...closed, ev(EventTypes.departureConfirmed, 102)]); // sale a la 102
+    expect(blockOf(next, 102), isNull); // ahora sí
+    expect(blockOf(next, 103), ArrivalBlock.anotherVisitInProgress);
   });
 }

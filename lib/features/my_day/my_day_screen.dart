@@ -14,7 +14,9 @@ import '../../domain/models/models.dart';
 import '../../domain/rules/technician_state.dart';
 import 'visit_card.dart';
 import 'widgets/location_banner.dart';
-import '../departure/departure_screen.dart';
+import 'widgets/next_stop_bar.dart';
+import '../visit_summary/visit_summary_screen.dart';
+import '../route/route_map_screen.dart';
 import 'visit_detail_loader.dart';
 
 /// C1 · Mi día: la ruta del día en orden y el estado del técnico.
@@ -74,9 +76,6 @@ class _Content extends StatelessWidget {
       ...route.visits.where((v) => v.status != VisitStatus.done),
       ...route.visits.where((v) => v.status == VisitStatus.done),
     ];
-    final canPrepareDeparture = route.visits.isNotEmpty &&
-        route.visits.every((v) =>
-            v.status == VisitStatus.pending);
 
     return Column(
       children: [
@@ -110,13 +109,23 @@ class _Content extends StatelessWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon( // el mapa con la ruta: sugerida por el algoritmo o con la visita que elija
+                      onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const RouteMapScreen())),
+                      icon: const Icon(Icons.map_outlined),
+                      label: const Text('Ver mapa y ruta'),
+                    ),
                     const SizedBox(height: 12),
-                    for (final v in visits) ...[
+                    const SizedBox(height: 12),
+                    for (final (i, v) in visits.indexed) ...[
                       VisitCard(
+                        number: i + 1,
                         visit: v,
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute<void>(
-                            builder: (_) => v.status == VisitStatus.onSite // si la visita ya está En sitio
+                            builder: (_) => v.status == VisitStatus.done // si la visita ya se cerró: su resumen
+                              ? VisitSummaryScreen(visitId: v.id)
+                              : v.status == VisitStatus.onSite // si la visita ya está En sitio
                               ? SiteScreen(visitId: v.id) // abre la pantalla de trabajo
                               : VisitDetailLoader(visitId: v.id), // si no, abre la tarjeta de visita
                           ),
@@ -127,19 +136,7 @@ class _Content extends StatelessWidget {
                   ],
                 ),
         ),
-        if (canPrepareDeparture)
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-            child: FilledButton(
-              child: Text('Preparar Salida'),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => DepartureScreen(route: route),
-                )
-              ),
-            ),
-          ),
+        NextStopBar(route: route), // a dónde sigue: la Salida del día o la siguiente visita
       ],
     );
   }

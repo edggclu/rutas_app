@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/widgets/input_formatters.dart';
@@ -6,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_header.dart';
 import '../../core/widgets/toast.dart';
+import '../../core/widgets/unsaved_guard.dart';
 import '../../domain/models/enums.dart';
 import '../../domain/models/models.dart';
 import '../../domain/plan_rules.dart';
@@ -29,6 +32,7 @@ class _PlanEditScreenState extends ConsumerState<PlanEditScreen> {
   late final TextEditingController _notes;
   late List<ChecklistItem> _items;
   late List<SketchPin> _pins;
+  late final String _initial; // el plan como llegó, para saber si hay cambios sin guardar
   int? _selectedPin;
   bool _busy = false;
   bool _dragLocked = false; // un dedo sobre un pin: la lista no se desplaza
@@ -40,6 +44,7 @@ class _PlanEditScreenState extends ConsumerState<PlanEditScreen> {
     _notes = TextEditingController(text: p?.notes ?? '');
     _items = List.of(p?.items ?? const <ChecklistItem>[]);
     _pins = List.of(p?.sketch?.pins ?? const <SketchPin>[]);
+    _initial = jsonEncode(_draft().toJson());
   }
 
   @override
@@ -47,6 +52,8 @@ class _PlanEditScreenState extends ConsumerState<PlanEditScreen> {
     _notes.dispose();
     super.dispose();
   }
+
+  bool get _dirty => jsonEncode(_draft().toJson()) != _initial;
 
   /// El plan tal como está en pantalla.
   Plan _draft() {
@@ -110,8 +117,13 @@ class _PlanEditScreenState extends ConsumerState<PlanEditScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
+@override
+  Widget build(BuildContext context) => UnsavedGuard(
+        dirty: _dirty && !_busy,
+        child: _form(context),
+      );
+
+  Widget _form(BuildContext context) {
     final bottom = MediaQuery.of(context).padding.bottom;
     final sketch = widget.plan?.sketch;
     SketchPin? selected;
@@ -125,7 +137,7 @@ class _PlanEditScreenState extends ConsumerState<PlanEditScreen> {
           AppHeader(
             subtitle: widget.folio,
             title: 'Editar plan',
-            onBack: _busy ? null : () => Navigator.of(context).pop(),
+            onBack: _busy ? null : () => Navigator.of(context).maybePop(),
           ),
           Expanded(
             child: ListView(
@@ -135,6 +147,7 @@ class _PlanEditScreenState extends ConsumerState<PlanEditScreen> {
                 AppCard(
                   child: TextField(
                     controller: _notes,
+                    onChanged: (_) => setState(() {}), // actualiza si hay cambios sin guardar
                     maxLines: 4,
                     maxLength: 1000, // largo máximo de las notas
                     decoration: const InputDecoration(labelText: 'Notas para el técnico'),

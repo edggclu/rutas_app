@@ -4,6 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/tag_chip.dart';
 import '../../domain/models/enums.dart';
 import '../../domain/models/models.dart';
+import '../../domain/visit_labels.dart';
 
 Widget jobTypeChip(JobType t) {
   switch (t) {
@@ -19,20 +20,30 @@ Widget jobTypeChip(JobType t) {
   }
 }
 
-Widget statusChip(VisitStatus s) {
-  switch (s) {
+/// El estado de la visita con su color. Una visita cerrada sin terminar no se ve como "Hecha".
+Widget visitStatusChip(Visit v) => statusTag(v.status, v.result, v.dayNumber);
+
+/// El estado con su color, a partir de los tres datos (también lo usa la pantalla del jefe).
+Widget statusTag(VisitStatus status, VisitResult? result, int? dayNumber) {
+  final label = statusText(status, result, dayNumber);
+  switch (status) {
     case VisitStatus.pending:
-      return const TagChip(
-          label: 'Por hacer', background: AppColors.gris100, foreground: AppColors.gris600);
+      return TagChip(label: label, background: AppColors.gris100, foreground: AppColors.gris600);
     case VisitStatus.enRoute:
-      return const TagChip(
-          label: 'En camino', background: AppColors.infoSuave, foreground: AppColors.info);
+      return TagChip(label: label, background: AppColors.infoSuave, foreground: AppColors.info);
     case VisitStatus.onSite:
-      return const TagChip(
-          label: 'En sitio', background: AppColors.okSuave, foreground: AppColors.ok);
+      return TagChip(label: label, background: AppColors.okSuave, foreground: AppColors.ok);
     case VisitStatus.done:
-      return const TagChip(
-          label: 'Hecha', background: AppColors.gris200, foreground: AppColors.gris900);
+      switch (result) {
+        case VisitResult.continueLater:
+        case VisitResult.noAnswer:
+          return TagChip(label: label, background: AppColors.alertaSuave, foreground: AppColors.alerta);
+        case VisitResult.blocked:
+          return TagChip(label: label, background: AppColors.rojoSuave, foreground: AppColors.rojoOscuro);
+        case VisitResult.finished:
+        case null:
+          return TagChip(label: label, background: AppColors.gris200, foreground: AppColors.gris900);
+      }
   }
 }
 

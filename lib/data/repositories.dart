@@ -1,8 +1,12 @@
 import 'package:telyser_app/domain/models/app_settings.dart';
+import 'package:telyser_app/domain/models/dispatch_models.dart';
 import 'package:telyser_app/domain/models/closing_models.dart';
 import 'package:telyser_app/domain/models/my_job_models.dart';
+import 'package:telyser_app/domain/models/password_reset.dart';
 import 'package:telyser_app/domain/models/notification_models.dart';
+import 'package:telyser_app/domain/models/geo_point.dart';
 import 'package:telyser_app/domain/models/product.dart';
+import 'package:telyser_app/domain/models/route_path.dart';
 import 'package:telyser_app/domain/models/review_models.dart';
 
 import '../domain/models/models.dart';
@@ -14,6 +18,9 @@ import '../domain/models/models.dart';
 abstract class AuthRepository {
   Future<Session> login(String username, String password);
   Future<void> logout();
+  Future<void> changePassword(String current, String next); // lanza WrongPasswordException si la actual no es correcta
+  Future<PasswordResetInfo> requestPasswordReset(String login); // manda un código al teléfono registrado (siempre responde igual: no dice si el usuario existe)
+  Future<void> resetPassword({required String login, required String code, required String newPassword}); // lanza InvalidResetCodeException si el código falla
 }
 
 abstract class VisitRepository {
@@ -53,4 +60,18 @@ abstract class PlanRepository {
 abstract class NotificationsRepository {
   Future<List<AppNotification>> fetch();
   Future<void> markRead(List<int> ids); // los marca como leídos en el servidor
+}
+
+
+/// Lo que ve el jefe de ruta. Necesita señal: no pasa por la cola. La implementación de la API
+/// arma el tablero con `dispatch/decisions`, `dispatch/today` (hoy y mañana) y `dispatch/unassigned`.
+abstract class DispatchRepository {
+  Future<DispatchBoard> fetch();
+}
+
+
+/// La ruta por calles entre varios puntos. Necesita señal; si no se puede, devuelve null y la
+/// app dibuja la línea recta.
+abstract class RoutingRepository {
+  Future<RoutePath?> route(List<GeoPoint> stops);
 }

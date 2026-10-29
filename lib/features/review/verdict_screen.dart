@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:telyser_app/core/widgets/unsaved_guard.dart';
 import 'package:telyser_app/providers/review_providers.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -41,8 +42,13 @@ class _VerdictScreenState extends ConsumerState<VerdictScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
+@override
+  Widget build(BuildContext context) => UnsavedGuard(
+        dirty: _cause != null && !_saving,
+        child: _form(context),
+      );
+
+  Widget _form(BuildContext context) {
     final job = ref.watch(reviewJobProvider(widget.jobId));
     if (job == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -56,7 +62,7 @@ class _VerdictScreenState extends ConsumerState<VerdictScreen> {
           AppHeader(
             subtitle: job.folio,
             title: 'Dictamen de causa',
-            onBack: () => Navigator.of(context).pop(),
+            onBack: () => Navigator.of(context).maybePop(),
           ),
           Expanded(
             child: ListView(

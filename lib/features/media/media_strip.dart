@@ -16,9 +16,10 @@ const _size = 84.0; // lado de cada miniatura
 /// Tira horizontal de miniaturas de fotos y videos. Tocar una la abre a pantalla completa
 /// y la X de la esquina la borra (si todavía no se ha subido). Si no hay archivos, no dibuja nada.
 class MediaStrip extends ConsumerWidget {
-  const MediaStrip({super.key, required this.items});
+  const MediaStrip({super.key, required this.items, this.deletable = true});
 
   final List<MediaItem> items;
+  final bool deletable; // false en una visita ya cerrada: solo se puede ver
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,8 +32,9 @@ class MediaStrip extends ConsumerWidget {
         separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, i) => _Tile(
           item: items[i],
+          deletable: deletable,
           onOpen: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(builder: (_) => MediaViewerScreen(items: items, initialIndex: i)),
+            MaterialPageRoute<void>(builder: (_) => MediaViewerScreen(items: items, initialIndex: i, deletable: deletable)),
           ),
           onDelete: () async {
             final messenger = ScaffoldMessenger.of(context); // se guardan antes del await
@@ -53,9 +55,10 @@ class MediaStrip extends ConsumerWidget {
 
 /// Una miniatura con su estado de envío (reloj o nube) y, si se puede, la X para borrarla.
 class _Tile extends StatelessWidget {
-  const _Tile({required this.item, required this.onOpen, required this.onDelete});
+  const _Tile({required this.item, required this.deletable, required this.onOpen, required this.onDelete});
 
   final MediaItem item;
+  final bool deletable;
   final VoidCallback onOpen;
   final VoidCallback onDelete;
 
@@ -98,7 +101,7 @@ class _Tile extends StatelessWidget {
               child: Icon(sent ? Icons.cloud_done : Icons.schedule, size: 14, color: Colors.white),
             ),
           ),
-          if (canDeleteMedia(item)) // lo ya subido no se puede quitar
+          if (deletable && canDeleteMedia(item)) // lo ya subido no se puede quitar
             Positioned(
               left: 2,
               top: 2,

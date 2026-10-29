@@ -4,6 +4,7 @@ import 'package:telyser_app/providers/session_provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../domain/session_errors.dart';
+import 'forgot_password_screen.dart';
 
 /// A1 · Login (tema oscuro navy).
 class LoginScreen extends ConsumerStatefulWidget {
@@ -46,41 +47,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  // A2 · No hay recuperación automática de contraseña.
-  void _forgotPassword() {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Recuperar contraseña',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'La app no recupera contraseñas por su cuenta. Contacta a '
-              'Administración para que la restablezcan.',
-              style: TextStyle(color: AppColors.gris600),
-            ),
-            const SizedBox(height: 20),
-            // TODO: botón "Llamar a Administración" cuando se tenga el número
-            // (vendrá de /api/settings).
-            OutlinedButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Cerrar'),
-            ),
-          ],
-        ),
-      ),
+  // A2 · Recuperar la contraseña con un código al teléfono. Al terminar, vuelve con el usuario.
+  Future<void> _forgotPassword() async {
+    final login = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => ForgotPasswordScreen(initialLogin: _user.text)),
     );
+    if (login != null && mounted) setState(() => _user.text = login);
   }
 
   @override

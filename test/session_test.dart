@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:telyser_app/data/repositories.dart';
 import 'package:telyser_app/domain/models/models.dart';
+import 'package:telyser_app/domain/models/password_reset.dart';
 import 'package:telyser_app/domain/session_errors.dart';
 import 'package:telyser_app/providers/infra_providers.dart';
 import 'package:telyser_app/providers/session_provider.dart';
@@ -24,6 +25,10 @@ class _FakeAuth implements AuthRepository {
 
   @override
   Future<void> logout() async => logouts++;
+
+  @override
+  Future<void> changePassword(String current, String next) async {}
+@override  Future<PasswordResetInfo> requestPasswordReset(String login) async => const PasswordResetInfo(codeLength: 6, minLength: 8);  @override  Future<void> resetPassword({required String login, required String code, required String newPassword}) async {}
 }
 
 void main() {

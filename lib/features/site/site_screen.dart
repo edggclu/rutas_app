@@ -37,7 +37,7 @@ class SiteScreen extends ConsumerWidget { // widget que puede leer providers
             bottom: Wrap( // etiquetas en fila
               spacing: 6, // espacio horizontal entre etiquetas
               runSpacing: 6, // espacio vertical si bajan de renglón
-              children: [...visitTags(visit.job), statusChip(visit.status)], // tipo, urgente, cobertura y estado
+              children: [...visitTags(visit.job), visitStatusChip(visit)], // tipo, urgente, cobertura y estado
             ),
           ),
           Expanded( // ocupa el espacio que queda

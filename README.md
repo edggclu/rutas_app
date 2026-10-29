@@ -2,7 +2,7 @@
 
 App Android para técnicos e ingenieros de campo de Telyser (cámaras, alarmas, redes). Funciona completa con datos de prueba; la API real (Laravel) está pendiente.
 
-**Qué hace hoy:** login, Mi día, salida con lista de material, llegada, "No me abren", En sitio (fotos, extras, garantía), cierre (Terminé, Sigo otro día, No pude seguir), plan del trabajo con croquis, Mis trabajos (estado de lo que terminó) y Por validar del ingeniero. Todo lo del técnico funciona sin señal y se manda en una cola.
+**Qué hace hoy:** login y cambio de contraseña, Mi día con mapa y ruta por el vecino más cercano, salida con lista de material, llegada, "No me abren", En sitio (fotos, extras, garantía), cierre (Terminé, Sigo otro día, No pude seguir), resumen de la visita cerrada, plan del trabajo con croquis, Mis trabajos (estado de lo que terminó), Avisos, Por validar del ingeniero y Rutas del jefe de ruta. Todo lo del técnico funciona sin señal y se manda en una cola.
 
 ## Índice
 1. [Cómo arrancar](#cómo-arrancar)
@@ -34,7 +34,7 @@ El contrato con el servidor está en `docs/contrato_api.md`.
 Con `kDemoMode = true`:
 - La espera de "No me abren" es de 1 minuto (`wait_base_min: 1`, `wait_per_km_min: 0`).
 - El repositorio de prueba pone la fecha de hoy a la ruta.
-- El menú ⋮ de Mi día ofrece **Cerrar sesión**, **Reiniciar datos de demo** (borra la cola y las fotos) y **Simular sesión expirada**.
+- El menú ⋮ de Mi día ofrece **Cambiar contraseña**, **Cerrar sesión**, **Reiniciar datos de demo** (borra la cola y las fotos) y **Simular sesión expirada**. Una contraseña cambiada vive en memoria: al cerrar la app por completo vuelve la original.
 
 "Reiniciar datos de demo" **no** restaura la lista de Por validar: esa vive en memoria del repositorio de prueba y vuelve a su estado inicial al cerrar la app por completo.
 
@@ -80,6 +80,7 @@ core/         widgets y utilidades genéricas, sin reglas del negocio
 | Abrir mapa, llamar o WhatsApp | `openMap(...)`, `callPhone(...)`, `openWhatsApp(...)` |
 | Mostrar una imagen de asset o URL | `AppImage(src: ...)` |
 | Mostrar las fotos o videos tomados por el técnico, con ver y borrar | `MediaStrip(items: ...)` (en `features/media/`) |
+| Un formulario con algo escrito que no se debe perder | `UnsavedGuard(dirty: …)` y la flecha con `maybePop()` (ver "Salir sin guardar") |
 | Una pantalla larga | Una pantalla que solo **compone** secciones en `widgets/`; cada sección lee lo que necesita con `ref.watch` |
 
 ## Base de datos local (Drift / SQLite)
@@ -210,6 +211,8 @@ Los modelos se parsean a mano con `fromJson`, con lectores tolerantes (`readStri
 | `responsible` | `responsible` | `false` = acompañante |
 | `companions[]` | `List<Person>` | |
 | `km_from_previous` | `kmFromPrevious` | Alimenta la espera de "No me abren" |
+| `visits[].order` | `Visit.order` | Ya no define el orden de la ruta: la app lo calcula. Solo sirve de respaldo |
+| `client.tier` | `Client.tier` (`ClientTier?`) | `A`, `B` o `C`; nulo si no viene |
 | `client` | `Client` | `overdue` es solo sí/no, nunca montos |
 | `place` | `Place` | `lat`, `lng` y `estimated_km_from_office` pueden ser nulos |
 | `place.contact` | `Contact?` | `authorized` = puede pedir extras |
@@ -278,8 +281,8 @@ La barra de deshacer calcula el tiempo restante desde una hora límite fija guar
 |---|---|
 | `departure_confirmed` | La visita pasa de Por hacer a En camino |
 | `arrived` | La visita pasa a En sitio y guarda la hora |
-| `finished`, `continue_tomorrow`, `blocked`, `no_answer_confirmed` | La visita queda Hecha con su resultado y la siguiente por hacer pasa a En camino (salvo que ya haya una En camino o En sitio) |
-| Los demás | No cambian el estado; solo viajan al servidor |
+| `finished`, `continue_tomorrow`, `blocked`, `no_answer_confirmed` | La visita queda cerrada con su resultado (Hecha, Sin terminar, Detenida o Sin atender). La siguiente **no** arranca sola: el técnico elige a cuál va con `departure_confirmed` |
+| Los demás (incluida `note_added`) | No cambian el estado; solo viajan al servidor |
 
 ### Cuándo se puede marcar "Llegué"
 
@@ -287,7 +290,7 @@ La barra de deshacer calcula el tiempo restante desde una hora límite fija guar
 
 | Resultado | Cuándo | Qué ve el técnico |
 |---|---|---|
-| `routeNotStarted` | La visita todavía está Por hacer (no confirmó la salida) | Deslizable gris con el motivo |
+| `routeNotStarted` | La visita todavía está Por hacer (no ha salido a ella) | Deslizable gris con el motivo |
 | `anotherVisitInProgress` | Hay otra visita En camino o En sitio | Deslizable gris con el motivo |
 | (ninguno) | La visita está En camino y no hay otra en curso | Deslizable activo |
 
@@ -525,6 +528,78 @@ Lista de lo que el servidor le dice al usuario: cambios de ruta, trabajos regres
 | `providers/notifications_providers.dart` | `notificationsProvider`, `unreadNoticesProvider` y `markNoticesReadProvider` |
 | `features/notifications/notifications_screen.dart` | La pantalla |
 
+### Ruta del día y mapa
+
+El orden de la ruta **ya no viene del servidor** (`order` solo sirve de respaldo si falta una ubicación): lo calcula la app. Empieza en la oficina (parámetros `office_lat` y `office_lng`) con la visita más cercana, y de ahí va a la más cercana a esa (vecino más cercano). El técnico ve la ruta en un mapa grande (OpenStreetMap, necesita internet para los mosaicos; sin señal el mapa queda en blanco pero los puntos siguen ahí) con cada visita numerada: la siguiente parada va rellena en rojo y las demás en blanco con borde rojo. Abajo, la tarjeta **Siguiente parada** con cliente, dirección, distancia desde el punto anterior, tipo de cliente (A, B o C), la cita acordada y dos botones: **Iniciar navegación** (abre Maps o Waze) y **Detalle de visita**. Los números de la tarjeta (o los pines) cambian la parada que se mira.
+
+- **Elegir con cuál empezar:** al mirar otra parada, el botón principal pasa a **Empezar por esta**. La ruta se rehace desde esa, con las demás por cercanía. "Volver a la ruta sugerida" deshace la elección.
+- **Por calles:** la línea del mapa sigue las calles y los km de cada tramo son por calles, no en línea recta. La app se los pide a un servidor de rutas compatible con OSRM (`routing_base_url` en los parámetros del servidor). Mientras llega, sin señal o si la empresa no configuró uno, dibuja la línea recta punteada y usa la distancia recta. El **orden** de la ruta siempre se calcula con la distancia recta: es solo para comparar qué queda más cerca y no necesita internet. El servidor público de demostración de OSRM no es para producción: conviene uno propio.
+- **Las cerradas no cuentan:** la ruta se calcula solo con las visitas por hacer, y sale desde donde cerró la última (o desde la visita en curso).
+- **La siguiente ya no arranca sola:** al cerrar una visita, el técnico queda Libre y Mi día muestra "Sigue X" con **Ir a X** y **Cambiar** (abre el mapa). Por la mañana la barra dice "Empiezas en X" y abre la Salida con la lista de material. Salir a una visita encola `departure_confirmed` de esa visita.
+- **La elección vive solo mientras decide** (`routeStartProvider`): al salir, el estado queda guardado en la cola.
+
+| Archivo | Qué hace |
+|---|---|
+| `domain/rules/route_planner.dart` | `distanceKm`, `nearestNeighborOrder` y `planRoute` (`RoutePlan`: activa, por hacer en orden, cerradas, km por tramo, y cuál sugiere el algoritmo) |
+| `domain/models/geo_point.dart` | `GeoPoint` (antes vivía en `data/`, que el dominio no puede importar) |
+| `data/osrm_routing_repository.dart` | `OsrmRoutingRepository` y `parseOsrmRoute`: piden y leen la ruta por calles (`RoutingRepository` es la interfaz) |
+| `providers/routing_providers.dart` | `routingRepositoryProvider` y `routePathProvider` (solo vuelve a pedir si cambian los puntos, `RouteStops`) |
+| `providers/route_providers.dart` | `appliedRouteProvider` (servidor + cola), `routeStartProvider`, `routePlanProvider` y `myDayProvider` (ya en el orden de la ruta) |
+| `features/route/route_map_screen.dart` | La pantalla, con `widgets/route_map.dart` (el mapa y los pines), `stop_panel.dart` (la tarjeta de abajo) y `tier_chip.dart` |
+| `features/my_day/widgets/next_stop_bar.dart` | La barra de abajo de Mi día: Salida o "Ir a la siguiente" |
+
+### Visita cerrada: estado y resumen
+
+Una visita cerrada solo es **Hecha** si se terminó. Si el técnico marcó "Sigo otro día" queda **Sin terminar · Día N**, "No pude seguir" queda **Detenida** y "No me atendieron" queda **Sin atender** (`visitStatusLabel` en `domain/visit_labels.dart`). Siguen cerradas para la ruta, pero ya no dicen que el trabajo está listo.
+
+Al tocar una visita cerrada se abre su **resumen**, solo lectura: cómo se cerró (material usado, lo que falta, motivo, quién confirmó los extras), garantía, extras, solicitudes, y fotos y videos (sin poder borrarlos). Lo único que se puede hacer es **Agregar nota**, por si el técnico olvidó anotar algo; la nota viaja en la cola (`note_added`) y lo ya guardado no cambia.
+
+| Archivo | Qué hace |
+|---|---|
+| `domain/rules/visit_summary.dart` | `summarizeVisit` arma el resumen con las acciones guardadas en el teléfono, y `canAddNote` |
+| `features/visit_summary/` | La pantalla, `widgets/closing_card.dart` y `widgets/notes_section.dart` |
+
+El resumen sale de las acciones guardadas **en el teléfono**. Cuando exista el envío de la cola (paso 8) y se limpie lo ya enviado, el resumen de visitas viejas tendrá que venir del servidor.
+
+### Cuenta: contraseña
+
+Dos caminos, los dos sin pasar por administración y los dos con las mismas reglas de contraseña nueva (`domain/password_rules.dart`: no vacía, al menos `password_min_length` caracteres y escrita igual las dos veces):
+
+- **Con la sesión abierta**, menú ⋮ de Mi día → **Cambiar contraseña**: pide la actual y la nueva dos veces. Si la actual no es correcta, el servidor responde 422 y la pantalla lo dice.
+- **Sin sesión**, **¿Olvidaste tu contraseña?** en el login: se escribe el usuario o teléfono, el servidor manda un código al teléfono registrado y se escribe el código con la contraseña nueva. Siempre responde igual, exista o no el usuario, para no revelar quién tiene cuenta. El largo del código y el mínimo de la contraseña los manda el servidor con la respuesta. Un código malo o vencido se avisa y se puede pedir otro. Al terminar vuelve al login con el usuario escrito. En la demo el código es `123456`.
+
+Necesitan señal y no pasan por la cola.
+
+| Archivo | Qué hace |
+|---|---|
+| `domain/password_rules.dart` | `checkNewPassword` (con sesión) y `checkResetPassword` (con código) |
+| `domain/models/password_reset.dart` | `PasswordResetInfo`: largo del código y mínimo de la contraseña |
+| `application/account_actions.dart` | `changePassword`, `requestReset` y `resetPassword` |
+| `data/repositories.dart` | `AuthRepository.changePassword`, `requestPasswordReset` y `resetPassword` (el mock las guarda en memoria) |
+| `features/account/change_password_screen.dart` | Cambiar con la sesión abierta |
+| `features/auth/forgot_password_screen.dart` | Recuperar sin sesión, en dos pasos |
+
+### Salir sin guardar
+
+Todo formulario con algo escrito pregunta "¿Salir sin guardar?" antes de descartarlo: Editar plan, Agregar extra, Solicitud para después, Sigo otro día, No pude seguir, Garantía, Dictamen, Cambiar contraseña, y las hojas de nota, de cierre con extras y de regresar un trabajo. Se usa `UnsavedGuard(dirty: …)` de `core/widgets/unsaved_guard.dart`. Dos detalles:
+
+- La flecha del encabezado debe llamar a `Navigator.of(context).maybePop()`, no a `pop()`: `pop()` se salta la pregunta. Las salidas del propio código al guardar sí usan `pop()`.
+- Cada campo debe llamar a `setState` al cambiar, porque la guarda lee `dirty` en cada dibujo. En Solicitud para después, si se descarta, también se borran las fotos que se tomaron para ella.
+
+### Rutas (jefe de ruta)
+
+La pestaña **Rutas** (permiso `dispatch`) tiene cuatro secciones, como el documento de requisitos (sección 14): **Decisión** (urgencias arriba, detenidos, jornadas propuestas por "Sigo otro día", trabajos regresados, retrasos de ruta y llegadas fuera de orden), **Hoy** (cada técnico con su estado y sus visitas), **Por asignar** (trabajos sin visita con el semáforo de cinco luces: cliente confirmado, anticipo pagado, sin adeudo, material listo y acceso) y **Mañana**. Por ahora solo se mira: crear, mover y reordenar visitas es el paso 6b.
+
+El servidor escribe el título y el detalle de cada decisión, y dice con `can_schedule` si un trabajo ya se puede programar (si no lo dice, solo lo bloquea una luz en rojo). El estado "En sitio en X" de cada técnico lo calcula la app con `technicianStateOf`, la misma regla de Mi día.
+
+| Archivo | Qué hace |
+|---|---|
+| `domain/models/dispatch_models.dart` | `DispatchBoard`, `Decision` (`DecisionKind` tolerante), `TechnicianRoute`, `UnassignedJob`, `Light` y `LightState` |
+| `data/repositories.dart` | Interfaz `DispatchRepository` |
+| `data/mock/mock_repositories.dart` | `MockDispatchRepository`: lee `assets/mock/dispatch.json` |
+| `providers/dispatch_providers.dart` | `dispatchProvider` |
+| `features/dispatch/` | `dispatch_screen.dart` y `widgets/` (`decisions_section`, `routes_section`, `unassigned_section`) |
+
 ## Cómo agregar cosas
 
 ### Un evento nuevo del técnico
@@ -573,11 +648,17 @@ Una pantalla que solo **compone** secciones; cada sección lee lo que necesita c
 | `input_formatters_test` | Los filtros de los campos descartan letras y signos, y respetan el largo |
 | `session_test` | Sesión expirada: salir sin tocar la cola y exigir la misma cuenta |
 | `notifications_test` | Avisos: el mock, tipos desconocidos, conteo, orden y la hora relativa |
+| `routing_test` | La ruta por calles: lector de OSRM, cliente HTTP, tramos por calles y el provider |
+| `route_planner_test`, `route_providers_test` | La ruta: distancia, vecino más cercano, elegir la primera, cerradas fuera y el cableado con la oficina y la cola |
+| `visit_labels_test`, `visit_summary_test` | Hecha / Sin terminar / Detenida / Sin atender y el resumen de una visita con sus notas |
+| `account_test` | Cambiar y recuperar la contraseña: reglas, acciones y repositorio de prueba |
+| `unsaved_guard_test` | La pregunta de salir sin guardar |
+| `dispatch_test` | Rutas: el mock, decisiones, estado del técnico y semáforo |
 | `architecture_test` | Las 5 reglas de dependencias por capa |
 
 ## Pendiente
 
-- **Paso 6:** Jefe de ruta (Rutas).
+- **Paso 6b:** Jefe de ruta: crear, mover y reordenar visitas, y meter una urgencia en la ruta de alguien (hoy Rutas solo se mira).
 - **Paso 7:** "Llegué" automático por geocerca y notificaciones push (Firebase). La lista de Avisos ya existe; falta que las push la alimenten.
 - **Paso 8:** API real, envío de la cola, subida y compresión de fotos.
 - **Por confirmar con la empresa:** `credit_authorization_wait_min` (¿5 o 15 minutos?).

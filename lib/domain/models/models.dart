@@ -76,17 +76,21 @@ class Place {
 }
 
 class Client {
-  const Client({required this.id, required this.name, required this.overdue});
+  const Client({required this.id, required this.name, required this.overdue, this.tier});
   final int id;
   final String name;
 
   /// Solo se sabe si tiene saldo vencido (sí o no). Nunca llegan montos.
   final bool overdue;
 
+  /// A, B o C; null si el servidor no lo manda.
+  final ClientTier? tier;
+
   factory Client.fromJson(Map<String, dynamic> j) => Client(
         id: j['id'] as int,
         name: j['name'] as String,
         overdue: (j['overdue'] as bool?) ?? false,
+        tier: ClientTier.tryParse(j['tier'] as String?),
       );
 }
 

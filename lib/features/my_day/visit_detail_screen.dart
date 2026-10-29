@@ -63,7 +63,7 @@ class VisitDetailScreen extends ConsumerWidget { // ConsumerWidget: puede leer p
     final active = route == null ? null : visitInProgress(route.visits); // la visita que está en curso
     final blockText = switch (block) { // el texto que explica el bloqueo
       null => null, // sin bloqueo: no hay texto
-      ArrivalBlock.routeNotStarted => 'Confirma la salida en Mi día (Preparar salida) para poder marcar Llegué.', // no ha salido
+      ArrivalBlock.routeNotStarted => 'Confirma en Mi día que vas en camino a esta visita para poder marcar Llegué.', // no ha salido
       ArrivalBlock.anotherVisitInProgress => 'Primero termina tu visita en ${active?.place.name ?? 'la visita actual'}.', // hay otra en curso
     };
 
@@ -77,7 +77,7 @@ class VisitDetailScreen extends ConsumerWidget { // ConsumerWidget: puede leer p
             bottom: Wrap( // etiquetas en fila
               spacing: 6, // espacio horizontal entre etiquetas
               runSpacing: 6, // espacio vertical si bajan de renglón
-              children: [...visitTags(job), statusChip(visit.status)], // tipo, urgente, cobertura y estado
+              children: [...visitTags(job), visitStatusChip(visit)], // tipo, urgente, cobertura y estado
             ),
           ),
           Expanded( // ocupa el espacio que queda

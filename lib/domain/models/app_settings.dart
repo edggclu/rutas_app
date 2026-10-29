@@ -17,6 +17,10 @@ class AppSettings {
     required this.photoTargetKb,
     required this.videoMaxS,
     required this.officePhone,
+    required this.passwordMinLength,
+    this.officeLat,
+    this.officeLng,
+    this.routingBaseUrl,
   });
 
   final int arrivalRadiusM;
@@ -30,6 +34,10 @@ class AppSettings {
   final int photoTargetKb;
   final int videoMaxS;
   final String officePhone;
+  final int passwordMinLength; // largo mínimo de una contraseña nueva
+  final double? officeLat; // ubicación de la oficina: donde empieza la primera ruta del día
+  final double? officeLng;
+  final String? routingBaseUrl; // servidor de rutas por calles (compatible con OSRM). Si falta, la ruta se dibuja en línea recta
 
   factory AppSettings.fromMap(Map<String, dynamic> j) => AppSettings(
     arrivalRadiusM: (j['arrival_radius_m'] as num).toInt(), 
@@ -43,6 +51,10 @@ class AppSettings {
     photoTargetKb: (j['photo_target_kb']as num).toInt(), 
     videoMaxS: (j['video_max_s'] as num).toInt(),
     officePhone: j['office_phone'] as String,
+    passwordMinLength: (j['password_min_length'] as num).toInt(),
+    officeLat: (j['office_lat'] as num?)?.toDouble(),
+    officeLng: (j['office_lng'] as num?)?.toDouble(),
+    routingBaseUrl: j['routing_base_url'] as String?,
   );
   
   Map<String, dynamic> toMap() => {
@@ -57,6 +69,10 @@ class AppSettings {
     'photo_target_kb': photoTargetKb,
     'video_max_s': videoMaxS,
     'office_phone': officePhone,
+    'password_min_length': passwordMinLength,
+    'office_lat': officeLat,
+    'office_lng': officeLng,
+    'routing_base_url': routingBaseUrl,
   };
 
 }

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:telyser_app/application/account_actions.dart';
 import 'package:telyser_app/application/media_actions.dart';
 import 'package:telyser_app/application/visit_actions.dart';
 
@@ -22,3 +23,8 @@ final demoResetProvider = Provider<Future<void> Function()>((ref) => () async { 
 /// Acciones sobre las fotos y videos ya tomados (borrar).
 final mediaActionsProvider = Provider<MediaActions>(
     (ref) => MediaActions(ref.watch(mediaRepositoryProvider)));
+
+
+/// Acciones de la cuenta (cambiar contraseña).
+final accountActionsProvider = Provider<AccountActions>(
+    (ref) => AccountActions(ref.watch(authRepositoryProvider)));

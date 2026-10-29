@@ -95,8 +95,9 @@ class _DepartureScreenState extends ConsumerState<DepartureScreen> {
                   style: TextStyle(color: AppColors.gris600),
                 ),
                 const SizedBox(height: 12),
-                for (final v in _pending) ...[
+                for (final (i, v) in _pending.indexed) ...[
                   _VisitSection(
+                    number: i + 1,
                     visit: v,
                     missing: _missing,
                     onToggle: _toggle,
@@ -127,11 +128,13 @@ class _DepartureScreenState extends ConsumerState<DepartureScreen> {
 /// Una visita con su lista: Material y Herramienta por separado.
 class _VisitSection extends StatelessWidget {
   const _VisitSection({
+    required this.number,
     required this.visit,
     required this.missing,
     required this.onToggle,
   });
 
+  final int number; // su lugar en la ruta de hoy
   final Visit visit;
   final Set<(int, int)> missing;
   final void Function((int, int)) onToggle;
@@ -162,7 +165,7 @@ class _VisitSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${visit.order} · ${visit.place.name}',
+            '$number · ${visit.place.name}',
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 2),

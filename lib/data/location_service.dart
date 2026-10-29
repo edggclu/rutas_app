@@ -1,13 +1,9 @@
 import 'package:geolocator/geolocator.dart';
 
+import '../domain/models/geo_point.dart';
 import '../domain/models/location_access.dart';
 
-/// Un punto en el mapa: latitud y longitud.
-class GeoPoint {
-
-  final double lat; final double lng;
-  const GeoPoint(this.lat, this.lng); // constructor: recibe latitud y longitud
-}
+export '../domain/models/geo_point.dart'; // quien importe el servicio de ubicación sigue viendo GeoPoint
 
 /// Contrato: "algo que sabe dar la ubicación actual".
 /// Existe para poder usar un falso en los tests porque no tienen gps

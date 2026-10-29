@@ -1,5 +1,6 @@
 import '../domain/rules/closing.dart';
 import '../domain/events/event_data.dart';
+import '../domain/rules/visit_summary.dart'; // canAddNote
 import 'action_receipt.dart';
 import 'outbox_writer.dart';
 
@@ -8,6 +9,13 @@ class ClosingActions { // una clase por área
   ClosingActions(this._writer); // recibe el ayudante
 
   final OutboxWriter _writer; // escribe en la cola
+
+  /// Una nota en una visita ya cerrada, por si el técnico olvidó anotar algo. No cambia nada de
+  /// lo guardado: solo agrega.
+  Future<ActionReceipt> addNote({required int visitId, required String text}) {
+    if (!canAddNote(text)) throw ArgumentError('La nota no puede ir vacía');
+    return _writer.undoable([PendingEvent(NoteAddedEvent(text.trim()), visitId: visitId)]);
+  }
 
   /// Deslizable "Terminé el trabajo". Si hubo extras, lleva quién los confirmó.
   Future<ActionReceipt> finish({ // devuelve el comprobante para deshacer

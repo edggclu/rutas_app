@@ -8,9 +8,10 @@ import 'visit_tags.dart';
 
 /// Tarjeta de visita de la lista "Mi día".
 class VisitCard extends StatelessWidget {
-  const VisitCard({super.key, required this.visit, required this.onTap});
+  const VisitCard({super.key, required this.visit, required this.number, required this.onTap});
 
   final Visit visit;
+  final int number; // su lugar en la ruta de hoy (la ruta se ordena en la app, no viene del servidor)
   final VoidCallback onTap;
 
   /// Folio, "Día N" (solo instalaciones, sin total) y hora de cita si existe.
@@ -58,7 +59,7 @@ class VisitCard extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                       child: Text(
-                        '${visit.order}',
+                        '$number',
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w700,
@@ -97,7 +98,7 @@ class VisitCard extends StatelessWidget {
                 Wrap(
                   spacing: 6,
                   runSpacing: 6,
-                  children: [...visitTags(visit.job), statusChip(visit.status)],
+                  children: [...visitTags(visit.job), visitStatusChip(visit)],
                 ),
                 const SizedBox(height: 8),
                 Text(

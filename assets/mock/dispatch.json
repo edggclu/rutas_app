@@ -1,0 +1,92 @@
+{
+  "decisions": [
+    {
+      "id": 1, "kind": "urgent", "job_folio": "TEL-2610-031",
+      "title": "Urgente: Hotel Costa Azul",
+      "detail": "Se cayó todo el sistema de cámaras. El cliente no puede operar.",
+      "created_at": "2026-10-29T14:10:00Z"
+    },
+    {
+      "id": 2, "kind": "blocked", "job_folio": "TEL-2610-017",
+      "title": "Detenido: Restaurante El Faro",
+      "detail": "Falta el grabador. Se espera a Axel. Lleva 2 días.",
+      "created_at": "2026-10-28T16:00:00Z"
+    },
+    {
+      "id": 3, "kind": "continue_proposed", "job_folio": "TEL-2610-014",
+      "title": "Jornada propuesta: Hotel Bahía",
+      "detail": "Pedro marcó Sigo otro día. Falta tender las cámaras del segundo piso. Propuesta: mañana con Pedro.",
+      "created_at": "2026-10-29T20:30:00Z"
+    },
+    {
+      "id": 4, "kind": "returned", "job_folio": "TEL-2610-021",
+      "title": "Regresado por el ingeniero: Clínica Santa Fe",
+      "detail": "Falta la foto del grabador grabando. Hay que programar otra visita.",
+      "created_at": "2026-10-29T13:05:00Z"
+    },
+    {
+      "id": 5, "kind": "route_delay", "job_folio": "TEL-2610-009",
+      "title": "Extra que retrasa la ruta de Pedro",
+      "detail": "Cámara IP extra en Condominio Las Palmas: 2 horas más.",
+      "created_at": "2026-10-29T18:20:00Z"
+    },
+    {
+      "id": 6, "kind": "out_of_order", "job_folio": "TEL-2610-009",
+      "title": "Llegué fuera de orden",
+      "detail": "Pedro marcó Llegué en Condominio Las Palmas antes que en Restaurante Mar Azul.",
+      "created_at": "2026-10-29T19:00:00Z"
+    }
+  ],
+  "today": {
+    "technicians": [
+      {
+        "id": 7, "name": "Pedro",
+        "visits": [
+          { "id": 101, "status": "done", "result": "continue", "day_number": 1, "client": "Hotel Bahía", "place": "Hotel Bahía — torre 2", "scheduled_at": "2026-10-29T14:00:00Z" },
+          { "id": 103, "status": "on_site", "client": "Condominio Las Palmas", "place": "Condominio Las Palmas", "scheduled_at": null },
+          { "id": 102, "status": "pending", "client": "Restaurante Mar Azul", "place": "Restaurante Mar Azul", "scheduled_at": "2026-10-29T20:30:00Z" }
+        ]
+      },
+      {
+        "id": 8, "name": "Luis",
+        "visits": [
+          { "id": 110, "status": "en_route", "client": "Hotel Costa Azul", "place": "Hotel Costa Azul — recepción", "scheduled_at": null }
+        ]
+      },
+      {
+        "id": 9, "name": "Marco",
+        "visits": []
+      }
+    ]
+  },
+  "tomorrow": {
+    "technicians": [
+      {
+        "id": 7, "name": "Pedro",
+        "visits": [
+          { "id": 120, "status": "pending", "day_number": 2, "client": "Hotel Bahía", "place": "Hotel Bahía — torre 2", "scheduled_at": "2026-10-30T14:00:00Z" }
+        ]
+      },
+      { "id": 8, "name": "Luis", "visits": [] }
+    ]
+  },
+  "unassigned": [
+    {
+      "id": 41, "folio": "TEL-2610-041", "type": "installation", "priority": "normal",
+      "client": "Clínica Santa Fe", "place": "Clínica Santa Fe — recepción",
+      "lights": { "client_confirmed": "ok", "deposit_paid": "ok", "balance": "ok", "material_ready": "warning", "access": "ok" },
+      "can_schedule": true
+    },
+    {
+      "id": 42, "folio": "TEL-2610-042", "type": "installation", "priority": "normal",
+      "client": "Colegio Horizonte", "place": "Colegio Horizonte — dirección",
+      "lights": { "client_confirmed": "ok", "deposit_paid": "blocked", "balance": "ok", "material_ready": "ok", "access": "warning" },
+      "can_schedule": false
+    },
+    {
+      "id": 43, "folio": "TEL-2610-043", "type": "corrective", "priority": "urgent",
+      "client": "Farmacia del Centro", "place": "Farmacia del Centro",
+      "lights": { "client_confirmed": "ok", "deposit_paid": "ok", "balance": "warning", "material_ready": "ok", "access": "ok" }
+    }
+  ]
+}

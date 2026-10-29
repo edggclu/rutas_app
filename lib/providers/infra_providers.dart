@@ -59,3 +59,7 @@ final planRepositoryProvider = // guardar el plan del trabajo
 
 final notificationsRepositoryProvider = // avisos
     Provider<NotificationsRepository>((ref) => MockNotificationsRepository()); // hoy, el de prueba
+
+
+final dispatchRepositoryProvider = // el tablero del jefe de ruta
+    Provider<DispatchRepository>((ref) => MockDispatchRepository()); // hoy, el de prueba

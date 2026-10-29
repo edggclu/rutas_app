@@ -48,24 +48,9 @@ DayRoute applyEvents(DayRoute route, List<VisitEvent> events) { // devuelve la r
     visits[i] = v; // la cambia
   }
 
-  // Al cerrar una visita, la siguiente por hacer pasa a En camino
-  // (salvo que ya haya una En camino o En sitio, por ejemplo fuera de orden).
-  void startNext() { // arranca la siguiente
-    final busy = visits.any( // ¿ya hay una visita activa?
-        (v) => v.status == VisitStatus.enRoute || v.status == VisitStatus.onSite);
-    if (busy) return; // si la hay, no hace nada
-    for (final v in visits) { // busca la primera por hacer
-      if (v.status == VisitStatus.pending) { // la encontró
-        replace(v.copyWith(status: VisitStatus.enRoute)); // la pone En camino
-        return; // termina
-      }
-    }
-  }
-
   void close(Visit? v, VisitResult result) { // cierra una visita con un resultado
     if (v == null || v.status == VisitStatus.done) return; // si no existe o ya está cerrada, nada
-    replace(v.copyWith(status: VisitStatus.done, result: result)); // la deja Hecha
-    startNext(); // y arranca la siguiente
+    replace(v.copyWith(status: VisitStatus.done, result: result)); // la deja cerrada (no avanza sola: el técnico elige a dónde va)
   }
 
   for (final e in events) { // en el orden en que pasaron
@@ -98,6 +83,7 @@ DayRoute applyEvents(DayRoute route, List<VisitEvent> events) { // devuelve la r
           RouteDelayReportedEvent() ||
           WarrantyDocumentedEvent() ||
           HelpRequestedEvent() ||
+          NoteAddedEvent() ||
           UnknownEvent():
         break; // no cambian el estado de la visita
     }

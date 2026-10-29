@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:telyser_app/core/widgets/unsaved_guard.dart';
 import 'package:telyser_app/features/shared/run_undoable.dart';
 import 'package:telyser_app/providers/infra_providers.dart';
 import '../../core/widgets/choice_group.dart';
@@ -139,8 +140,24 @@ class _AddExtraScreenState extends ConsumerState<AddExtraScreen> { // el estado 
     );
   } 
 
-  @override
-  Widget build(BuildContext context) { // dibuja el formulario
+
+  /// Hay algo escrito o elegido que se perdería al salir.
+  bool get _dirty =>
+      _nameCtrl.text.trim().isNotEmpty ||
+      _qtyCtrl.text != '1' ||
+      _source != null ||
+      _reason != null ||
+      _authorized != null ||
+      _notInstalled ||
+      _delays ||
+      _delayCtrl.text.isNotEmpty;
+@override
+  Widget build(BuildContext context) => UnsavedGuard(
+        dirty: _dirty && !_saving,
+        child: _form(context),
+      );
+
+  Widget _form(BuildContext context) { // dibuja el formulario
     final contact = widget.visit.place.contact; // contacto principal del lugar
     final hasAuthorized = contact != null && contact.authorized; // ¿hay contacto autorizado?
     final product = _product; // atajo al producto elegido
@@ -152,7 +169,7 @@ class _AddExtraScreenState extends ConsumerState<AddExtraScreen> { // el estado 
           AppHeader( // encabezado navy
             subtitle: widget.visit.job.folio, // arriba: el folio
             title: 'Agregar extra', // título
-            onBack: () => Navigator.of(context).pop(), // flecha para regresar
+            onBack: () => Navigator.of(context).maybePop(), // flecha para regresar (pregunta si hay cambios)
           ),
           Expanded( // ocupa el espacio que queda
             child: ListView( // contenido que se puede desplazar

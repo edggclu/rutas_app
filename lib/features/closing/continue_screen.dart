@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:telyser_app/core/widgets/unsaved_guard.dart';
 import '../../core/widgets/input_formatters.dart';
 import 'package:telyser_app/domain/format.dart';
 import 'package:telyser_app/domain/models/media_item.dart';
@@ -76,8 +77,19 @@ class _ContinueScreenState extends ConsumerState<ContinueScreen> { // el estado 
     );
   }
 
-  @override
-  Widget build(BuildContext context) { // dibuja la pantalla
+
+  bool get _dirty =>
+      _leftCtrl.text.trim().isNotEmpty ||
+      _missingCtrl.text.trim().isNotEmpty ||
+      _laidCable ||
+      _materials.any((i) => _used[i.id] != (i.quantity ?? 0)); // cambió alguna cantidad usada
+@override
+  Widget build(BuildContext context) => UnsavedGuard(
+        dirty: _dirty,
+        child: _form(context),
+      );
+
+  Widget _form(BuildContext context) { // dibuja la pantalla
     final media = ref.watch(mediaForVisitProvider(widget.visit.id)).value ?? const <MediaItem>[]; // archivos de la visita
     final videos = media.where((m) => m.kind == MediaKind.cablingVideo).length; // videos del cableado
     final canConfirm = canContinueTomorrow( // ¿ya se puede continuar?
@@ -93,7 +105,7 @@ class _ContinueScreenState extends ConsumerState<ContinueScreen> { // el estado 
           AppHeader( // encabezado navy
             subtitle: widget.visit.job.folio, // arriba: el folio
             title: 'Sigo otro día', // título
-            onBack: () => Navigator.of(context).pop(), // flecha para regresar
+            onBack: () => Navigator.of(context).maybePop(), // flecha para regresar (pregunta si hay cambios)
           ),
           Expanded( // ocupa el espacio que queda
             child: ListView( // contenido que se puede desplazar
@@ -112,11 +124,12 @@ class _ContinueScreenState extends ConsumerState<ContinueScreen> { // el estado 
                 for (final i in _materials) // por cada renglón
                   _UsedRow( // fila con − y +
                     item: i, // el renglón
-                    onChanged: (v) => _used[i.id] = v, // guarda la cantidad usada
+                    onChanged: (v) => setState(() => _used[i.id] = v), // guarda la cantidad usada
                   ),
                 const SizedBox(height: 16), // espacio vertical
                 TextField( // qué se queda en el sitio
                   controller: _leftCtrl, // su controlador
+                  onChanged: (_) => setState(() {}), // actualiza si hay cambios sin guardar
                   maxLines: 2, // hasta 2 renglones visibles
                   decoration: const InputDecoration( // etiqueta
                     labelText: 'Qué se queda en el sitio (opcional)', // texto

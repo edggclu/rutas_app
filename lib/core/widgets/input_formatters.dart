@@ -17,3 +17,9 @@ final List<TextInputFormatter> integerInput = [
 
 /// Texto de una sola línea con largo máximo (nombres, etiquetas, seriales).
 List<TextInputFormatter> shortText([int max = 80]) => [LengthLimitingTextInputFormatter(max)];
+
+/// Un código de solo dígitos (por ejemplo, el que llega por mensaje) de hasta [max] dígitos.
+List<TextInputFormatter> digitsInput(int max) => [
+      FilteringTextInputFormatter.digitsOnly,
+      LengthLimitingTextInputFormatter(max),
+    ];

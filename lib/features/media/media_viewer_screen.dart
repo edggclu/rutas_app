@@ -14,10 +14,11 @@ import 'confirm_delete.dart';
 /// Visor a pantalla completa de las fotos y videos de una tira. Se desliza de lado entre ellos,
 /// las fotos se acercan con dos dedos y los videos se reproducen. Desde aquí también se borra.
 class MediaViewerScreen extends ConsumerStatefulWidget {
-  const MediaViewerScreen({super.key, required this.items, this.initialIndex = 0});
+  const MediaViewerScreen({super.key, required this.items, this.initialIndex = 0, this.deletable = true});
 
   final List<MediaItem> items; // los archivos de la tira, tal como estaban al abrir
   final int initialIndex;
+  final bool deletable; // false en una visita ya cerrada: solo se puede ver
 
   @override
   ConsumerState<MediaViewerScreen> createState() => _MediaViewerScreenState();
@@ -90,20 +91,22 @@ class _MediaViewerScreenState extends ConsumerState<MediaViewerScreen> {
                 ),
               ),
       ),
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.fromLTRB(16, 8, 16, 12 + bottom),
-        child: canDeleteMedia(current)
-            ? OutlinedButton.icon(
-                onPressed: _busy ? null : _delete,
-                icon: const Icon(Icons.delete_outline),
-                label: Text(current.kind.isVideo ? 'Borrar video' : 'Borrar foto'),
-              )
-            : const Text( // ya está en el servidor: la app no la puede quitar
-                'Ya se subió al servidor y no se puede borrar desde la app.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.gris400, fontSize: 13),
-              ),
-      ),
+      bottomNavigationBar: !widget.deletable
+          ? null
+          : Padding(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 12 + bottom),
+              child: canDeleteMedia(current)
+                  ? OutlinedButton.icon(
+                      onPressed: _busy ? null : _delete,
+                      icon: const Icon(Icons.delete_outline),
+                      label: Text(current.kind.isVideo ? 'Borrar video' : 'Borrar foto'),
+                    )
+                  : const Text( // ya está en el servidor: la app no la puede quitar
+                      'Ya se subió al servidor y no se puede borrar desde la app.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.gris400, fontSize: 13),
+                    ),
+            ),
     );
   }
 }

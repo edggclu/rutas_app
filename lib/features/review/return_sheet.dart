@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/widgets/unsaved_guard.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../domain/review_rules.dart';
@@ -9,6 +10,7 @@ Future<String?> showReturnSheet(BuildContext context) {
   return showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true, // permite que suba con el teclado
+    enableDrag: false, // arrastrarla cierra sin preguntar; se cierra con Cancelar o tocando fuera
     backgroundColor: Colors.white,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -33,8 +35,10 @@ class _ReturnSheetState extends State<_ReturnSheet> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
+@override
+  Widget build(BuildContext context) => UnsavedGuard(dirty: _noteCtrl.text.trim().isNotEmpty, child: _content(context));
+
+  Widget _content(BuildContext context) {
     final keyboard = MediaQuery.of(context).viewInsets.bottom;
     final bottom = MediaQuery.of(context).padding.bottom;
     return Padding(

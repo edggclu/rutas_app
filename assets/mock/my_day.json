@@ -8,7 +8,7 @@
       "scheduled_at": "2026-10-06T14:00:00Z", "day_number": 1, "responsible": true,
       "companions": [{ "id": 3, "name": "Toño" }],
       "arrived_at": null, "left_at": null, "km_from_previous": 12.4,
-      "client": { "id": 1, "name": "Hotel Bahía", "overdue": true },
+      "client": { "id": 1, "name": "Hotel Bahía", "overdue": true, "tier": "A" },
       "place": {
         "id": 3, "name": "Hotel Bahía — torre 2", "address": "Av. Costera 120, Nuevo Vallarta",
         "lat": 20.7002, "lng": -105.2943, "estimated_km_from_office": 12.4,
@@ -62,7 +62,7 @@
       "scheduled_at": "2026-10-06T20:30:00Z", "day_number": null, "responsible": true,
       "companions": [],
       "arrived_at": null, "left_at": null, "km_from_previous": 5.0,
-      "client": { "id": 2, "name": "Restaurante Mar Azul", "overdue": false },
+      "client": { "id": 2, "name": "Restaurante Mar Azul", "overdue": false, "tier": "B" },
       "engineer": { "id": 2, "name": "Toño", "phone": "3220000002" },
       "place": {
         "id": 8, "name": "Restaurante Mar Azul", "address": "Calle Hidalgo 45, Centro, Puerto Vallarta",
@@ -86,7 +86,7 @@
       "scheduled_at": null, "day_number": null, "responsible": true,
       "companions": [],
       "arrived_at": null, "left_at": null, "km_from_previous": 9.0,
-      "client": { "id": 4, "name": "Condominio Las Palmas", "overdue": false },
+      "client": { "id": 4, "name": "Condominio Las Palmas", "overdue": false, "tier": "C" },
       
       "place": {
         "id": 12, "name": "Condominio Las Palmas", "address": "Blvd. Nayarit 880, Nuevo Vallarta",

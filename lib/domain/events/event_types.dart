@@ -16,4 +16,5 @@ class EventTypes {
   static const routeDelayReported = 'route_delay_reported'; // un extra va a retrasar las siguientes visitas (le llega al jefe)
     static const warrantyDocumented = 'warranty_documented'; // el técnico documento la causa y el serial de una garantía
   static const helpRequested = 'help_requested'; // el tecnico pidió ayuda al ingeniero
+  static const noteAdded = 'note_added'; // nota que el técnico agrega a una visita ya cerrada (payload: text)
 }

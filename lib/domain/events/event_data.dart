@@ -34,6 +34,7 @@ sealed class EventData { // la clase base
       case EventTypes.continueTomorrow: return ContinueTomorrowEvent.fromPayload(p); // sigo otro día
       case EventTypes.blocked: return BlockedEvent.fromPayload(p); // no pude seguir
       case EventTypes.helpRequested: return const HelpRequestedEvent(); // pidió ayuda
+      case EventTypes.noteAdded: return NoteAddedEvent.fromPayload(p); // nota
       default: return UnknownEvent(type, p); // un tipo que esta versión no conoce
     }
   }
@@ -264,6 +265,16 @@ class HelpRequestedEvent extends EventData { // pidió ayuda al ingeniero
   String get type => EventTypes.helpRequested; // su nombre
   @override
   Map<String, dynamic> toPayload() => {}; // no lleva datos
+}
+
+class NoteAddedEvent extends EventData { // una nota que se agrega después de cerrar la visita
+  const NoteAddedEvent(this.text); // el texto
+  final String text; // lo que escribió el técnico
+  @override
+  String get type => EventTypes.noteAdded; // su nombre
+  @override
+  Map<String, dynamic> toPayload() => {'text': text}; // el texto
+  factory NoteAddedEvent.fromPayload(Map<String, dynamic> p) => NoteAddedEvent(readString(p, 'text') ?? ''); // lo reconstruye
 }
 
 // ---------------------------------------------------------------- Desconocido

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:telyser_app/core/widgets/unsaved_guard.dart';
 import 'package:telyser_app/core/widgets/toast.dart';
 import 'package:telyser_app/domain/models/media_item.dart';
 import 'package:telyser_app/features/shared/run_undoable.dart';
@@ -101,8 +102,15 @@ class _BlockedScreenState extends ConsumerState<BlockedScreen> { // el estado de
     );
   }
 
-  @override
-  Widget build(BuildContext context) { // dibuja la pantalla
+
+  bool get _dirty => _reason != null || _kind != null || _noteCtrl.text.trim().isNotEmpty;
+@override
+  Widget build(BuildContext context) => UnsavedGuard(
+        dirty: _dirty && !_saving,
+        child: _form(context),
+      );
+
+  Widget _form(BuildContext context) { // dibuja la pantalla
     final media = ref.watch(mediaForVisitProvider(widget.visit.id)).value ?? const <MediaItem>[]; // archivos de la visita
     final damagePhotos = media.where((m) => m.kind == MediaKind.damage).length; // fotos del daño
     final shown = [for (final m in media) if (m.kind == MediaKind.damage || _photoIds.contains(m.id)) m]; // las que se muestran en la tira
@@ -121,7 +129,7 @@ class _BlockedScreenState extends ConsumerState<BlockedScreen> { // el estado de
           AppHeader( // encabezado navy
             subtitle: widget.visit.job.folio, // arriba: el folio
             title: 'No pude seguir', // título
-            onBack: () => Navigator.of(context).pop(), // flecha para regresar
+            onBack: () => Navigator.of(context).maybePop(), // flecha para regresar (pregunta si hay cambios)
           ),
           Expanded( // ocupa el espacio que queda
             child: ListView( // contenido que se puede desplazar

@@ -127,6 +127,7 @@ void main() {
       const ContinueTomorrowEvent(materials: [MaterialUsed(id: 1, text: 'Cable', planned: 10, used: 4)], leftOnSite: 'a', missing: 'b', laidCable: false),
       const BlockedEvent(reason: BlockReason.cannotSolve, note: 'No encuentro la falla'),
       const HelpRequestedEvent(),
+      const NoteAddedEvent('Olvidé anotar el conector extra'),
     ];
 
     for (final s in samples) { // una prueba por evento
@@ -140,7 +141,7 @@ void main() {
     }
 
     test('hay un ejemplo por cada tipo de EventTypes', () { // si agregas un evento y olvidas el ejemplo, falla
-      expect(samples.map((s) => s.type).toSet().length, 15); // quince tipos distintos
+      expect(samples.map((s) => s.type).toSet().length, 16); // dieciséis tipos distintos
     });
   });
 

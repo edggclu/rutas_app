@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/widgets/unsaved_guard.dart';
 import '../../core/widgets/input_formatters.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -21,6 +22,7 @@ Future<FinishConfirmation?> showFinishSheet( // muestra la hoja
   return showModalBottomSheet<FinishConfirmation>( // hoja que sube desde abajo
     context: context, // sobre esta pantalla
     isScrollControlled: true, // permite que suba con el teclado
+    enableDrag: false, // arrastrarla cierra sin preguntar; se cierra con Cancelar o tocando fuera
     backgroundColor: Colors.white, // fondo blanco
     shape: const RoundedRectangleBorder( // esquinas de arriba redondeadas
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -50,8 +52,10 @@ class _FinishSheetState extends State<_FinishSheet> { // el estado de la hoja
     super.dispose(); // termina de limpiar
   }
 
-  @override
-  Widget build(BuildContext context) { // dibuja la hoja
+@override
+  Widget build(BuildContext context) => UnsavedGuard(dirty: _nameCtrl.text.trim().isNotEmpty || _roleCtrl.text.trim().isNotEmpty, child: _content(context));
+
+  Widget _content(BuildContext context) { // dibuja la hoja
     final keyboard = MediaQuery.of(context).viewInsets.bottom; // alto del teclado
     final bottom = MediaQuery.of(context).padding.bottom; // alto de la barra de gestos
     final name = _nameCtrl.text.trim(); // nombre escrito
@@ -99,6 +103,7 @@ class _FinishSheetState extends State<_FinishSheet> { // el estado de la hoja
             const SizedBox(height: 10), // espacio vertical
             TextField( // cargo
               controller: _roleCtrl, // su controlador
+              onChanged: (_) => setState(() {}), // actualiza si hay cambios sin guardar
               inputFormatters: shortText(60), // largo máximo
               decoration: const InputDecoration(labelText: 'Cargo (opcional)'), // etiqueta
             ),

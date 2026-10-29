@@ -45,7 +45,7 @@ void main() {
     expect(computeTechnicianState(r.visits).label, 'En sitio en Hotel Bahía');
   });
 
-  test('al terminar, la visita queda Hecha y la siguiente En camino', () {
+  test('al terminar, la visita queda Hecha y la siguiente espera a que el técnico salga a ella', () {
     final r = applyEvents(route, [
       ev(EventTypes.departureConfirmed, 101),
       ev(EventTypes.arrived, 101),
@@ -53,7 +53,28 @@ void main() {
     ]);
     expect(st(r, 101), VisitStatus.done);
     expect(r.visits.first.result, VisitResult.finished);
-    expect(st(r, 102), VisitStatus.enRoute);
+    expect(st(r, 102), VisitStatus.pending); // no avanza sola: el técnico decide a cuál va
+  });
+
+  test('el técnico elige a cuál visita sale después de cerrar una', () {
+    final r = applyEvents(route, [
+      ev(EventTypes.departureConfirmed, 101),
+      ev(EventTypes.arrived, 101),
+      ev(EventTypes.finished, 101),
+      ev(EventTypes.departureConfirmed, 103), // elige la 103 aunque la 102 sea la siguiente de la lista
+    ]);
+    expect(st(r, 103), VisitStatus.enRoute);
+    expect(st(r, 102), VisitStatus.pending);
+    expect(computeTechnicianState(r.visits).label, 'En camino a Condominio Las Palmas');
+  });
+
+  test('entre una visita y otra el técnico está Libre', () {
+    final r = applyEvents(route, [
+      ev(EventTypes.departureConfirmed, 101),
+      ev(EventTypes.arrived, 101),
+      ev(EventTypes.finished, 101),
+    ]);
+    expect(computeTechnicianState(r.visits).kind, TechStateKind.free);
   });
 
   test('cada resultado cierra la visita con el resultado correcto', () {

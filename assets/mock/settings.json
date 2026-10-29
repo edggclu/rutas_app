@@ -9,5 +9,9 @@
   "credit_authorization_wait_min": 5,
   "photo_target_kb": 300,
   "video_max_s": 60,
-  "office_phone": "3220000000"
+  "office_phone": "3220000000",
+  "password_min_length": 8,
+  "office_lat": 20.6420,
+  "office_lng": -105.2190,
+  "routing_base_url": "https://router.project-osrm.org"
 }

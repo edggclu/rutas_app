@@ -6,6 +6,7 @@ import 'package:telyser_app/providers/route_providers.dart';
 import '../../core/widgets/alert_box.dart';
 import '../../core/widgets/app_header.dart';
 import '../my_day/visit_tags.dart';
+import '../my_day/widgets/missing_items_card.dart';
 import 'widgets/close_bar.dart';
 import 'widgets/extras_section.dart';
 import 'widgets/photos_section.dart';
@@ -46,6 +47,7 @@ class SiteScreen extends ConsumerWidget { // widget que puede leer providers
               children: [
                 NoAnswerBanner(visitId: visitId), // aviso de "No me abren" (si se reportó)
                 ArrivalInfo(visit: visit), // hora de llegada y acompañantes
+                MissingItemsCard(visitId: visitId, topSpacing: 16), // lo que le faltó al salir (si hay)
                 if (isWarranty) ...[ // en visitas de garantía
                   const SizedBox(height: 16), // espacio vertical
                   WarrantySection(visit: visit), // tarjeta de garantía

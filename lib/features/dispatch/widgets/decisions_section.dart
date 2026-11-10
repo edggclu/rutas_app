@@ -8,9 +8,11 @@ import '../../../domain/models/dispatch_models.dart';
 /// Lo que requiere la decisión del jefe: urgencias arriba, y después detenidos, jornadas
 /// propuestas, trabajos regresados, retrasos y llegadas fuera de orden.
 class DecisionsSection extends StatelessWidget {
-  const DecisionsSection({super.key, required this.decisions});
+  const DecisionsSection({super.key, required this.decisions, required this.jobFor, required this.onScheduleUrgent});
 
   final List<Decision> decisions;
+  final UnassignedJob? Function(Decision decision) jobFor; // el trabajo por asignar de esa urgencia, si lo hay
+  final void Function(UnassignedJob job) onScheduleUrgent; // abre la pantalla para meterla en una ruta
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +23,11 @@ class DecisionsSection extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       itemCount: decisions.length,
       separatorBuilder: (context, index) => const SizedBox(height: 12),
-      itemBuilder: (context, i) => _DecisionCard(decision: decisions[i]),
+      itemBuilder: (context, i) {
+        final d = decisions[i];
+        final job = d.kind == DecisionKind.urgent ? jobFor(d) : null;
+        return _DecisionCard(decision: d, onAct: job == null || !job.canSchedule ? null : () => onScheduleUrgent(job));
+      },
     );
   }
 }
@@ -38,9 +44,10 @@ class DecisionsSection extends StatelessWidget {
     };
 
 class _DecisionCard extends StatelessWidget {
-  const _DecisionCard({required this.decision});
+  const _DecisionCard({required this.decision, required this.onAct});
 
   final Decision decision;
+  final VoidCallback? onAct; // "Meter en una ruta" (solo en una urgencia que ya se puede programar)
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +76,14 @@ class _DecisionCard extends StatelessWidget {
                   [if (folio != null) folio, formatRelativeDay(decision.createdAt)].join(' · '),
                   style: const TextStyle(fontSize: 12, color: AppColors.gris600),
                 ),
+                if (onAct != null) ...[
+                  const SizedBox(height: 10),
+                  OutlinedButton(
+                    style: OutlinedButton.styleFrom(minimumSize: const Size(0, 44)),
+                    onPressed: onAct,
+                    child: const Text('Meter en una ruta'),
+                  ),
+                ],
               ],
             ),
           ),

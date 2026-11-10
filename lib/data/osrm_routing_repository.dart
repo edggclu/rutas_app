@@ -41,12 +41,10 @@ RoutePath? parseOsrmRoute(Map<String, dynamic> body) {
   ];
   if (points.length < 2) return null;
   final legs = route['legs'];
+  final legMaps = legs is List ? [for (final l in legs) if (l is Map) l] : const <Map>[];
   return RoutePath(
     points: points,
-    legsKm: [
-      if (legs is List)
-        for (final l in legs)
-          if (l is Map && l['distance'] is num) (l['distance'] as num) / 1000, // OSRM da metros
-    ].map((d) => d.toDouble()).toList(),
+    legsKm: [for (final l in legMaps) if (l['distance'] is num) (l['distance'] as num).toDouble() / 1000], // OSRM da metros
+    legsMin: [for (final l in legMaps) if (l['duration'] is num) (l['duration'] as num).toDouble() / 60], // y segundos
   );
 }

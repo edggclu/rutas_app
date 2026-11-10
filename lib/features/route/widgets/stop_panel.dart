@@ -78,6 +78,7 @@ class _Content extends StatelessWidget {
     final isActive = plan.active.any((v) => v.id == stop.id); // la visita en curso también se puede mirar
     final index = plan.ordered.indexWhere((v) => v.id == stop.id);
     final km = index >= 0 ? plan.legKm(index, panel.path) : null; // por calles si ya se tiene
+    final minutes = index >= 0 ? plan.legMinutes(index, panel.path) : null; // solo con la ruta por calles
     final scheduled = stop.scheduledAt;
     final canNavigate = isActive ? stop.status == VisitStatus.enRoute : index == 0; // En sitio ya no navega
     final canStartHere = !isActive && index > 0;
@@ -120,7 +121,7 @@ class _Content extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(color: AppColors.gris100, borderRadius: BorderRadius.circular(8)),
                 child: Text(
-                  '${formatNumber(km, decimals: 1)} km',
+                  [if (minutes != null) '$minutes min', '${formatNumber(km, decimals: 1)} km'].join(' · '),
                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.gris900),
                 ),
               ),

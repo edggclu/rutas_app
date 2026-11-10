@@ -4,16 +4,19 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/time/time_utils.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/tag_chip.dart';
+import '../../../domain/dispatch_rules.dart';
 import '../../../domain/models/dispatch_models.dart';
 import '../../../domain/rules/technician_state.dart';
 import '../../my_day/visit_tags.dart';
 
-/// Las rutas de todos los técnicos en un día (hoy o mañana): su estado y sus visitas en orden.
+/// Las rutas de todos los técnicos en un día (hoy o mañana): su estado y sus visitas. Una visita que
+/// todavía no empieza se puede mover a otro día o a otro técnico tocándola.
 class RoutesSection extends StatelessWidget {
-  const RoutesSection({super.key, required this.routes, required this.showState});
+  const RoutesSection({super.key, required this.routes, required this.showState, required this.onMove});
 
   final List<TechnicianRoute> routes;
   final bool showState; // el estado "En sitio en…" solo tiene sentido hoy
+  final void Function(DispatchVisit visit, TechnicianRoute from) onMove; // abre la hoja para mover
 
   @override
   Widget build(BuildContext context) {
@@ -24,16 +27,17 @@ class RoutesSection extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       itemCount: routes.length,
       separatorBuilder: (context, index) => const SizedBox(height: 12),
-      itemBuilder: (context, i) => _TechnicianCard(route: routes[i], showState: showState),
+      itemBuilder: (context, i) => _TechnicianCard(route: routes[i], showState: showState, onMove: onMove),
     );
   }
 }
 
 class _TechnicianCard extends StatelessWidget {
-  const _TechnicianCard({required this.route, required this.showState});
+  const _TechnicianCard({required this.route, required this.showState, required this.onMove});
 
   final TechnicianRoute route;
   final bool showState;
+  final void Function(DispatchVisit visit, TechnicianRoute from) onMove;
 
   @override
   Widget build(BuildContext context) {
@@ -53,19 +57,26 @@ class _TechnicianCard extends StatelessWidget {
             const Text('Sin visitas.', style: TextStyle(color: AppColors.gris600))
           else
             for (final (i, v) in route.visits.indexed)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    SizedBox(width: 22, child: Text('${i + 1}', style: const TextStyle(color: AppColors.gris600))),
-                    Expanded(
-                      child: Text(
-                        [v.clientName, if (v.scheduledAt != null) formatClock(v.scheduledAt!)].join(' · '),
-                        overflow: TextOverflow.ellipsis,
+              InkWell(
+                onTap: canMoveVisit(v) ? () => onMove(v, route) : null, // solo si todavía no empieza
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    children: [
+                      SizedBox(width: 22, child: Text('${i + 1}', style: const TextStyle(color: AppColors.gris600))),
+                      Expanded(
+                        child: Text(
+                          [v.clientName, if (v.scheduledAt != null) formatClock(v.scheduledAt!)].join(' · '),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                    statusTag(v.status, v.result, v.dayNumber),
-                  ],
+                      statusTag(v.status, v.result, v.dayNumber),
+                      if (canMoveVisit(v)) ...[
+                        const SizedBox(width: 6),
+                        const Icon(Icons.swap_horiz, size: 18, color: AppColors.gris600), // se puede mover
+                      ],
+                    ],
+                  ),
                 ),
               ),
         ],

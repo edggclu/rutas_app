@@ -88,8 +88,9 @@ class NoAnswerScreen extends ConsumerWidget {
     }
 
     // calcula si le falta al técnico
-    final status = computeNoAnswerStatus( 
-        visit: visit, events: events, settings: settings, now: now);
+    final status = computeNoAnswerStatus(
+        visit: visit, events: events, settings: settings, now: now,
+        kmFromPreviousStop: ref.watch(kmFromPreviousProvider(visitId)));
     final phone = visit.place.contact?.phone; // teléfono del cliente
     final hasPhone = phone != null && phone.isNotEmpty; 
     final bottom = MediaQuery.of(context).padding.bottom; 

@@ -4,6 +4,7 @@ import 'package:telyser_app/application/media_actions.dart';
 import 'package:telyser_app/application/visit_actions.dart';
 
 import 'infra_providers.dart';
+import 'storage_providers.dart';
 import 'settings_provider.dart';
 
 /// Acciones del técnico (encolan eventos). Lee `undo_seconds` de los

@@ -21,6 +21,7 @@ sealed class EventData { // la clase base
     switch (type) { // según el tipo
       case EventTypes.departureConfirmed: return const DepartureConfirmedEvent(); // salida
       case EventTypes.missingItems: return MissingItemsEvent.fromPayload(p); // faltantes
+      case EventTypes.itemsObtained: return ItemsObtainedEvent.fromPayload(p); // ya los consiguió
       case EventTypes.arrived: return ArrivedEvent.fromPayload(p); // llegada
       case EventTypes.noAnswerReported: return const NoAnswerReportedEvent(); // "No me abren"
       case EventTypes.clientContacted: return ClientContactedEvent.fromPayload(p); // contacto con el cliente
@@ -59,6 +60,19 @@ class MissingItemsEvent extends EventData { // renglones que le faltan al salir
   Map<String, dynamic> toPayload() => {'items': [for (final i in items) i.toJson()]}; // la lista de renglones
   factory MissingItemsEvent.fromPayload(Map<String, dynamic> p) => // lo reconstruye
       MissingItemsEvent([for (final m in readMaps(p, 'items')) MissingItem.fromJson(m)]); // cada renglón guardado
+}
+
+class ItemsObtainedEvent extends EventData { // ya consiguió renglones que le faltaban al salir
+  const ItemsObtainedEvent(this.itemIds); // los ids de los renglones
+  final List<int> itemIds; // ids de la lista de salida
+  @override
+  String get type => EventTypes.itemsObtained; // su nombre
+  @override
+  Map<String, dynamic> toPayload() => {'item_ids': itemIds}; // los ids
+  factory ItemsObtainedEvent.fromPayload(Map<String, dynamic> p) { // lo reconstruye
+    final raw = p['item_ids'];
+    return ItemsObtainedEvent([if (raw is List) for (final i in raw) if (i is int) i]); // solo enteros
+  }
 }
 
 // ---------------------------------------------------------------- Llegada

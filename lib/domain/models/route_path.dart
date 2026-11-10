@@ -22,10 +22,12 @@ class RouteStops {
   int get hashCode => Object.hashAll(points);
 }
 
-/// La ruta por calles entre los puntos: la línea que sigue las calles y cuántos km tiene cada tramo.
+/// La ruta por calles entre los puntos: la línea que sigue las calles y cuántos km y minutos tiene
+/// cada tramo.
 class RoutePath {
-  const RoutePath({required this.points, required this.legsKm});
+  const RoutePath({required this.points, required this.legsKm, this.legsMin = const []});
 
   final List<GeoPoint> points; // la línea para dibujar
   final List<double> legsKm; // km por calles de cada tramo, de un punto al siguiente
+  final List<double> legsMin; // minutos de cada tramo manejando, sin tráfico (vacío si no vinieron)
 }

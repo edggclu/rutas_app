@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+
+import 'user_storage.dart';
 
 part 'app_database.g.dart';
 
@@ -62,8 +63,8 @@ class MediaQueue extends Table {
 
 @DriftDatabase(tables: [SettingsKv, CachedVisits, OutboxEvents, MediaQueue])
 class AppDatabase extends _$AppDatabase {
-  /// Base real: un archivo SQLite dentro del teléfono.
-  AppDatabase() : super(_openConnection());
+  /// Base real de un usuario: un archivo SQLite en su carpeta dentro del teléfono.
+  AppDatabase.forUser(int userId) : super(_openConnection(userId));
 
   /// Para tests: base en memoria, sin archivo.
   AppDatabase.forTesting(super.e);
@@ -72,11 +73,9 @@ class AppDatabase extends _$AppDatabase {
   int get schemaVersion => 1;
 }
 
-LazyDatabase _openConnection() {
+LazyDatabase _openConnection(int userId) {
   return LazyDatabase(() async {
-    final dir = await getApplicationDocumentsDirectory();
-    return NativeDatabase.createInBackground(
-      File(p.join(dir.path, 'telyser.sqlite')),
-    );
+    final dir = await userDirectory(userId);
+    return NativeDatabase.createInBackground(File(p.join(dir.path, databaseFileName)));
   });
 }

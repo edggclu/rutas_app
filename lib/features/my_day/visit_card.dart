@@ -5,6 +5,7 @@ import '../../core/time/time_utils.dart';
 import '../../domain/models/enums.dart';
 import '../../domain/models/models.dart';
 import 'visit_tags.dart';
+import 'widgets/missing_items_card.dart';
 
 /// Tarjeta de visita de la lista "Mi día".
 class VisitCard extends StatelessWidget {
@@ -98,7 +99,7 @@ class VisitCard extends StatelessWidget {
                 Wrap(
                   spacing: 6,
                   runSpacing: 6,
-                  children: [...visitTags(visit.job), visitStatusChip(visit)],
+                  children: [...visitTags(visit.job), visitStatusChip(visit), MissingCountTag(visitId: visit.id)],
                 ),
                 const SizedBox(height: 8),
                 Text(

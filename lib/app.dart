@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:telyser_app/providers/session_provider.dart';
 
@@ -15,6 +16,9 @@ class TelyserApp extends StatelessWidget {
       title: 'Telyser',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      locale: const Locale('es', 'MX'), // la app está en español: también los calendarios y los diálogos del sistema
+      supportedLocales: const [Locale('es', 'MX')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       home: const _AuthGate(),
     );
   }

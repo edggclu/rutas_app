@@ -20,3 +20,9 @@ class WrongPasswordException implements Exception {
 class InvalidResetCodeException implements Exception {
   const InvalidResetCodeException();
 }
+
+/// El recurso ya cambió desde que se mostró (el servidor responde 409): por ejemplo, otra persona
+/// ya programó ese trabajo o la visita ya empezó. Hay que volver a pedir la lista.
+class ConflictException implements Exception {
+  const ConflictException();
+}

@@ -27,6 +27,7 @@ class Decision {
     required this.detail,
     required this.createdAt,
     this.jobFolio,
+    this.jobId,
   });
 
   final int id;
@@ -34,6 +35,7 @@ class Decision {
   final String title;
   final String detail;
   final String? jobFolio;
+  final int? jobId; // el trabajo del que habla (para actuar sobre él)
   final DateTime createdAt; // UTC
 
   factory Decision.fromJson(Map<String, dynamic> j) => Decision(
@@ -42,6 +44,7 @@ class Decision {
         title: readString(j, 'title') ?? '',
         detail: readString(j, 'detail') ?? '',
         jobFolio: readString(j, 'job_folio'),
+        jobId: readInt(j, 'job_id'),
         createdAt: DateTime.tryParse(readString(j, 'created_at') ?? '')?.toUtc() ??
             DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
       );
@@ -68,6 +71,7 @@ class DispatchVisit {
     this.result,
     this.dayNumber,
     this.scheduledAt,
+    this.confirmedWithClient = false,
   });
 
   final int id;
@@ -77,6 +81,7 @@ class DispatchVisit {
   final String clientName;
   final String placeName;
   final DateTime? scheduledAt; // UTC
+  final bool confirmedWithClient; // la cita ya se acordó con el cliente: si se mueve, administración debe avisarle
 
   factory DispatchVisit.fromJson(Map<String, dynamic> j) => DispatchVisit(
         id: readInt(j, 'id') ?? 0,
@@ -86,6 +91,7 @@ class DispatchVisit {
         clientName: readString(j, 'client') ?? '',
         placeName: readString(j, 'place') ?? '',
         scheduledAt: DateTime.tryParse(readString(j, 'scheduled_at') ?? '')?.toUtc(),
+        confirmedWithClient: readBool(j, 'client_confirmed') ?? false,
       );
 }
 
@@ -102,6 +108,7 @@ class TechnicianRoute {
         name: readString(j, 'name') ?? '',
         visits: [for (final m in readMaps(j, 'visits')) DispatchVisit.fromJson(m)],
       );
+TechnicianRoute copyWith({List<DispatchVisit>? visits}) => TechnicianRoute(id: id, name: name, visits: visits ?? this.visits);
 }
 
 /// Las cinco luces del semáforo de un trabajo por asignar.
@@ -185,6 +192,23 @@ class DispatchBoard {
   final List<TechnicianRoute> tomorrow;
   final List<UnassignedJob> unassigned;
 
+  /// Los técnicos a quienes se puede asignar una visita. Salen de las rutas de hoy, que traen a
+  /// todos, aunque no tengan visitas.
+  List<({int id, String name})> get technicians => [for (final t in today) (id: t.id, name: t.name)];
+
+  DispatchBoard copyWith({
+    List<Decision>? decisions,
+    List<TechnicianRoute>? today,
+    List<TechnicianRoute>? tomorrow,
+    List<UnassignedJob>? unassigned,
+  }) =>
+      DispatchBoard(
+        decisions: decisions ?? this.decisions,
+        today: today ?? this.today,
+        tomorrow: tomorrow ?? this.tomorrow,
+        unassigned: unassigned ?? this.unassigned,
+      );
+
   factory DispatchBoard.fromJson(Map<String, dynamic> j) {
     List<TechnicianRoute> routes(String key) {
       final section = j[key];
@@ -200,4 +224,21 @@ class DispatchBoard {
       unassigned: [for (final m in readMaps(j, 'unassigned')) UnassignedJob.fromJson(m)],
     );
   }
+}
+
+/// Una visita nueva que crea el jefe de ruta a partir de un trabajo por asignar.
+class NewVisit {
+  const NewVisit({
+    required this.jobId,
+    required this.date,
+    required this.technicianId,
+    this.companionIds = const [],
+    this.urgent = false,
+  });
+
+  final int jobId;
+  final DateTime date; // solo cuenta el día
+  final int technicianId; // el responsable
+  final List<int> companionIds;
+  final bool urgent; // se mete en la ruta de hoy como urgencia: ese técnico recibe un aviso
 }

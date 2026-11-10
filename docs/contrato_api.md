@@ -38,7 +38,7 @@ descarga al iniciar el día y **nunca** los escribe fijos en el código.
   "arrival_radius_m": 150, "arrival_dwell_s": 60,
   "wait_base_min": 10, "wait_per_km_min": 1,
   "min_client_contacts": 1, "min_office_calls": 1,
-  "undo_seconds": 10, "credit_authorization_wait_min": 5,
+  "undo_seconds": 10, "credit_authorization_wait_min": 10,
   "photo_target_kb": 300, "video_max_s": 60,
   "office_phone": "3220000000",
   "password_min_length": 8,
@@ -46,8 +46,7 @@ descarga al iniciar el día y **nunca** los escribe fijos en el código.
   "routing_base_url": "https://router.project-osrm.org"
 }
 ```
-- `credit_authorization_wait_min`: el documento de requisitos dice 15 min en la
-  sección 10.2 y 5 min en la 19. **Pendiente de confirmar cuál es.**
+- `credit_authorization_wait_min`: minutos que el técnico espera a que administración conteste una autorización por saldo vencido antes de que el extra pase a solicitud para después. Se decidió en **10** (el documento de requisitos decía 15 en la sección 10.2 y 5 en la 19). La pantalla de espera todavía no existe (paso 8).
 - Las familias de material que absorbe Telyser **no** se mandan a la app: el
   servidor marca el material absorbido y el técnico no ve ninguna etiqueta.
 - `office_phone`: teléfono de la oficina. La app lo usa para el botón "Llamar a la oficina".
@@ -132,7 +131,7 @@ Tipos de evento que manda la app:
 
 | Área | Tipos |
 |---|---|
-| Salida | `departure_confirmed`, `missing_items`. `departure_confirmed` también se manda al salir hacia la siguiente visita: lleva el `visit_id` de la visita elegida |
+| Salida | `departure_confirmed`, `missing_items`, `items_obtained`. `departure_confirmed` también se manda al salir hacia la siguiente visita: lleva el `visit_id` de la visita elegida |
 | Llegada | `arrived` (automático o manual) |
 | No me abren | `no_answer_reported`, `client_contacted`, `office_called`, `no_answer_confirmed` |
 | En sitio y extras | `photo_added`, `extra_added`, `request_added`, `authorization_requested`, `route_delay_reported` |
@@ -150,6 +149,12 @@ El estado que ve el técnico es la ruta del servidor más los eventos que aún n
 `PUT /api/jobs/{id}/plan` · `GET /api/review` · `GET /api/my-jobs` ·
 `GET /api/dispatch/today|unassigned|decisions` · `POST /api/password` · `POST /api/password/forgot` · `POST /api/password/reset` · `POST /api/visits` · `PATCH /api/visits/{id}` ·
 `POST /api/devices`.
+
+### Datos (payload) de los eventos de salida
+
+`missing_items`: `{ "items": [{ "id": 1, "text": "Cámaras IP", "kind": "material" }] }`. Lo que le falta al técnico al salir (se avisa a Axel y al jefe). No impide salir.
+
+`items_obtained`: `{ "item_ids": [1, 4] }`. El técnico ya consiguió renglones que había marcado como faltantes, para que ya no se los manden. Los ids son los de la lista de salida de esa visita (`visit_id`).
 
 ### Datos (payload) de los eventos de extras
 
@@ -308,7 +313,7 @@ Cambia la contraseña del usuario con sesión. Necesita señal: **no pasa por la
 
 ## Rutas (jefe de ruta)
 
-Requieren el permiso `dispatch` (si no, 403). Necesitan señal: **no pasan por la cola**. La app arma el tablero con cuatro lecturas. Por ahora solo se leen; crear, mover y reordenar visitas (`POST /api/visits`, `PATCH /api/visits/{id}`) es el paso siguiente.
+Requieren el permiso `dispatch` (si no, 403). Necesitan señal: **no pasan por la cola**. La app arma el tablero con cuatro lecturas (decisions, today de hoy, today de mañana y unassigned) y puede crear y mover visitas (ver más abajo).
 
 ### GET /api/dispatch/decisions
 Lo que requiere la decisión del jefe. El servidor escribe el título y el detalle.
@@ -360,3 +365,25 @@ No llevan `Authorization`. Tampoco pasan por la cola.
 - 204 si todo está bien. El servidor invalida el código y las sesiones abiertas del usuario.
 - 422 con `code: "invalid_reset_code"` si el código no es correcto, ya venció o el usuario no existe (la misma respuesta en los tres casos). La app dice "El código no es correcto o ya venció" y deja pedir otro.
 - 422 con `code: "weak_password"` si la contraseña nueva no cumple las reglas.
+
+### Crear y mover visitas
+Las dos acciones del jefe de ruta. Requieren el permiso `dispatch` y no pasan por la cola.
+
+**POST /api/visits** — programa un trabajo por asignar.
+```json
+{ "job_id": 42, "date": "2026-10-30", "technician_id": 7, "companion_ids": [8, 9], "urgent": false }
+```
+- `date` es solo el día (`YYYY-MM-DD`). `technician_id` es el responsable; no puede estar también en `companion_ids`.
+- El orden dentro de la ruta **no se manda**: lo elige el técnico.
+- `urgent: true` la mete en la ruta de hoy como urgencia y el técnico responsable recibe un aviso (`GET /api/notifications`).
+- 201 con la visita creada. 409 si el trabajo ya no está pendiente (otra persona lo programó). 422 si el semáforo no lo permite (`can_schedule: false`) o la fecha ya pasó.
+
+**PATCH /api/visits/{id}** — mueve una visita a otro día y/o a otro técnico.
+```json
+{ "date": "2026-10-31", "technician_id": 8 }
+```
+- Cada campo es opcional: la app solo manda lo que cambió. El orden en la ruta tampoco se manda.
+- 409 si la visita ya empezó (en camino, en sitio o cerrada) o ya no existe.
+- Si la visita estaba confirmada con el cliente (`client_confirmed: true` en `dispatch/today`), el servidor avisa a administración para que le avise al cliente. La app solo lo informa al jefe.
+
+`dispatch/today` ahora trae por visita `client_confirmed` (bool), y las decisiones de tipo `urgent` traen `job_id`, para poder meter esa urgencia en una ruta.

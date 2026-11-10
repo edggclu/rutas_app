@@ -128,6 +128,7 @@ void main() {
       const BlockedEvent(reason: BlockReason.cannotSolve, note: 'No encuentro la falla'),
       const HelpRequestedEvent(),
       const NoteAddedEvent('Olvidé anotar el conector extra'),
+      const ItemsObtainedEvent([1, 3]),
     ];
 
     for (final s in samples) { // una prueba por evento
@@ -141,7 +142,7 @@ void main() {
     }
 
     test('hay un ejemplo por cada tipo de EventTypes', () { // si agregas un evento y olvidas el ejemplo, falla
-      expect(samples.map((s) => s.type).toSet().length, 16); // dieciséis tipos distintos
+      expect(samples.map((s) => s.type).toSet().length, 17); // diecisiete tipos distintos
     });
   });
 

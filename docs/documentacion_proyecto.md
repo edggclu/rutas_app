@@ -184,7 +184,7 @@ El servidor de Telyser (el CRM en Laravel) es la **fuente de verdad** de cliente
 
 - Cada visita llega con su cliente, lugar, contacto, trabajo y lista de salida anidados en un JSON, y se guarda completa en una sola columna. Si el servidor agrega un campo, no hace falta migrar la base del teléfono.
 - Lo que la app **genera** (llegadas, extras, cierres) se guarda en una cola de acciones.
-- La base es SQLite (archivo `telyser.sqlite` dentro del teléfono), manejada con la librería Drift.
+- La base es SQLite (un archivo `telyser.sqlite` por usuario, en `users/<id>/` dentro del teléfono), manejada con la librería Drift.
 
 *Figura 17. [Diagrama entidad-relación de la base local]*
 

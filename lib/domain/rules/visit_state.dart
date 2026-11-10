@@ -75,6 +75,7 @@ DayRoute applyEvents(DayRoute route, List<VisitEvent> events) { // devuelve la r
       case NoAnswerConfirmedEvent(): // nadie atendió
         close(v, VisitResult.noAnswer); // la cierra
       case MissingItemsEvent() || // estos eventos solo viajan al servidor:
+          ItemsObtainedEvent() ||
           NoAnswerReportedEvent() ||
           ClientContactedEvent() ||
           OfficeCalledEvent() ||

@@ -17,6 +17,15 @@ class DepartureActions { // una clase por área
   Future<ActionReceipt> goTo(Visit visit) =>
       _writer.undoable([PendingEvent(const DepartureConfirmedEvent(), visitId: visit.id)]);
 
+  /// "Ya lo tengo": el técnico consiguió renglones que le faltaban al salir. Se avisa para que Axel
+  /// y el jefe sepan que ya no hace falta mandárselos. Lleva tiempo para deshacer.
+  Future<ActionReceipt> markObtained({required int visitId, required List<MissingItem> items}) {
+    if (items.isEmpty) throw ArgumentError('No hay renglones que marcar');
+    return _writer.undoable([
+      PendingEvent(ItemsObtainedEvent([for (final i in items) i.id]), visitId: visitId),
+    ]);
+  }
+
   /// "Llevo todo" / salir con faltantes. Encola, en este orden:
   ///  1. un `MissingItemsEvent` por cada visita con renglones faltantes;
   ///  2. un `DepartureConfirmedEvent` de la primera visita por hacer.

@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:telyser_app/providers/infra_providers.dart';
+import 'package:telyser_app/providers/storage_providers.dart';
 
 import '../../domain/models/media_item.dart';
 

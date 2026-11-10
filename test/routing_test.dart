@@ -25,8 +25,8 @@ const _osrm = {
         ],
       },
       'legs': [
-        {'distance': 1500.0},
-        {'distance': 2250},
+        {'distance': 1500.0, 'duration': 300},
+        {'distance': 2250, 'duration': 450.0},
       ],
     },
   ],
@@ -62,6 +62,7 @@ void main() {
       expect(path.points.first, const GeoPoint(20.60, -105.20));
       expect(path.points.length, 3);
       expect(path.legsKm, [1.5, 2.25]);
+      expect(path.legsMin, [5.0, 7.5]); // OSRM da segundos
     });
 
     test('sin ruta, devuelve null', () {
@@ -97,6 +98,7 @@ void main() {
         ],
       };
       expect(parseOsrmRoute(noLegs)!.legsKm, isEmpty);
+      expect(parseOsrmRoute(noLegs)!.legsMin, isEmpty);
     });
   });
 
@@ -192,6 +194,21 @@ void main() {
       await c.read(routePathProvider(const RouteStops([GeoPoint(1, 1), GeoPoint(2, 2)])).future);
       expect(repo.calls, 1);
       keep.close();
+    });
+  });
+
+  group('minutos del tramo', () {
+    test('legMinutes usa los minutos por calles, redondeados hacia arriba', () {
+      final plan = planRoute([_visit(1, 9), _visit(2, 2)], office: const GeoPoint(20.0, -105.0));
+      const path = RoutePath(points: [], legsKm: [3.1, 7.4], legsMin: [4.2, 11.0]);
+      expect(plan.legMinutes(0, path), 5);
+      expect(plan.legMinutes(1, path), 11);
+    });
+
+    test('sin ruta por calles no se inventa un tiempo', () {
+      final plan = planRoute([_visit(1, 9)], office: const GeoPoint(20.0, -105.0));
+      expect(plan.legMinutes(0, null), isNull);
+      expect(plan.legMinutes(0, const RoutePath(points: [], legsKm: [3.1])), isNull); // vinieron km pero no minutos
     });
   });
 }

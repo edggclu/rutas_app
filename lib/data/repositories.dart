@@ -67,6 +67,13 @@ abstract class NotificationsRepository {
 /// arma el tablero con `dispatch/decisions`, `dispatch/today` (hoy y mañana) y `dispatch/unassigned`.
 abstract class DispatchRepository {
   Future<DispatchBoard> fetch();
+
+  /// Crea una visita de un trabajo por asignar. Lanza `ConflictException` si el trabajo ya no está
+  /// pendiente (otra persona lo programó).
+  Future<void> createVisit(NewVisit visit);
+
+  /// Mueve una visita a otro día o a otro técnico. Lanza `ConflictException` si ya empezó.
+  Future<void> moveVisit({required int visitId, DateTime? date, int? technicianId});
 }
 
 

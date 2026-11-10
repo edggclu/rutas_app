@@ -71,6 +71,15 @@ class RoutePlan {
     }
     return legsKm[i];
   }
+
+  /// Los minutos manejando hasta la visita [i] de [ordered], si ya se tiene la ruta por calles.
+  /// Sin ella no se inventa un tiempo: solo la distancia recta sirve para comparar, no para estimar.
+  int? legMinutes(int i, RoutePath? path) {
+    final legs = path?.legsMin;
+    if (legs == null) return null;
+    final leg = start == null ? i - 1 : i;
+    return leg >= 0 && leg < legs.length ? legs[leg].ceil() : null;
+  }
 }
 
 /// Ordena [pending] con el vecino más cercano. Empieza por [firstId] si se eligió una; si no,
@@ -130,4 +139,25 @@ RoutePlan planRoute(List<Visit> visits, {GeoPoint? office, int? firstId}) {
     legsKm: legs,
     suggestedFirstId: suggested.isEmpty ? null : suggested.first.id,
   );
+}
+
+/// Los km en línea recta desde el punto anterior hasta [visit]: la última visita que se cerró antes
+/// de llegar a esta o, si es la primera del día, la oficina. Con esto se calcula la espera de "No
+/// me abren" aunque el técnico haya cambiado el orden de la ruta. Es la distancia recta a propósito:
+/// no cambia mientras corre la cuenta regresiva ni depende de tener señal. null si falta alguna
+/// ubicación (entonces se usa el dato del servidor).
+double? straightKmFromPrevious(Visit visit, List<Visit> visits, GeoPoint? office) {
+  final here = pointOf(visit);
+  if (here == null) return null;
+  final arrived = visit.arrivedAt;
+  Visit? previous;
+  for (final v in visits) {
+    if (v.id == visit.id || v.status != VisitStatus.done) continue;
+    final t = v.arrivedAt;
+    if (arrived != null && t != null && !t.isBefore(arrived)) continue; // se cerró después de llegar a esta
+    final latest = previous?.arrivedAt;
+    if (previous == null || (t != null && (latest == null || t.isAfter(latest)))) previous = v;
+  }
+  final from = previous == null ? office : pointOf(previous);
+  return from == null ? null : distanceKm(from, here);
 }

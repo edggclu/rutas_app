@@ -10,9 +10,10 @@ import '../../my_day/visit_tags.dart';
 /// Los trabajos aprobados que todavía no tienen visita, con el semáforo de lo que falta. Un
 /// trabajo en rojo todavía no se puede programar.
 class UnassignedSection extends StatelessWidget {
-  const UnassignedSection({super.key, required this.jobs});
+  const UnassignedSection({super.key, required this.jobs, required this.onSchedule});
 
   final List<UnassignedJob> jobs;
+  final void Function(UnassignedJob job, {required bool urgent}) onSchedule; // abre la pantalla para programar
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +24,7 @@ class UnassignedSection extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       itemCount: jobs.length,
       separatorBuilder: (context, index) => const SizedBox(height: 12),
-      itemBuilder: (context, i) => _JobCard(job: jobs[i]),
+      itemBuilder: (context, i) => _JobCard(job: jobs[i], onSchedule: onSchedule),
     );
   }
 }
@@ -35,9 +36,10 @@ Color _lightColor(LightState s) => switch (s) {
     };
 
 class _JobCard extends StatelessWidget {
-  const _JobCard({required this.job});
+  const _JobCard({required this.job, required this.onSchedule});
 
   final UnassignedJob job;
+  final void Function(UnassignedJob job, {required bool urgent}) onSchedule;
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +84,26 @@ class _JobCard extends StatelessWidget {
                 ],
               ),
             ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton(
+                  onPressed: job.canSchedule ? () => onSchedule(job, urgent: false) : null, // en rojo no se programa
+                  child: const Text('Programar visita'),
+                ),
+              ),
+              if (job.priority == Priority.urgent) ...[
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: job.canSchedule ? () => onSchedule(job, urgent: true) : null,
+                    child: const Text('Meter hoy'),
+                  ),
+                ),
+              ],
+            ],
+          ),
         ],
       ),
     );

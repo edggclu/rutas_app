@@ -46,6 +46,22 @@ void main() {
     expect(waitKm(v), 17.0); // usa estimated_km_from_office del lugar
   });
 
+  test('los km que calcula la app mandan sobre los del servidor, que ya no coinciden con el orden', () {
+    final raw = json.decode(File('assets/mock/my_day.json').readAsStringSync()) as Map<String, dynamic>;
+    final v = DayRoute.fromJson(raw).visits[0]; // trae km_from_previous del servidor
+    expect(v.kmFromPrevious, isNotNull);
+    expect(waitKm(v), v.kmFromPrevious); // sin dato de la app, el del servidor
+    expect(waitKm(v, kmFromPreviousStop: 3.5), 3.5); // con el de la app, ese
+  });
+
+  test('la espera se calcula con los km de la visita anterior real', () {
+    final raw = json.decode(File('assets/mock/my_day.json').readAsStringSync()) as Map<String, dynamic>;
+    final v = DayRoute.fromJson(raw).visits[0];
+    final near = computeNoAnswerStatus(visit: v, events: const [], settings: settings, now: v.arrivedAt ?? DateTime.utc(2026, 10, 6, 14), kmFromPreviousStop: 2);
+    final far = computeNoAnswerStatus(visit: v, events: const [], settings: settings, now: v.arrivedAt ?? DateTime.utc(2026, 10, 6, 14), kmFromPreviousStop: 20);
+    expect(far.wait - near.wait, Duration(minutes: 18 * settings.waitPerKmMin)); // más lejos, más espera
+  });
+
   test('al llegar, falta toda la espera y no puede irse', () { // estado inicial
     final s = statusAt(Duration.zero, const []); // justo al llegar, sin acciones
     expect(s.remaining, const Duration(minutes: 15)); // falta toda la espera

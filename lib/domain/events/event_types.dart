@@ -9,6 +9,7 @@ class EventTypes {
   static const continueTomorrow = 'continue_tomorrow';
   static const blocked = 'blocked';
   static const missingItems = 'missing_items';
+  static const itemsObtained = 'items_obtained'; // el técnico ya consiguió renglones que le faltaban al salir (payload: item_ids)
   static const clientContacted = 'client_contacted'; // el técnico tocó llamar o WhatsApp al cliente (payload: channel)
   static const officeCalled = 'office_called'; // el técnico tocó "Llamar a la oficina"
   static const extraAdded = 'extra_added'; // el técnico registró un extra hecho en la visita

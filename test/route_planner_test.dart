@@ -118,4 +118,30 @@ void main() {
       expect(plan.stops, isEmpty);
     });
   });
+
+  group('km desde la visita anterior (espera de No me abren)', () {
+    test('la primera del día cuenta desde la oficina', () {
+      final v = _visit(1, km: 7, status: 'on_site', arrivedAt: '2026-10-06T15:00:00Z');
+      expect(straightKmFromPrevious(v, [v], _at(0))!, closeTo(7, 0.05));
+    });
+
+    test('después de cerrar otra, cuenta desde donde cerró (no desde la oficina)', () {
+      final done = _visit(1, km: 10, status: 'done', arrivedAt: '2026-10-06T14:00:00Z');
+      final v = _visit(2, km: 13, status: 'on_site', arrivedAt: '2026-10-06T16:00:00Z');
+      expect(straightKmFromPrevious(v, [done, v], _at(0))!, closeTo(3, 0.05));
+    });
+
+    test('toma la última que cerró antes de llegar, no una posterior ni una anterior', () {
+      final first = _visit(1, km: 2, status: 'done', arrivedAt: '2026-10-06T13:00:00Z');
+      final second = _visit(2, km: 10, status: 'done', arrivedAt: '2026-10-06T15:00:00Z');
+      final v = _visit(3, km: 12, status: 'on_site', arrivedAt: '2026-10-06T17:00:00Z');
+      final later = _visit(4, km: 0, status: 'done', arrivedAt: '2026-10-06T19:00:00Z'); // se cerró después
+      expect(straightKmFromPrevious(v, [first, second, v, later], _at(0))!, closeTo(2, 0.05));
+    });
+
+    test('sin ubicación de alguno de los dos puntos, null (se usa el dato del servidor)', () {
+      expect(straightKmFromPrevious(_visit(1, km: null, status: 'on_site'), [], _at(0)), isNull);
+      expect(straightKmFromPrevious(_visit(1, km: 5, status: 'on_site'), [], null), isNull); // ni oficina
+    });
+  });
 }

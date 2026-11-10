@@ -85,7 +85,9 @@ core/         widgets y utilidades genéricas, sin reglas del negocio
 
 ## Base de datos local (Drift / SQLite)
 
-Archivo `telyser.sqlite` dentro del teléfono. Definida en `lib/data/local/app_database.dart`.
+Archivo `telyser.sqlite` dentro del teléfono, **uno por usuario**: `users/<id>/telyser.sqlite`, junto a sus fotos y videos (`users/<id>/media/`). Así dos personas que usan el mismo teléfono nunca ven ni envían lo de la otra. Definida en `lib/data/local/app_database.dart`; la carpeta del usuario, en `data/local/user_storage.dart`.
+
+La base se abre al iniciar sesión (`providers/storage_providers.dart`, que reúne la base, la cola, la ruta guardada, los parámetros y las fotos) y se cierra al cambiar de usuario. Si el mismo usuario vuelve a entrar —por ejemplo, tras una sesión expirada— encuentra su cola intacta. Sin sesión, tocar lo guardado lanza un error a propósito. Los datos de antes de este cambio (`telyser.sqlite` suelta en la carpeta de documentos) ya no se leen; en desarrollo basta con reiniciar los datos de demo.
 
 ```mermaid
 erDiagram
@@ -299,6 +301,8 @@ La barra de deshacer calcula el tiempo restante desde una hora límite fija guar
 ### Salida y lista de material (C2)
 `features/departure/` muestra la lista (sale de `job.plan.items`), los faltantes y el deslizable "Llevo todo". Acciones en `application/` (área `departure`).
 
+**Faltantes después de salir.** Marcar un renglón como faltante no bloquea nada: el técnico sale y trabaja igual. Lo que marcó se ve después en la tarjeta de la visita y en En sitio ("Te falta para esta visita"), y en Mi día como "Te faltan N". Cuando lo consigue toca **Ya lo tengo** (o **Ya tengo todo**): se encola `items_obtained` y la lista se actualiza, con tiempo para deshacer. `pendingMissingItems` (`domain/rules/missing_items.dart`) calcula lo que sigue faltando con la cola; la tarjeta es `features/my_day/widgets/missing_items_card.dart`.
+
 ### Llegada y "¿Ya te abrieron?"
 
 ```mermaid
@@ -346,7 +350,7 @@ flowchart TD
     I --> J["Visita Hecha (no_answer) y la siguiente En camino"]
 ```
 
-La espera es `wait_base_min + wait_per_km_min × km`, redondeada hacia arriba al minuto. Siempre se calcula desde la hora de llegada guardada; el reloj de la pantalla (`tickProvider`, cada segundo) solo la redibuja.
+La espera es `wait_base_min + wait_per_km_min × km`, redondeada hacia arriba al minuto. Los km los calcula la app en línea recta desde la visita anterior real (la última que cerró antes de llegar, o la oficina si es la primera): así no dependen del orden que mandaba el servidor ni de tener señal. Si falta alguna ubicación, usa `km_from_previous` del servidor y, si tampoco, `estimated_km_from_office`. Siempre se calcula desde la hora de llegada guardada; el reloj de la pantalla (`tickProvider`, cada segundo) solo la redibuja.
 
 | Parámetro del servidor | Para qué |
 |---|---|
@@ -533,7 +537,7 @@ Lista de lo que el servidor le dice al usuario: cambios de ruta, trabajos regres
 El orden de la ruta **ya no viene del servidor** (`order` solo sirve de respaldo si falta una ubicación): lo calcula la app. Empieza en la oficina (parámetros `office_lat` y `office_lng`) con la visita más cercana, y de ahí va a la más cercana a esa (vecino más cercano). El técnico ve la ruta en un mapa grande (OpenStreetMap, necesita internet para los mosaicos; sin señal el mapa queda en blanco pero los puntos siguen ahí) con cada visita numerada: la siguiente parada va rellena en rojo y las demás en blanco con borde rojo. Abajo, la tarjeta **Siguiente parada** con cliente, dirección, distancia desde el punto anterior, tipo de cliente (A, B o C), la cita acordada y dos botones: **Iniciar navegación** (abre Maps o Waze) y **Detalle de visita**. Los números de la tarjeta (o los pines) cambian la parada que se mira.
 
 - **Elegir con cuál empezar:** al mirar otra parada, el botón principal pasa a **Empezar por esta**. La ruta se rehace desde esa, con las demás por cercanía. "Volver a la ruta sugerida" deshace la elección.
-- **Por calles:** la línea del mapa sigue las calles y los km de cada tramo son por calles, no en línea recta. La app se los pide a un servidor de rutas compatible con OSRM (`routing_base_url` en los parámetros del servidor). Mientras llega, sin señal o si la empresa no configuró uno, dibuja la línea recta punteada y usa la distancia recta. El **orden** de la ruta siempre se calcula con la distancia recta: es solo para comparar qué queda más cerca y no necesita internet. El servidor público de demostración de OSRM no es para producción: conviene uno propio.
+- **Por calles:** la línea del mapa sigue las calles y los km y los minutos de cada tramo son por calles, no en línea recta. La app se los pide a un servidor de rutas compatible con OSRM (`routing_base_url` en los parámetros del servidor). Mientras llega, sin señal o si la empresa no configuró uno, dibuja la línea recta punteada y usa la distancia recta. El **orden** de la ruta siempre se calcula con la distancia recta: es solo para comparar qué queda más cerca y no necesita internet. El servidor público de demostración de OSRM no es para producción: conviene uno propio.
 - **La visita en curso también se puede mirar:** si ya vas en camino o estás en sitio, el mapa la muestra en verde y su tarjeta dice EN CAMINO o EN SITIO (en camino conserva Iniciar navegación; en sitio solo el detalle). Así, con la última visita en curso el mapa no dice que ya cerraste todo.
 - **Las cerradas no cuentan:** la ruta se calcula solo con las visitas por hacer, y sale desde donde cerró la última (o desde la visita en curso).
 - **La siguiente ya no arranca sola:** al cerrar una visita, el técnico queda Libre y Mi día muestra "Sigue X" con **Ir a X** y **Cambiar** (abre el mapa). Por la mañana la barra dice "Empiezas en X" y abre la Salida con la lista de material. Salir a una visita encola `departure_confirmed` de esa visita.
@@ -590,17 +594,30 @@ Todo formulario con algo escrito pregunta "¿Salir sin guardar?" antes de descar
 
 ### Rutas (jefe de ruta)
 
-La pestaña **Rutas** (permiso `dispatch`) tiene cuatro secciones, como el documento de requisitos (sección 14): **Decisión** (urgencias arriba, detenidos, jornadas propuestas por "Sigo otro día", trabajos regresados, retrasos de ruta y llegadas fuera de orden), **Hoy** (cada técnico con su estado y sus visitas), **Por asignar** (trabajos sin visita con el semáforo de cinco luces: cliente confirmado, anticipo pagado, sin adeudo, material listo y acceso) y **Mañana**. Por ahora solo se mira: crear, mover y reordenar visitas es el paso 6b.
+La pestaña **Rutas** (permiso `dispatch`) tiene cuatro secciones, como el documento de requisitos (sección 14): **Decisión** (urgencias arriba, detenidos, jornadas propuestas por "Sigo otro día", trabajos regresados, retrasos de ruta y llegadas fuera de orden), **Hoy** (cada técnico con su estado y sus visitas), **Por asignar** (trabajos sin visita con el semáforo de cinco luces: cliente confirmado, anticipo pagado, sin adeudo, material listo y acceso) y **Mañana**.
 
 El servidor escribe el título y el detalle de cada decisión, y dice con `can_schedule` si un trabajo ya se puede programar (si no lo dice, solo lo bloquea una luz en rojo). El estado "En sitio en X" de cada técnico lo calcula la app con `technicianStateOf`, la misma regla de Mi día.
 
+**Qué puede hacer el jefe** (necesita señal, no pasa por la cola):
+
+- **Programar una visita:** en Por asignar, **Programar visita** elige el día (Hoy, Mañana u otra fecha hasta 90 días), el técnico responsable y, si hace falta, acompañantes. Con una luz en rojo el botón no se activa.
+- **Meter una urgencia:** en una urgencia, **Meter en una ruta** (o **Meter hoy** en un trabajo urgente de Por asignar) la pone en la ruta de hoy del técnico que elija, que recibe un aviso. Al programarla, la urgencia sale de Decisión.
+- **Mover una visita:** tocar una visita **Por hacer** de Hoy o Mañana abre una hoja para cambiarla de día y/o de técnico. Si ya estaba confirmada con el cliente, la hoja avisa que administración recibe un aviso para avisarle. Una visita que ya empezó (en camino, en sitio o cerrada) no se mueve.
+- **No decide el orden de cada ruta:** ese lo elige el técnico con el mapa (ver "Ruta del día y mapa"), así que no hay "reordenar" para el jefe.
+
+Si otra persona ya programó el trabajo o la visita ya empezó, el servidor responde 409: la app avisa, cierra la pantalla y vuelve a pedir el tablero. Las reglas son `checkSchedule`, `checkMove` y `canMoveVisit` de `domain/dispatch_rules.dart`; el servidor vuelve a validarlas.
+
 | Archivo | Qué hace |
 |---|---|
-| `domain/models/dispatch_models.dart` | `DispatchBoard`, `Decision` (`DecisionKind` tolerante), `TechnicianRoute`, `UnassignedJob`, `Light` y `LightState` |
-| `data/repositories.dart` | Interfaz `DispatchRepository` |
-| `data/mock/mock_repositories.dart` | `MockDispatchRepository`: lee `assets/mock/dispatch.json` |
-| `providers/dispatch_providers.dart` | `dispatchProvider` |
-| `features/dispatch/` | `dispatch_screen.dart` y `widgets/` (`decisions_section`, `routes_section`, `unassigned_section`) |
+| `domain/models/dispatch_models.dart` | `DispatchBoard`, `Decision` (`DecisionKind` tolerante), `TechnicianRoute`, `UnassignedJob`, `Light`, `LightState` y `NewVisit` |
+| `domain/dispatch_rules.dart` | `checkSchedule`, `checkMove` y `canMoveVisit` |
+| `application/dispatch_actions.dart` | `scheduleVisit` y `moveVisit`; refrescan el tablero, también si hay conflicto |
+| `data/repositories.dart` | Interfaz `DispatchRepository` (`fetch`, `createVisit`, `moveVisit`) |
+| `data/mock/mock_repositories.dart` | `MockDispatchRepository`: lee `assets/mock/dispatch.json` y guarda los cambios en memoria (no lleva a los acompañantes) |
+| `providers/dispatch_providers.dart` | `dispatchProvider` y `dispatchActionsProvider` |
+| `features/dispatch/` | `dispatch_screen.dart`, `schedule_visit_screen.dart` y `widgets/` (`decisions_section`, `routes_section`, `unassigned_section`, `move_visit_sheet`, `day_choice`) |
+
+La app está en español (`es_MX`), también los calendarios del sistema (`flutter_localizations`).
 
 ## Cómo agregar cosas
 
@@ -641,7 +658,8 @@ Una pantalla que solo **compone** secciones; cada sección lee lo que necesita c
 | `outbox_test` | La cola: `enqueue`, `undo`, `releaseExpired`, `nextBatch` |
 | `settings_store_test`, `route_store_test` | Guardado local de parámetros y de la ruta |
 | `visit_state_test`, `events_test` | `applyEvents` y los eventos tipados (un ejemplo por tipo) |
-| `no_answer_test`, `extras_test`, `closing_test`, `arrival_rules_test` | Las reglas puras de cada área |
+| `no_answer_test`, `extras_test`, `closing_test`, `arrival_rules_test` | Las reglas puras de cada área (la espera de "No me abren" usa los km que calcula la app) |
+| `missing_items_test` | Faltantes: lo que sigue faltando tras marcar "Ya lo tengo", y la acción |
 | `visit_actions_test`, `media_repository_test`, `media_actions_test` | Las acciones, y guardar y borrar fotos y videos |
 | `review_test` | Por validar: modelos, reglas y acciones |
 | `my_jobs_test` | Mis trabajos: el mock, el estado desconocido y el orden |
@@ -649,6 +667,7 @@ Una pantalla que solo **compone** secciones; cada sección lee lo que necesita c
 | `format_test` | Formato de números |
 | `input_formatters_test` | Los filtros de los campos descartan letras y signos, y respetan el largo |
 | `session_test` | Sesión expirada: salir sin tocar la cola y exigir la misma cuenta |
+| `user_storage_test` | Lo guardado en el teléfono es del usuario: otro usuario no ve la cola, y sin sesión no se toca nada |
 | `notifications_test` | Avisos: el mock, tipos desconocidos, conteo, orden y la hora relativa |
 | `routing_test` | La ruta por calles: lector de OSRM, cliente HTTP, tramos por calles y el provider |
 | `stop_panel_test` | La tarjeta del mapa: la visita en curso (en camino o en sitio), la siguiente parada y cuando ya no queda nada |
@@ -656,12 +675,10 @@ Una pantalla que solo **compone** secciones; cada sección lee lo que necesita c
 | `visit_labels_test`, `visit_summary_test` | Hecha / Sin terminar / Detenida / Sin atender y el resumen de una visita con sus notas |
 | `account_test` | Cambiar y recuperar la contraseña: reglas, acciones y repositorio de prueba |
 | `unsaved_guard_test` | La pregunta de salir sin guardar |
-| `dispatch_test` | Rutas: el mock, decisiones, estado del técnico y semáforo |
+| `dispatch_test`, `dispatch_actions_test` | Rutas: el mock, decisiones, estado del técnico, semáforo, y programar y mover visitas |
 | `architecture_test` | Las 5 reglas de dependencias por capa |
 
 ## Pendiente
 
-- **Paso 6b:** Jefe de ruta: crear, mover y reordenar visitas, y meter una urgencia en la ruta de alguien (hoy Rutas solo se mira).
 - **Paso 7:** "Llegué" automático por geocerca y notificaciones push (Firebase). La lista de Avisos ya existe; falta que las push la alimenten.
 - **Paso 8:** API real, envío de la cola, subida y compresión de fotos.
-- **Por confirmar con la empresa:** `credit_authorization_wait_min` (¿5 o 15 minutos?).

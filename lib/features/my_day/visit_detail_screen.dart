@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:telyser_app/features/my_day/widgets/missing_items_card.dart';
 import 'package:telyser_app/domain/arrival_rules.dart';
 import 'package:telyser_app/domain/models/enums.dart';
 import 'package:telyser_app/domain/models/models.dart';
@@ -93,6 +94,7 @@ class VisitDetailScreen extends ConsumerWidget { // ConsumerWidget: puede leer p
                 ],
                 const SizedBox(height: 10), // espacio vertical
                 TaskCard(job: job), // qué hay que hacer
+                MissingItemsCard(visitId: visit.id, topSpacing: 10), // lo que le faltó al salir (si hay)
                 if (visit.client.overdue) ...[ // si el cliente tiene saldo vencido
                   const SizedBox(height: 10), // espacio vertical
                   const AlertBox( // aviso ámbar (sin montos)

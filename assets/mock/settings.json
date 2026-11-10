@@ -6,7 +6,7 @@
   "min_client_contacts": 1,
   "min_office_calls": 1,
   "undo_seconds": 10,
-  "credit_authorization_wait_min": 5,
+  "credit_authorization_wait_min": 10,
   "photo_target_kb": 300,
   "video_max_s": 60,
   "office_phone": "3220000000",

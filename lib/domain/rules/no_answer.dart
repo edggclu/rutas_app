@@ -3,9 +3,11 @@ import 'package:telyser_app/domain/models/models.dart';
 import 'package:telyser_app/domain/rules/visit_state.dart';
 import '../events/event_data.dart'; 
 
-/// Kilómetros que cuentan para la espera: desde la visita anterior; si ese dato
-/// falta, la distancia estimada desde la oficina que ya guarda el lugar. devuelve null si no hay ninguna de las 2
-double? waitKm(Visit visit) => visit.kmFromPrevious ?? visit.place.estimatedKmFromOffice; // si es null usa el de la derecha
+/// Kilómetros que cuentan para la espera: los calculados por la app desde la visita anterior real
+/// ([kmFromPreviousStop]); si faltan, los del servidor; si faltan, los
+/// estimados desde la oficina que ya guarda el lugar. Devuelve null si no hay ninguno de los 3.
+double? waitKm(Visit visit, {double? kmFromPreviousStop}) =>
+    kmFromPreviousStop ?? visit.kmFromPrevious ?? visit.place.estimatedKmFromOffice; // cada uno cubre al anterior si falta
 
 /// Cuanto debe esperar el tecnico: base + minutos por km*km
 /// Ejemplo con valores iniciales: 5km -> 10 + 5 = 15min
@@ -49,9 +51,10 @@ NoAnswerStatus computeNoAnswerStatus ({
   required Visit visit,
   required List<VisitEvent> events,
   required AppSettings settings,
-  required DateTime now
+  required DateTime now,
+  double? kmFromPreviousStop, // los km desde la visita anterior real, calculados por la app
 }) {
-  final km = waitKm(visit);
+  final km = waitKm(visit, kmFromPreviousStop: kmFromPreviousStop);
   final wait = noAnswerWait(km: km, settings: settings); // calcula la espera
   final start = visit.arrivedAt ?? now;
   var remaining = start.add(wait).difference(now); // hora en que termina menos hora actual

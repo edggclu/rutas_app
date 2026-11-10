@@ -3,7 +3,9 @@ import 'package:intl/intl.dart';
 
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:telyser_app/domain/models/app_settings.dart';
+import 'package:telyser_app/domain/dispatch_rules.dart';
 import 'package:telyser_app/domain/models/dispatch_models.dart';
+import 'package:telyser_app/domain/models/enums.dart';
 import 'package:telyser_app/domain/models/closing_models.dart';
 import 'package:telyser_app/domain/models/my_job_models.dart';
 import 'package:telyser_app/domain/models/password_reset.dart';
@@ -228,11 +230,92 @@ class MockNotificationsRepository implements NotificationsRepository {
 }
 
 
-/// El tablero del jefe de prueba: lee assets/mock/dispatch.json.
+/// El tablero del jefe de prueba: lee assets/mock/dispatch.json y guarda los cambios en memoria
+/// (al cerrar la app por completo vuelve el tablero original). No lleva a los acompañantes.
 class MockDispatchRepository implements DispatchRepository {
+  MockDispatchRepository({DateTime Function()? now}) : _now = now ?? DateTime.now;
+
+  final DateTime Function() _now;
+  DispatchBoard? _board;
+  int _nextVisitId = 200;
+
+  Future<DispatchBoard> _load() async =>
+      _board ??= DispatchBoard.fromJson(await _loadJson('assets/mock/dispatch.json'));
+
   @override
   Future<DispatchBoard> fetch() async {
     await Future<void>.delayed(const Duration(milliseconds: 300)); // simula la red
-    return DispatchBoard.fromJson(await _loadJson('assets/mock/dispatch.json'));
+    return _load();
+  }
+
+  /// Agrega la visita a la ruta de ese técnico ese día. Más allá de mañana no hay lista que mostrar.
+  DispatchBoard _addTo(DispatchBoard board, DispatchVisit visit, DateTime date, int technicianId) {
+    final today = dateOnly(_now());
+    final day = dateOnly(date);
+    if (day == today) return board.copyWith(today: _withVisit(board.today, board.technicians, technicianId, visit));
+    if (day == today.add(const Duration(days: 1))) {
+      return board.copyWith(tomorrow: _withVisit(board.tomorrow, board.technicians, technicianId, visit));
+    }
+    return board;
+  }
+
+  List<TechnicianRoute> _withVisit(
+    List<TechnicianRoute> routes,
+    List<({int id, String name})> technicians,
+    int technicianId,
+    DispatchVisit visit,
+  ) {
+    if (routes.any((r) => r.id == technicianId)) {
+      return [for (final r in routes) r.id == technicianId ? r.copyWith(visits: [...r.visits, visit]) : r];
+    }
+    final name = technicians.firstWhere((t) => t.id == technicianId).name; // un técnico sin ruta ese día
+    return [...routes, TechnicianRoute(id: technicianId, name: name, visits: [visit])];
+  }
+
+  @override
+  Future<void> createVisit(NewVisit visit) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    final board = await _load();
+    final job = board.unassigned.where((j) => j.id == visit.jobId).firstOrNull;
+    if (job == null) throw const ConflictException(); // otra persona ya lo programó
+    final created = DispatchVisit(
+      id: _nextVisitId++,
+      status: VisitStatus.pending,
+      clientName: job.clientName,
+      placeName: job.placeName,
+    );
+    _board = _addTo(
+      board.copyWith(
+        unassigned: [for (final j in board.unassigned) if (j.id != job.id) j],
+        // al programar el trabajo, su urgencia deja de pedir decisión
+        decisions: [for (final d in board.decisions) if (!(d.kind == DecisionKind.urgent && d.jobId == job.id)) d],
+      ),
+      created,
+      visit.date,
+      visit.technicianId,
+    );
+  }
+
+  @override
+  Future<void> moveVisit({required int visitId, DateTime? date, int? technicianId}) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    final board = await _load();
+    final today = dateOnly(_now());
+    for (final (isToday, routes) in [(true, board.today), (false, board.tomorrow)]) {
+      for (final route in routes) {
+        final visit = route.visits.where((v) => v.id == visitId).firstOrNull;
+        if (visit == null) continue;
+        if (visit.status != VisitStatus.pending) throw const ConflictException(); // ya empezó
+        final without = [
+          for (final r in routes)
+            r.id == route.id ? r.copyWith(visits: [for (final v in r.visits) if (v.id != visitId) v]) : r,
+        ];
+        final removed = isToday ? board.copyWith(today: without) : board.copyWith(tomorrow: without);
+        final targetDay = date ?? (isToday ? today : today.add(const Duration(days: 1)));
+        _board = _addTo(removed, visit, targetDay, technicianId ?? route.id);
+        return;
+      }
+    }
+    throw const ConflictException(); // la visita ya no está
   }
 }

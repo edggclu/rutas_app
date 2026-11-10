@@ -6,10 +6,13 @@ import 'package:intl/intl.dart';
 import '../domain/models/geo_point.dart';
 import '../domain/models/models.dart';
 import '../domain/models/media_item.dart';
+import '../domain/models/event_models.dart';
+import '../domain/rules/missing_items.dart';
 import '../domain/rules/route_planner.dart';
 import '../domain/rules/visit_state.dart';
 import '../domain/rules/visit_summary.dart';
 import 'infra_providers.dart';
+import 'storage_providers.dart';
 import 'session_provider.dart';
 import 'settings_provider.dart';
 
@@ -110,3 +113,21 @@ final mediaForVisitProvider = StreamProvider.autoDispose // autoDispose: se apag
 /// Todo lo que se hizo en una visita (extras, solicitudes, cierre, notas), de la cola.
 final visitSummaryProvider = Provider.family<VisitSummary, int>(
     (ref, visitId) => summarizeVisit(ref.watch(visitEventsProvider).value ?? const <VisitEvent>[], visitId));
+
+
+/// Los km desde la visita anterior hasta esa visita, calculados con lo que hizo el técnico hoy
+/// (no con el orden que mandaba el servidor). null si falta alguna ubicación.
+final kmFromPreviousProvider = Provider.family<double?, int>((ref, visitId) {
+  final route = ref.watch(myDayProvider).value;
+  final visit = ref.watch(visitByIdProvider(visitId));
+  if (route == null || visit == null) return null;
+  final settings = ref.watch(settingsProvider).value;
+  final lat = settings?.officeLat;
+  final lng = settings?.officeLng;
+  return straightKmFromPrevious(visit, route.visits, lat == null || lng == null ? null : GeoPoint(lat, lng));
+});
+
+
+/// Lo que todavía le falta al técnico para esa visita (marcado al salir y no conseguido después).
+final missingItemsProvider = Provider.family<List<MissingItem>, int>(
+    (ref, visitId) => pendingMissingItems(ref.watch(visitEventsProvider).value ?? const <VisitEvent>[], visitId));
